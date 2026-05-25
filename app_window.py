@@ -2,6 +2,7 @@ import webview
 import threading
 import os
 import sys
+import time
 from app import app
 
 def run_flask():
@@ -17,17 +18,20 @@ if __name__ == '__main__':
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
     
-    # Create a REAL desktop window (not a browser)
+    # Wait for Flask to start (3 seconds)
+    print("Starting server...")
+    time.sleep(3)
+    
+    # Create a REAL desktop window
     webview.create_window(
-        title="What's Cookin'!",           # Window title
-        url="http://127.0.0.1:5000",       # Your Flask app
-        width=450,                          # Phone-sized width
-        height=800,                         # Phone-sized height
-        resizable=True,                     # Can resize
-        fullscreen=False,                   # Not fullscreen
-        min_size=(350, 600),                # Minimum size
-        confirm_close=True,                 # Ask before closing
-        background_color="#FF6B35"          # Orange accent color
+        title="What's Cookin'!",
+        url="http://127.0.0.1:5000",
+        width=450,
+        height=800,
+        resizable=True,
+        fullscreen=False,
+        min_size=(350, 600),
+        confirm_close=True
     )
     
     webview.start()
