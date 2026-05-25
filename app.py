@@ -282,12 +282,35 @@ def profile():
     return render_template('profile.html', user=user, my_recipes=my_recipes, favorites=favorites)
 
 if __name__ == '__main__':
-    # Ensure instance folder exists
-    os.makedirs('instance', exist_ok=True)
+    import threading
+    import webbrowser
+    import time
+    
+    # Get correct paths for EXE
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.dirname(__file__)
+    
+    # Create instance folder
+    instance_path = os.path.join(base_path, 'instance')
+    os.makedirs(instance_path, exist_ok=True)
     
     # Initialize database
     with app.app_context():
         init_db()
     
+    # Function to open browser after server starts
+    def open_browser():
+        time.sleep(2)  # Wait for server to start
+        webbrowser.open('http://127.0.0.1:5000')
+    
+    # Start browser opener in background
+    browser_thread = threading.Thread(target=open_browser)
+    browser_thread.daemon = True
+    browser_thread.start()
+    
     # Run the app
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    print("Starting What's Cookin' app...")
+    print("Open your browser to: http://127.0.0.1:5000")
+    app.run(host='127.0.0.1', debug=False, port=5000)
