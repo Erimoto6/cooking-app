@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="profile-screen">
+    <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <h2>{{ user.username }}</h2>
+        <p>{{ user.phone_number }}</p>
+    </div>
+    
+    <div class="profile-stats">
+        <div class="stat-box">
+            <div class="stat-number">{{ my_recipes|length }}</div>
+            <div class="stat-label">My Recipes</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">{{ favorites|length }}</div>
+            <div class="stat-label">Favorites</div>
+        </div>
+    </div>
+    
+    <div class="profile-section">
+        <h3>My Recipes</h3>
+        <div class="profile-recipe-list">
+            {% for recipe in my_recipes %}
+            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="profile-recipe-item">
+                <span>{{ recipe.image_url or '🍲' }}</span>
+                <span>{{ recipe.title }}</span>
+            </a>
+            {% else %}
+            <p class="empty-text">No recipes created yet</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="profile-section">
+        <h3>Favorite Recipes</h3>
+        <div class="profile-recipe-list">
+            {% for recipe in favorites %}
+            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="profile-recipe-item">
+                <span>{{ recipe.image_url or '🍲' }}</span>
+                <span>{{ recipe.title }}</span>
+            </a>
+            {% else %}
+            <p class="empty-text">No favorite recipes yet</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+</div>
+{% endblock %}

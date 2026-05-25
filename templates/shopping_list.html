@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping List{% endblock %}
+
+{% block content %}
+<div class="shopping-screen">
+    <h1>Shopping List</h1>
+    
+    {% if items %}
+        <div class="shopping-items">
+            {% for item in items %}
+            <div class="shopping-item {% if item.checked %}checked{% endif %}">
+                <div class="item-info">
+                    <div class="item-name">{{ item.ingredient_name }}</div>
+                    <div class="item-quantity">{{ item.quantity }}</div>
+                </div>
+                <div class="item-actions">
+                    <a href="{{ url_for('toggle_shopping_item_route', item_id=item.id) }}" class="check-btn">
+                        {% if item.checked %}✅{% else %}⬜{% endif %}
+                    </a>
+                    <a href="{{ url_for('remove_shopping_item_route', item_id=item.id) }}" class="delete-btn">🗑️</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <button class="clear-all-btn" onclick="alert('Clear all coming soon!')">Clear All</button>
+    {% else %}
+        <div class="empty-shopping">
+            <div class="empty-icon">🛒</div>
+            <p>Your shopping list is empty</p>
+            <p class="empty-hint">Add ingredients from recipe pages!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

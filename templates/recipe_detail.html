@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recipe.title }}{% endblock %}
+
+{% block content %}
+<div class="recipe-detail-screen">
+    <div class="recipe-hero">
+        <div class="recipe-emoji-large">{{ recipe.image_url or '🍲' }}</div>
+        <div class="recipe-title-large">{{ recipe.title }}</div>
+        <div class="recipe-meta">
+            <span class="meta-badge">⏱️ {{ recipe.prep_time + recipe.cook_time }} min</span>
+            <span class="meta-badge">📊 {{ recipe.difficulty }}</span>
+            <span class="meta-badge">📍 {{ recipe.region }}</span>
+        </div>
+        <button class="favorite-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
+            <span>❤️</span> {% if is_favorite %}Saved{% else %}Save{% endif %}
+        </button>
+    </div>
+    
+    <div class="recipe-section">
+        <h2>🛒 Ingredients</h2>
+        <div class="ingredients-list">
+            {% for ingredient in recipe.ingredients %}
+            <div class="ingredient-item" data-name="{{ ingredient.name }}" data-qty="{{ ingredient.quantity }}" data-recipe-id="{{ recipe.id }}">
+                <span class="ingredient-name">{{ ingredient.name }}</span>
+                <span class="ingredient-quantity">{{ ingredient.quantity }}</span>
+                <span class="add-icon">➕</span>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="add-all-btn" id="addAllBtn" data-recipe-id="{{ recipe.id }}">
+            🛒 Add All to Shopping List
+        </button>
+    </div>
+    
+    <div class="recipe-section">
+        <h2>📖 Procedure</h2>
+        <div class="steps-list">
+            {% for step in recipe.steps %}
+            <div class="step-item">
+                <div class="step-number">{{ step.step_number }}</div>
+                <div class="step-text">{{ step.instruction }}</div>
+                <button class="speak-btn" data-text="{{ step.instruction|replace('"', '&quot;') }}">🔊</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Wait for the page to load
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Favorite button handler
+        var favBtn = document.getElementById('favoriteBtn');
+        if (favBtn) {
+            favBtn.addEventListener('click', function() {
+                var recipeId = this.getAttribute('data-recipe-id');
+                fetch('/favorite/' + recipeId)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+            });
+        }
+        
+        // Add ingredient to shopping list
+        var ingredients = document.querySelectorAll('.ingredient-item');
+        for (var i = 0; i < ingredients.length; i++) {
+            ingredients[i].addEventListener('click', function() {
+                var name = this.getAttribute('data-name');
+                var qty = this.getAttribute('data-qty');
+                var recipeId = this.getAttribute('data-recipe-id');
+                
+                fetch('/add_to_shopping_list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ingredient_name: name,
+                        quantity: qty,
+                        recipe_id: recipeId
+                    })
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        alert('Added: ' + name);
+                    }
+                });
+            });
+        }
+        
+        // Add all ingredients button
+        var addAllBtn = document.getElementById('addAllBtn');
+        if (addAllBtn) {
+            addAllBtn.addEventListener('click', function() {
+                var recipeId = this.getAttribute('data-recipe-id');
+                window.location.href = '/add_recipe_to_shopping_list/' + recipeId;
+            });
+        }
+        
+        // Text to speech for steps
+        var speakBtns = document.querySelectorAll('.speak-btn');
+        for (var i = 0; i < speakBtns.length; i++) {
+            speakBtns[i].addEventListener('click', function() {
+                var text = this.getAttribute('data-text');
+                
+                if ('speechSynthesis' in window) {
+                    if (window.speechSynthesis.speaking) {
+                        window.speechSynthesis.cancel();
+                    }
+                    var utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert('Text-to-speech not supported in this browser');
+                }
+            });
+        }
+        
+    });
+</script>
+{% endblock %}

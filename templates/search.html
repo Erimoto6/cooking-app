@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Search{% endblock %}
+
+{% block content %}
+<div class="search-screen">
+    <div class="search-header">
+        <h1>Search Recipes</h1>
+    </div>
+    
+    <form method="GET" action="{{ url_for('search') }}" class="search-form">
+        <input type="text" name="q" placeholder="Search by name, cuisine, or ingredient..." value="{{ query }}" class="search-input">
+        <button type="submit" class="search-btn">🔍</button>
+    </form>
+    
+    {% if query %}
+        <div class="search-results">
+            <h2>Results for "{{ query }}"</h2>
+            {% if results %}
+                {% for recipe in results %}
+                <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="search-result-item">
+                    <div class="result-emoji">{{ recipe.image_url or '🍲' }}</div>
+                    <div class="result-info">
+                        <div class="result-title">{{ recipe.title }}</div>
+                        <div class="result-cuisine">{{ recipe.cuisine }} • {{ recipe.region }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">
+                    <div class="no-results-icon">😢</div>
+                    <p>No recipes found for "{{ query }}"</p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

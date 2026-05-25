@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cuisine }} Cuisine{% endblock %}
+
+{% block content %}
+<div class="cuisine-screen">
+    <div class="cuisine-header">
+        <h1>{{ cuisine }}</h1>
+    </div>
+    
+    {% for region in regions %}
+    <div class="region-section">
+        <h2>{{ region.region }}</h2>
+        <div class="recipe-grid">
+            {% for recipe in recipes_by_region[region.region] %}
+            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="recipe-grid-card">
+                <div class="recipe-grid-emoji">{{ recipe.image_url or '🍽️' }}</div>
+                <div class="recipe-grid-title">{{ recipe.title }}</div>
+                <div class="recipe-grid-time">⏱️ {{ recipe.prep_time + recipe.cook_time }} min</div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
