@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#FF6B35">
     <title>{% block title %}What's Cookin'{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="app-container">
-        <!-- Main Content -->
         <div class="main-content">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -24,27 +21,27 @@
             {% block content %}{% endblock %}
         </div>
         
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation with your icons -->
         {% if session.user_id %}
         <div class="bottom-nav">
             <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
-                <div class="nav-icon">🏠</div>
+                <img src="{{ url_for('static', filename='icons/home.png') }}" class="nav-icon-img" alt="Home">
                 <div class="nav-label">Home</div>
             </a>
             <a href="{{ url_for('search') }}" class="nav-item {% if request.endpoint == 'search' %}active{% endif %}">
-                <div class="nav-icon">🔍</div>
+                <img src="{{ url_for('static', filename='icons/search.png') }}" class="nav-icon-img" alt="Search">
                 <div class="nav-label">Search</div>
             </a>
             <a href="{{ url_for('create_recipe') }}" class="nav-item {% if request.endpoint == 'create_recipe' %}active{% endif %}">
-                <div class="nav-icon">➕</div>
+                <img src="{{ url_for('static', filename='icons/create.png') }}" class="nav-icon-img" alt="Create">
                 <div class="nav-label">Create</div>
             </a>
             <a href="{{ url_for('view_shopping_list') }}" class="nav-item {% if request.endpoint == 'view_shopping_list' %}active{% endif %}">
-                <div class="nav-icon">🛒</div>
+                <img src="{{ url_for('static', filename='icons/shopping.png') }}" class="nav-icon-img" alt="Shopping">
                 <div class="nav-label">Shopping</div>
             </a>
             <a href="{{ url_for('profile') }}" class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
-                <div class="nav-icon">👤</div>
+                <img src="{{ url_for('static', filename='icons/profile.png') }}" class="nav-icon-img" alt="Profile">
                 <div class="nav-label">Profile</div>
             </a>
         </div>
