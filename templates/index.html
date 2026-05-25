@@ -27,8 +27,8 @@
         <div class="recipe-horizontal">
             {% for recipe in favorite_dishes %}
             <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="recipe-card">
-                <div class="recipe-emoji">{{ recipe.image_url or '🍲' }}</div>
-                <div class="recipe-title">{{ recipe.title[:20] }}{% if recipe.title|length > 20 %}...{% endif %}</div>
+                <div class="recipe-placeholder"></div>
+                <div class="recipe-title">{{ recipe.title[:15] }}{% if recipe.title|length > 15 %}...{% endif %}</div>
             </a>
             {% endfor %}
         </div>
@@ -40,7 +40,7 @@
         <div class="recipe-horizontal">
             {% for recipe in recent_recipes[:3] %}
             <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="recipe-card">
-                <div class="recipe-emoji">{{ recipe.image_url or '🍲' }}</div>
+                <div class="recipe-placeholder"></div>
                 <div class="recipe-title">{{ recipe.title }}</div>
             </a>
             {% endfor %}
@@ -53,12 +53,12 @@
         <div class="folder-grid">
             {% for folder in folders %}
             <div class="folder-card" onclick="alert('{{ folder.folder_name }} recipes coming soon!')">
-                <div class="folder-icon">📁</div>
+                <div class="folder-icon"></div>
                 <div class="folder-name">{{ folder.folder_name }}</div>
             </div>
             {% endfor %}
             <div class="folder-card add-folder" onclick="alert('Add new folder coming soon!')">
-                <div class="folder-icon">➕</div>
+                <div class="folder-icon"></div>
                 <div class="folder-name">Add Folder</div>
             </div>
         </div>

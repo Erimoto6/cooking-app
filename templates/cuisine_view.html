@@ -14,9 +14,9 @@
         <div class="recipe-grid">
             {% for recipe in recipes_by_region[region.region] %}
             <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="recipe-grid-card">
-                <div class="recipe-grid-emoji">{{ recipe.image_url or '🍽️' }}</div>
+                <div class="recipe-placeholder-small"></div>
                 <div class="recipe-grid-title">{{ recipe.title }}</div>
-                <div class="recipe-grid-time">⏱️ {{ recipe.prep_time + recipe.cook_time }} min</div>
+                <div class="recipe-grid-time">{{ recipe.prep_time + recipe.cook_time }} min</div>
             </a>
             {% endfor %}
         </div>

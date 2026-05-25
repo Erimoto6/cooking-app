@@ -16,9 +16,9 @@
                 </div>
                 <div class="item-actions">
                     <a href="{{ url_for('toggle_shopping_item_route', item_id=item.id) }}" class="check-btn">
-                        {% if item.checked %}✅{% else %}⬜{% endif %}
+                        {% if item.checked %}✓{% else %}□{% endif %}
                     </a>
-                    <a href="{{ url_for('remove_shopping_item_route', item_id=item.id) }}" class="delete-btn">🗑️</a>
+                    <a href="{{ url_for('remove_shopping_item_route', item_id=item.id) }}" class="delete-btn">🗑</a>
                 </div>
             </div>
             {% endfor %}
@@ -27,9 +27,9 @@
         <button class="clear-all-btn" onclick="alert('Clear all coming soon!')">Clear All</button>
     {% else %}
         <div class="empty-shopping">
-            <div class="empty-icon">🛒</div>
+            <div class="empty-icon"></div>
             <p>Your shopping list is empty</p>
-            <p class="empty-hint">Add ingredients from recipe pages!</p>
+            <p class="empty-hint">Add ingredients from recipe pages</p>
         </div>
     {% endif %}
 </div>

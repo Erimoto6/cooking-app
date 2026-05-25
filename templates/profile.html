@@ -5,7 +5,7 @@
 {% block content %}
 <div class="profile-screen">
     <div class="profile-header">
-        <div class="profile-avatar">👤</div>
+        <div class="profile-avatar"></div>
         <h2>{{ user.username }}</h2>
         <p>{{ user.phone_number }}</p>
     </div>
@@ -26,7 +26,6 @@
         <div class="profile-recipe-list">
             {% for recipe in my_recipes %}
             <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="profile-recipe-item">
-                <span>{{ recipe.image_url or '🍲' }}</span>
                 <span>{{ recipe.title }}</span>
             </a>
             {% else %}
@@ -40,7 +39,6 @@
         <div class="profile-recipe-list">
             {% for recipe in favorites %}
             <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="profile-recipe-item">
-                <span>{{ recipe.image_url or '🍲' }}</span>
                 <span>{{ recipe.title }}</span>
             </a>
             {% else %}
