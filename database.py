@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import g
 import os
 import sys
+import hashlib
 
 # Get the correct path whether running as script or EXE
 if getattr(sys, 'frozen', False):
@@ -134,10 +135,11 @@ def init_db():
     # Insert demo user if no users exist
     cursor.execute("SELECT COUNT(*) as count FROM users")
     if cursor.fetchone()['count'] == 0:
+        demo_password = hashlib.sha256('password123'.encode()).hexdigest()
         cursor.execute('''
             INSERT INTO users (username, phone_number, password) 
             VALUES (?, ?, ?)
-        ''', ('demo_user', '1234567890', 'password123'))
+        ''', ('demo_user', '1234567890', demo_password))
         
         # Get the user ID
         cursor.execute("SELECT id FROM users WHERE username = 'demo_user'")
