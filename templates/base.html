@@ -23,8 +23,8 @@
         </div>
         
         <!-- Bottom Navigation with your icons -->
-        {% if session.user_id and request.endpoint != 'welcome' %}
-        <div class="bottom-nav">
+{% if session.user_id and request.endpoint not in ['welcome', 'login', 'signup'] %}        
+<div class="bottom-nav">
             <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
                 <img src="{{ url_for('static', filename='icons/home.png') }}" class="nav-icon-img" alt="Home">
                 <div class="nav-label">Home</div>
