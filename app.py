@@ -281,6 +281,40 @@ def profile():
     
     return render_template('profile.html', user=user, my_recipes=my_recipes, favorites=favorites)
 
+# ==================== VOICE COMMAND ROUTES ====================
+
+@app.route('/voice-commands', methods=['POST'])
+def save_voice_command():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    data = request.get_json()
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        INSERT INTO voice_command (user_id, command, action, recipe_id)
+        VALUES (?, ?, ?, ?)
+    ''', (session['user_id'], data['command'], 
+          data.get('action'), data.get('recipe_id')))
+    db.commit()
+    return jsonify({'success': True})
+
+@app.route('/voice-commands/recent', methods=['GET'])
+def get_recent_commands():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT * FROM voice_command 
+        WHERE user_id = ?
+        ORDER BY created_at DESC 
+        LIMIT 10
+    ''', (session['user_id'],))
+    commands = cursor.fetchall()
+    return jsonify([dict(c) for c in commands])
+
 if __name__ == '__main__':
     import threading
     import webbrowser

@@ -116,6 +116,20 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
+
+    # Voice commands table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS voice_command (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            command TEXT NOT NULL,
+            action TEXT,
+            recipe_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (recipe_id) REFERENCES recipes (id)
+        )
+    ''')
     
     # Insert demo user if no users exist
     cursor.execute("SELECT COUNT(*) as count FROM users")
