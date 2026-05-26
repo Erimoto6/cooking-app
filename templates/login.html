@@ -160,6 +160,15 @@
   .l-submit:hover {
     background: #a93226;
   }
+
+.l-input:-webkit-autofill,
+.l-input:-webkit-autofill:hover,
+.l-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px rgba(40, 10, 3, 0.9) inset;
+    -webkit-text-fill-color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: background-color 5000s ease-in-out 0s;
+}
 </style>
 {% endblock %}
 

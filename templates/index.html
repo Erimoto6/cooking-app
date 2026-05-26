@@ -1,67 +1,280 @@
 {% extends "base.html" %}
+{% block title %}Home - Dishly{% endblock %}
 
-{% block title %}What's Cookin'{% endblock %}
+{% block styles %}
+<style>
+  @keyframes h-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+  @keyframes h-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-15px,25px) scale(0.95); }
+  }
+  @keyframes h-fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .h-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .h-blob1 {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -80px; right: -60px;
+    animation: h-float1 9s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .h-blob2 {
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #3D0E00 0%, transparent 70%);
+    bottom: 200px; left: -40px;
+    animation: h-float2 11s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .h-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,1,0,0.55);
+    pointer-events: none;
+  }
+
+  .h-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+    animation: h-fadeUp 0.6s ease forwards;
+  }
+
+  .h-eyebrow {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 0 0 2px;
+  }
+
+  .h-title {
+    color: #ffffff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .h-section {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+  }
+
+  .h-section-title {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .h-cuisine-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .h-cuisine-card {
+    padding: 16px 8px;
+    border-radius: 14px;
+    background: rgba(139,37,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .h-cuisine-card:nth-child(even) {
+    background: rgba(92,26,0,0.3);
+  }
+
+  .h-cuisine-card:active {
+    background: rgba(192,57,43,0.4);
+  }
+
+  .h-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .h-scroll::-webkit-scrollbar { display: none; }
+
+  .h-recipe-card {
+    flex-shrink: 0;
+    width: 95px;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .h-recipe-thumb {
+    width: 95px;
+    height: 85px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 6px;
+  }
+
+  .h-recipe-name {
+    color: rgba(255,255,255,0.7);
+    font-size: 11px;
+    margin: 0;
+  }
+
+  .h-folder-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .h-folder-card {
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .h-folder-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(192,57,43,0.3);
+    margin: 0 auto 8px;
+  }
+
+  .h-folder-name {
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+  }
+
+  .h-folder-add {
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(255,255,255,0.15);
+  }
+
+  .h-folder-add .h-folder-icon {
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 20px;
+  }
+
+  .h-folder-add .h-folder-name {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .h-section-anim1 { animation: h-fadeUp 0.6s ease 0.1s both; }
+  .h-section-anim2 { animation: h-fadeUp 0.6s ease 0.2s both; }
+  .h-section-anim3 { animation: h-fadeUp 0.6s ease 0.25s both; }
+  .h-section-anim4 { animation: h-fadeUp 0.6s ease 0.3s both; }
+
+  .alert-success {
+    background: rgba(46,125,50,0.2);
+    border-color: rgba(76,175,80,0.4);
+    color: rgba(255,255,255,0.8);
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="home-screen">
-    <div class="home-header">
-        <h1>What's Cookin'!</h1>
+<div class="h-screen">
+  <div class="h-blob1"></div>
+  <div class="h-blob2"></div>
+  <div class="h-overlay"></div>
+
+  <div class="h-header">
+    <p class="h-eyebrow">Good day</p>
+    <h1 class="h-title">What's Cookin'!</h1>
+  </div>
+
+  <div class="h-section h-section-anim1">
+    <p class="h-section-title">Discover</p>
+    <div class="h-cuisine-grid">
+      <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">African</a>
+      <a href="{{ url_for('view_cuisine', cuisine='European') }}" class="h-cuisine-card">European</a>
+      <a href="{{ url_for('view_cuisine', cuisine='Asian') }}" class="h-cuisine-card">S. Asian</a>
+      <a href="{{ url_for('view_cuisine', cuisine='North American') }}" class="h-cuisine-card">N. American</a>
+      <a href="{{ url_for('view_cuisine', cuisine='South American') }}" class="h-cuisine-card">S. American</a>
+      <a href="{{ url_for('view_cuisine', cuisine='Oceanian') }}" class="h-cuisine-card">Oceanian</a>
     </div>
-    
-    <!-- Discover Section -->
-    <div class="section">
-        <h2>Discover</h2>
-        <div class="cuisine-grid">
-            <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="cuisine-card african">African</a>
-            <a href="{{ url_for('view_cuisine', cuisine='European') }}" class="cuisine-card european">European</a>
-            <a href="{{ url_for('view_cuisine', cuisine='Asian') }}" class="cuisine-card asian">South Asian</a>
-            <a href="{{ url_for('view_cuisine', cuisine='North American') }}" class="cuisine-card american">N. American</a>
-            <a href="{{ url_for('view_cuisine', cuisine='South American') }}" class="cuisine-card south-american">S. American</a>
-            <a href="{{ url_for('view_cuisine', cuisine='Oceanian') }}" class="cuisine-card oceanian">Oceanian</a>
-        </div>
+  </div>
+
+  <div class="h-section h-section-anim2">
+    <p class="h-section-title">Favorite Dishes</p>
+    <div class="h-scroll">
+      {% for recipe in favorite_dishes %}
+      <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="h-recipe-card">
+        <div class="h-recipe-thumb"></div>
+        <p class="h-recipe-name">{{ recipe.title[:14] }}{% if recipe.title|length > 14 %}...{% endif %}</p>
+      </a>
+      {% else %}
+      <p style="color:rgba(255,255,255,0.3);font-size:13px;">No favorites yet</p>
+      {% endfor %}
     </div>
-    
-    <!-- Favorite Dishes -->
-    <div class="section">
-        <h2>Favorite Dishes</h2>
-        <div class="recipe-horizontal">
-            {% for recipe in favorite_dishes %}
-            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="recipe-card">
-                <div class="recipe-placeholder"></div>
-                <div class="recipe-title">{{ recipe.title[:15] }}{% if recipe.title|length > 15 %}...{% endif %}</div>
-            </a>
-            {% endfor %}
-        </div>
+  </div>
+
+  <div class="h-section h-section-anim3">
+    <p class="h-section-title">Recent Viewed</p>
+    <div class="h-scroll">
+      {% for recipe in recent_recipes[:3] %}
+      <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="h-recipe-card">
+        <div class="h-recipe-thumb"></div>
+        <p class="h-recipe-name">{{ recipe.title[:14] }}{% if recipe.title|length > 14 %}...{% endif %}</p>
+      </a>
+      {% else %}
+      <p style="color:rgba(255,255,255,0.3);font-size:13px;">No recent recipes</p>
+      {% endfor %}
     </div>
-    
-    <!-- Recent Viewed Dishes -->
-    <div class="section">
-        <h2>Recent Viewed Dishes</h2>
-        <div class="recipe-horizontal">
-            {% for recipe in recent_recipes[:3] %}
-            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="recipe-card">
-                <div class="recipe-placeholder"></div>
-                <div class="recipe-title">{{ recipe.title }}</div>
-            </a>
-            {% endfor %}
-        </div>
+  </div>
+
+  <div class="h-section h-section-anim4">
+    <p class="h-section-title">Your Recipe Folder</p>
+    <div class="h-folder-grid">
+      {% for folder in folders %}
+      <div class="h-folder-card" onclick="alert('{{ folder.folder_name }} coming soon!')">
+        <div class="h-folder-icon"></div>
+        <div class="h-folder-name">{{ folder.folder_name }}</div>
+      </div>
+      {% endfor %}
+      <div class="h-folder-card h-folder-add" onclick="alert('Add new folder coming soon!')">
+        <div class="h-folder-icon">+</div>
+        <div class="h-folder-name">Add Folder</div>
+      </div>
     </div>
-    
-    <!-- Your Recipe Folder -->
-    <div class="section">
-        <h2>Your Recipe Folder</h2>
-        <div class="folder-grid">
-            {% for folder in folders %}
-            <div class="folder-card" onclick="alert('{{ folder.folder_name }} recipes coming soon!')">
-                <div class="folder-icon"></div>
-                <div class="folder-name">{{ folder.folder_name }}</div>
-            </div>
-            {% endfor %}
-            <div class="folder-card add-folder" onclick="alert('Add new folder coming soon!')">
-                <div class="folder-icon"></div>
-                <div class="folder-name">Add Folder</div>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 {% endblock %}
