@@ -1,23 +1,191 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome{% endblock %}
+{% block title %}Welcome - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  @keyframes w-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(30px,-40px) scale(1.1); }
+  }
+  @keyframes w-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-25px,35px) scale(0.95); }
+  }
+  @keyframes w-float3 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(15px,20px) scale(1.05); }
+  }
+  @keyframes w-fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .w-screen {
+    min-height: 100vh;
+    background: #160800;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 56px 28px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .w-blob1 {
+    position: absolute;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #8B2500 0%, transparent 70%);
+    top: -90px; left: -70px;
+    animation: w-float1 8s ease-in-out infinite;
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  .w-blob2 {
+    position: absolute;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #5C1A00 0%, transparent 70%);
+    bottom: 100px; right: -60px;
+    animation: w-float2 10s ease-in-out infinite;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .w-blob3 {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #C0392B 0%, transparent 70%);
+    top: 200px; left: 10px;
+    animation: w-float3 7s ease-in-out infinite;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .w-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,2,0,0.45);
+    pointer-events: none;
+  }
+
+  .w-logo {
+    position: relative;
+    z-index: 1;
+    animation: w-fadeUp 0.7s ease forwards;
+  }
+
+  .w-subtitle {
+    color: rgba(255,255,255,0.55);
+    font-size: 15px;
+    font-weight: 400;
+    margin: 0 0 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .w-brand {
+    color: #ffffff;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-size: 56px;
+    font-weight: bold;
+    line-height: 1.05;
+    margin: 0 0 8px;
+  }
+
+  .w-tagline {
+    color: rgba(255,255,255,0.35);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .w-buttons {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: w-fadeUp 0.7s ease 0.15s both;
+  }
+
+  .w-google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 30px;
+    background: #ffffff;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .w-google-btn img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .w-start-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    border-radius: 30px;
+    background: #C0392B;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    text-decoration: none;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .w-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    border-radius: 30px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    width: 100%;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="welcome-screen">
-    <div class="welcome-logo">
-        <div class="logo-icon"></div>
-        <h1>Welcome to</h1>
-        <h1 class="brand-name">What's Cookin'!</h1>
-    </div>
-    
-    <div class="welcome-buttons">
-        <button class="google-btn" onclick="alert('Google Sign In - Coming Soon!')">
-            Continue with Google
-        </button>
-        
-        <a href="{{ url_for('signup') }}" class="get-started-btn">Get Started</a>
-        
-        <a href="{{ url_for('login') }}" class="login-link">I Already Have an Account</a>
-    </div>
+<div class="w-screen">
+  <div class="w-blob1"></div>
+  <div class="w-blob2"></div>
+  <div class="w-blob3"></div>
+  <div class="w-overlay"></div>
+
+  <div class="w-logo">
+    <p class="w-subtitle">Welcome to</p>
+    <h1 class="w-brand">Dishly!</h1>
+    <p class="w-tagline">Your recipe companion</p>
+  </div>
+
+  <div class="w-buttons">
+    <button class="w-google-btn" onclick="alert('Google Sign In - Coming Soon!')">
+      <img src="https://www.google.com/favicon.ico" alt="Google">
+      Continue with Google
+    </button>
+    <a href="{{ url_for('signup') }}" class="w-start-btn">Get Started</a>
+    <a href="{{ url_for('login') }}" class="w-login-btn">I Already Have an Account</a>
+  </div>
 </div>
 {% endblock %}

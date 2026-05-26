@@ -1,33 +1,180 @@
 {% extends "base.html" %}
+{% block title %}Sign Up - Dishly{% endblock %}
 
-{% block title %}Sign Up{% endblock %}
+{% block styles %}
+<style>
+  @keyframes a-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(30px,-40px) scale(1.1); }
+  }
+  @keyframes a-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-25px,35px) scale(0.95); }
+  }
+  @keyframes a-float3 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(15px,20px) scale(1.05); }
+  }
+  @keyframes a-fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .a-screen {
+    min-height: 100vh;
+    background: #160800;
+    display: flex;
+    flex-direction: column;
+    padding: 52px 28px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .a-blob1 {
+    position: absolute;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #8B2500 0%, transparent 70%);
+    top: -90px; left: -70px;
+    animation: a-float1 8s ease-in-out infinite;
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  .a-blob2 {
+    position: absolute;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #5C1A00 0%, transparent 70%);
+    bottom: 80px; right: -60px;
+    animation: a-float2 10s ease-in-out infinite;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .a-blob3 {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #C0392B 0%, transparent 70%);
+    top: 200px; left: 10px;
+    animation: a-float3 7s ease-in-out infinite;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .a-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,2,0,0.5);
+    pointer-events: none;
+  }
+
+  .a-back {
+    position: relative;
+    z-index: 1;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 32px;
+    display: inline-block;
+    animation: a-fadeUp 0.6s ease forwards;
+  }
+
+  .a-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 32px;
+    animation: a-fadeUp 0.6s ease 0.1s both;
+  }
+
+  .a-eyebrow {
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 0 0 6px;
+  }
+
+  .a-title {
+    color: #ffffff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .a-form {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: a-fadeUp 0.6s ease 0.2s both;
+  }
+
+  .a-input {
+    padding: 14px 18px;
+    border-radius: 30px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  .a-input::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+
+  .a-input:focus {
+    border-color: rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.12);
+  }
+
+  .a-submit {
+    margin-top: 6px;
+    padding: 14px;
+    border-radius: 30px;
+    background: #C0392B;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .a-submit:hover {
+    background: #a93226;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="auth-screen">
-    <a href="{{ url_for('welcome') }}" class="back-link">← Back</a>
-    
-    <div class="auth-header">
-        <h2>Complete your Account</h2>
-    </div>
-    
-    <form method="POST" class="auth-form">
-        <div class="form-group">
-            <input type="text" name="username" placeholder="Username" required>
-        </div>
-        
-        <div class="form-group">
-            <input type="tel" name="phone_number" placeholder="Phone Number" required>
-        </div>
-        
-        <div class="form-group">
-            <input type="password" name="password" placeholder="Password" required>
-        </div>
-        
-        <div class="form-group">
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-        </div>
-        
-        <button type="submit" class="auth-btn">Sign In</button>
-    </form>
+<div class="a-screen">
+  <div class="a-blob1"></div>
+  <div class="a-blob2"></div>
+  <div class="a-blob3"></div>
+  <div class="a-overlay"></div>
+
+  <a href="{{ url_for('welcome') }}" class="a-back">← Back</a>
+
+  <div class="a-header">
+    <p class="a-eyebrow">Create account</p>
+    <h1 class="a-title">Complete your<br>Account</h1>
+  </div>
+
+  <form method="POST" class="a-form">
+    <input type="text" name="username" placeholder="Username" class="a-input" required>
+    <input type="tel" name="phone_number" placeholder="Phone Number" class="a-input" required>
+    <input type="password" name="password" placeholder="Password" class="a-input" required>
+    <input type="password" name="confirm_password" placeholder="Confirm Password" class="a-input" required>
+    <button type="submit" class="a-submit">Sign Up</button>
+  </form>
 </div>
 {% endblock %}

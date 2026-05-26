@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}What's Cookin'{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> 
+    {% block styles %}{% endblock %}
 </head>
 <body>
     <div class="app-container">
@@ -22,7 +23,7 @@
         </div>
         
         <!-- Bottom Navigation with your icons -->
-        {% if session.user_id %}
+        {% if session.user_id and request.endpoint != 'welcome' %}
         <div class="bottom-nav">
             <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
                 <img src="{{ url_for('static', filename='icons/home.png') }}" class="nav-icon-img" alt="Home">
