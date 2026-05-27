@@ -34,7 +34,7 @@ def login():
         
         db = get_db()
         cursor = db.cursor()
-        cursor.execute('SELECT * FROM users WHERE phone_number = ? AND password = ?', 
+        cursor.execute('SELECT * FROM users WHERE phone_number = %s AND password = %s', 
                       (phone_number, password))
         user = cursor.fetchone()
         
@@ -59,7 +59,7 @@ def signup():
         cursor = db.cursor()
         
         try:
-            cursor.execute('INSERT INTO users (username, phone_number, password) VALUES (?, ?, ?)',
+            cursor.execute('INSERT INTO users (username, phone_number, password) VALUES (%s, %s, %s)',
                           (username, phone_number, password))
             db.commit()
             flash('Account created successfully! Please login.', 'success')
@@ -91,7 +91,7 @@ def index():
     cursor.execute('SELECT * FROM recipes WHERE region IN ("Philippines", "United States") LIMIT 3')
     favorite_dishes = cursor.fetchall()
     
-    cursor.execute('SELECT * FROM recipe_folders WHERE user_id = ?', (session['user_id'],))
+    cursor.execute('SELECT * FROM recipe_folders WHERE user_id = %s', (session['user_id'],))
     folders = cursor.fetchall()
     
     return render_template('index.html', 
@@ -107,14 +107,14 @@ def view_cuisine(cuisine):
     
     db = get_db()
     cursor = db.cursor()
-    cursor.execute('SELECT DISTINCT region FROM recipes WHERE cuisine = ? ORDER BY region', (cuisine,))
+    cursor.execute('SELECT DISTINCT region FROM recipes WHERE cuisine = %s ORDER BY region', (cuisine,))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
     for region in regions:
         # Checking if row data is array-indexed or key-mapped
         region_name = region['region'] if isinstance(region, dict) else region[0]
-        cursor.execute('SELECT * FROM recipes WHERE cuisine = ? AND region = ? ORDER BY title', 
+        cursor.execute('SELECT * FROM recipes WHERE cuisine = %s AND region = %s ORDER BY title', 
                       (cuisine, region_name))
         recipes_by_region[region_name] = cursor.fetchall()
     
@@ -132,7 +132,7 @@ def view_recipe(recipe_id):
     
     db = get_db()
     cursor = db.cursor()
-    cursor.execute('SELECT * FROM favorites WHERE user_id = ? AND recipe_id = ?', 
+    cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
                   (session['user_id'], recipe_id))
     is_favorite = cursor.fetchone() is not None
     
@@ -145,7 +145,7 @@ def toggle_favorite(recipe_id):
     
     db = get_db()
     cursor = db.cursor()
-    cursor.execute('SELECT * FROM favorites WHERE user_id = ? AND recipe_id = ?', 
+    cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
                   (session['user_id'], recipe_id))
     
     if cursor.fetchone():
@@ -270,10 +270,10 @@ def profile():
     db = get_db()
     cursor = db.cursor()
     
-    cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
+    cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
     user = cursor.fetchone()
     
-    cursor.execute('SELECT * FROM recipes WHERE user_id = ? ORDER BY created_at DESC', (session['user_id'],))
+    cursor.execute('SELECT * FROM recipes WHERE user_id = %s ORDER BY created_at DESC', (session['user_id'],))
     my_recipes = cursor.fetchall()
     
     favorites = get_favorite_recipes(session['user_id'])
@@ -292,7 +292,7 @@ def save_voice_command():
     cursor = db.cursor()
     cursor.execute('''
         INSERT INTO voice_command (user_id, command, action, recipe_id)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     ''', (session['user_id'], data['command'], 
           data.get('action'), data.get('recipe_id')))
     db.commit()
@@ -307,7 +307,7 @@ def get_recent_commands():
     cursor = db.cursor()
     cursor.execute('''
         SELECT * FROM voice_command 
-        WHERE user_id = ?
+        WHERE user_id = %s
         ORDER BY created_at DESC 
         LIMIT 10
     ''', (session['user_id'],))

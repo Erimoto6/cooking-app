@@ -1,0 +1,18 @@
+# Environment variables 
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+
+# SQLite old database
+instance/
+
+# Build files
+build/
+dist/
+*.spec
