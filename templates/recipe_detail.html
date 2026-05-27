@@ -1,114 +1,831 @@
 {% extends "base.html" %}
 
-{% block title %}{{ recipe.title }}{% endblock %}
+{% block title %}{{ recipe.title }} – Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  @keyframes rd-fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes rd-blob1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(18px,-26px) scale(1.07); }
+  }
+  @keyframes rd-blob2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(-14px,20px) scale(0.94); }
+  }
+
+  .rd-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding-bottom: 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .rd-blob1 {
+    position: absolute; width: 280px; height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -60px; right: -60px;
+    animation: rd-blob1 9s ease-in-out infinite;
+    opacity: 0.45; pointer-events: none;
+  }
+  .rd-blob2 {
+    position: absolute; width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #3D0E00 0%, transparent 70%);
+    bottom: 300px; left: -40px;
+    animation: rd-blob2 11s ease-in-out infinite;
+    opacity: 0.4; pointer-events: none;
+  }
+  .rd-overlay {
+    position: absolute; inset: 0;
+    background: rgba(5,1,0,0.5);
+    pointer-events: none;
+  }
+
+  /* ── Hero ── */
+  .rd-hero {
+    position: relative; z-index: 1;
+    padding: 52px 20px 24px;
+    text-align: center;
+    animation: rd-fadeUp 0.5s ease both;
+  }
+  .rd-back {
+    position: absolute; top: 16px; left: 16px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.7); font-size: 18px;
+    text-decoration: none;
+  }
+  .rd-share-btn {
+    position: absolute; top: 16px; right: 16px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.7); font-size: 16px; cursor: pointer;
+  }
+  .rd-img-wrap {
+    width: 110px; height: 110px; border-radius: 22px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.15); font-size: 14px;
+  }
+  .rd-title {
+    font-size: 26px; font-family: 'Georgia', serif;
+    font-style: italic; font-weight: bold;
+    color: #ffffff; margin-bottom: 8px; line-height: 1.25;
+  }
+  .rd-description {
+    font-size: 13px; color: rgba(255,255,255,0.42);
+    line-height: 1.6; margin-bottom: 16px; padding: 0 8px;
+  }
+  .rd-meta {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 8px; margin-bottom: 20px;
+  }
+  .rd-badge {
+    padding: 5px 13px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    font-size: 11px; color: rgba(255,255,255,0.6);
+  }
+  .rd-fav-btn {
+    padding: 10px 28px; border-radius: 22px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    background: rgba(139,37,0,0.25);
+    border: 1px solid rgba(192,57,43,0.4);
+    color: rgba(255,130,90,0.9);
+    transition: all 0.2s;
+  }
+  .rd-fav-btn.active {
+    background: rgba(192,57,43,0.55);
+    border-color: rgba(255,100,70,0.65);
+    color: #ffffff;
+  }
+
+  /* ── Sections ── */
+  .rd-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 0 20px 28px;
+  }
+  .rd-section {
+    position: relative; z-index: 1;
+    padding: 0 20px; margin-bottom: 28px;
+    animation: rd-fadeUp 0.5s ease 0.15s both;
+  }
+  .rd-section-head {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 14px;
+  }
+  .rd-section-label {
+    font-size: 14px; font-weight: 500;
+    color: rgba(255,255,255,0.88); letter-spacing: 0.2px;
+  }
+  .rd-add-all-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 12px; color: rgba(255,120,80,0.8); padding: 0;
+  }
+
+  /* ── Ingredients ── */
+  .rd-ingr-item {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px; margin-bottom: 8px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .rd-ingr-item:active { background: rgba(192,57,43,0.18); }
+  .rd-ingr-item.added  { background: rgba(30,90,40,0.25); border-color: rgba(76,175,80,0.25); }
+  .rd-ingr-name { font-size: 14px; color: rgba(255,255,255,0.85); }
+  .rd-ingr-right { display: flex; align-items: center; gap: 10px; }
+  .rd-ingr-qty { font-size: 13px; color: rgba(255,255,255,0.38); }
+  .rd-plus {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: rgba(255,255,255,0.45);
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .rd-ingr-item.added .rd-plus {
+    background: rgba(76,175,80,0.25);
+    border-color: rgba(76,175,80,0.4);
+    color: rgba(140,210,140,0.9);
+    font-size: 12px;
+  }
+
+  /* ── Steps ── */
+  .rd-step {
+    display: flex; gap: 14px; align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .rd-step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(139,37,0,0.38);
+    border: 1px solid rgba(192,57,43,0.45);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,150,100,0.9); flex-shrink: 0;
+  }
+  .rd-step-body { flex: 1; }
+  .rd-step-text {
+    font-size: 14px; color: rgba(255,255,255,0.72); line-height: 1.65;
+  }
+  .rd-speak-btn {
+    margin-top: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px; padding: 5px 12px;
+    font-size: 14px; cursor: pointer; color: rgba(255,255,255,0.5);
+    transition: background 0.2s;
+  }
+  .rd-speak-btn:active { background: rgba(255,255,255,0.1); }
+
+  /* ── Toast ── */
+  .rd-toast {
+    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+    background: rgba(20,70,30,0.92);
+    border: 1px solid rgba(76,175,80,0.35);
+    color: rgba(255,255,255,0.9); padding: 10px 22px;
+    border-radius: 14px; font-size: 13px;
+    white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; z-index: 200;
+  }
+  .rd-toast.show { opacity: 1; }
+
+  /* Voice Assistant */
+.va-container {
+  padding: 0 20px;
+  margin-top: -10px;
+  margin-bottom: 28px;
+  animation: rd-fadeUp 0.5s ease both;
+}
+
+.va-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.va-status {
+  float: right;
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+}
+
+.va-box {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.va-subtext {
+  font-size: 12px;
+  color: rgba(255,255,255,0.38);
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.va-main-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.va-mic-btn,
+.va-read-btn,
+.va-stop-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.va-mic-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+}
+
+.va-read-btn {
+  background: rgba(139,37,0,0.25);
+  border: 1px solid rgba(192,57,43,0.4);
+  color: rgba(255,130,90,0.85);
+  padding: 10px 22px;
+  border-radius: 18px;
+}
+
+.va-stop-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  width: 40px; height: 40px;
+  border-radius: 8px;
+}
+
+.va-quick-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.va-small {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="recipe-detail-screen">
-    <div class="recipe-hero">
-        <div class="recipe-placeholder-large"></div>
-        <div class="recipe-title-large">{{ recipe.title }}</div>
-        <div class="recipe-meta">
-            <span class="meta-badge">{{ recipe.prep_time + recipe.cook_time }} min</span>
-            <span class="meta-badge">{{ recipe.difficulty }}</span>
-            <span class="meta-badge">{{ recipe.region }}</span>
-        </div>
-        <button class="favorite-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
-            {% if is_favorite %}Saved{% else %}Save{% endif %}
-        </button>
+<div class="rd-screen">
+  <div class="rd-blob1"></div>
+  <div class="rd-blob2"></div>
+  <div class="rd-overlay"></div>
+
+  <!-- Hero -->
+  <div class="rd-hero">
+    <a class="rd-back" href="{{ request.referrer or url_for('home') }}">&#8592;</a>
+
+    <button class="rd-share-btn" id="shareBtn" title="Share recipe">&#8599;</button>
+
+    <div class="rd-img-wrap">
+      {% if recipe.image_url %}
+        <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}"
+             style="width:100%;height:100%;object-fit:cover;border-radius:22px;">
+      {% else %}
+        <span style="font-size:12px;color:rgba(255,255,255,0.2);">No image</span>
+      {% endif %}
     </div>
-    
-    <div class="recipe-section">
-        <h2>Ingredients</h2>
-        <div class="ingredients-list">
-            {% for ingredient in recipe.ingredients %}
-            <div class="ingredient-item" data-name="{{ ingredient.name }}" data-qty="{{ ingredient.quantity }}" data-recipe-id="{{ recipe.id }}">
-                <span class="ingredient-name">{{ ingredient.name }}</span>
-                <span class="ingredient-quantity">{{ ingredient.quantity }}</span>
-                <span class="add-icon">+</span>
-            </div>
-            {% endfor %}
-        </div>
-        <button class="add-all-btn" id="addAllBtn" data-recipe-id="{{ recipe.id }}">
-            Add All to Shopping List
-        </button>
+
+    <div class="rd-title">{{ recipe.title }}</div>
+
+    {% if recipe.description %}
+    <div class="rd-description">{{ recipe.description }}</div>
+    {% endif %}
+
+    <div class="rd-meta">
+      <span class="rd-badge">🕒 {{ recipe.prep_time + recipe.cook_time }} min</span>
+      <span class="rd-badge">⚡ {{ recipe.difficulty }}</span>
+      <span class="rd-badge">🌏 {{ recipe.region }}</span>
+      {% if recipe.cuisine %}
+      <span class="rd-badge">{{ recipe.cuisine }}</span>
+      {% endif %}
     </div>
-    
-    <div class="recipe-section">
-        <h2>Procedure</h2>
-        <div class="steps-list">
-            {% for step in recipe.steps %}
-            <div class="step-item">
-                <div class="step-number">{{ step.step_number }}</div>
-                <div class="step-text">{{ step.instruction }}</div>
-                <button class="speak-btn" data-text="{{ step.instruction|replace('"', '&quot;') }}">🔊</button>
-            </div>
-            {% endfor %}
-        </div>
+
+    <button class="rd-fav-btn {% if is_favorite %}active{% endif %}"
+            id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
+      {% if is_favorite %}♥&nbsp; Saved{% else %}♡&nbsp; Add to favorites{% endif %}
+    </button>
+  </div>
+
+  <!-- Voice Assistant -->
+<div class="va-container">
+  <div class="va-header">VOICE ASSISTANT <span class="va-status">Idle</span></div>
+
+  <div class="va-box">
+    <p class="va-subtext">Tap the mic and say a command, or press "Read Recipe" to start.</p>
+
+    <div class="va-main-controls">
+      <button class="va-mic-btn" id="vaMicBtn">🎤</button>
+      <button class="va-read-btn" id="vaReadBtn">▶ Read Recipe</button>
+      <button class="va-stop-btn" id="vaStopBtn">■</button>
     </div>
+
+    <div class="va-quick-controls">
+      <button class="va-small">next step</button>
+      <button class="va-small">previous step</button>
+      <button class="va-small">repeat</button>
+      <button class="va-small">ingredients</button>
+      <button class="va-small">how long</button>
+      <button class="va-small">stop</button>
+    </div>
+  </div>
 </div>
 
+  <div class="rd-divider"></div>
+
+  <!-- Ingredients -->
+  <div class="rd-section">
+    <div class="rd-section-head">
+      <span class="rd-section-label">Ingredients</span>
+      <button class="rd-add-all-btn" id="addAllBtn" data-recipe-id="{{ recipe.id }}">
+        Add all to list →
+      </button>
+    </div>
+
+    <div class="rd-ingr-list">
+      {% for ingredient in recipe.ingredients %}
+      <div class="rd-ingr-item"
+           data-name="{{ ingredient.name }}"
+           data-qty="{{ ingredient.quantity }}"
+           data-recipe-id="{{ recipe.id }}">
+        <span class="rd-ingr-name">{{ ingredient.name }}</span>
+        <div class="rd-ingr-right">
+          <span class="rd-ingr-qty">{{ ingredient.quantity }}</span>
+          <div class="rd-plus">+</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="rd-divider"></div>
+
+  <!-- Steps -->
+  <div class="rd-section" style="animation-delay:0.25s">
+    <div class="rd-section-head">
+      <span class="rd-section-label">Procedure</span>
+    </div>
+
+    {% for step in recipe.steps %}
+    <div class="rd-step">
+      <div class="rd-step-num">{{ step.step_number }}</div>
+      <div class="rd-step-body">
+        <div class="rd-step-text">{{ step.instruction }}</div>
+        <button class="rd-speak-btn"
+                data-text="{{ step.instruction | replace('"', '&quot;') }}">
+          🔊 Read aloud
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div><!-- /.rd-screen -->
+
+<div class="rd-toast" id="rdToast"></div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var favBtn = document.getElementById('favoriteBtn');
-        if (favBtn) {
-            favBtn.addEventListener('click', function() {
-                var recipeId = this.getAttribute('data-recipe-id');
-                fetch('/favorite/' + recipeId)
-                    .then(function(response) { return response.json(); })
-                    .then(function(data) {
-                        if (data.success) { location.reload(); }
-                    });
-            });
-        }
-        
-        var ingredients = document.querySelectorAll('.ingredient-item');
-        for (var i = 0; i < ingredients.length; i++) {
-            ingredients[i].addEventListener('click', function() {
-                var name = this.getAttribute('data-name');
-                var qty = this.getAttribute('data-qty');
-                var recipeId = this.getAttribute('data-recipe-id');
-                
-                fetch('/add_to_shopping_list', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ingredient_name: name,
-                        quantity: qty,
-                        recipe_id: recipeId
-                    })
-                })
-                .then(function(response) { return response.json(); })
-                .then(function(data) {
-                    if (data.success) { alert('Added: ' + name); }
-                });
-            });
-        }
-        
-        var addAllBtn = document.getElementById('addAllBtn');
-        if (addAllBtn) {
-            addAllBtn.addEventListener('click', function() {
-                var recipeId = this.getAttribute('data-recipe-id');
-                window.location.href = '/add_recipe_to_shopping_list/' + recipeId;
-            });
-        }
-        
-        var speakBtns = document.querySelectorAll('.speak-btn');
-        for (var i = 0; i < speakBtns.length; i++) {
-            speakBtns[i].addEventListener('click', function() {
-                var text = this.getAttribute('data-text');
-                if ('speechSynthesis' in window) {
-                    if (window.speechSynthesis.speaking) {
-                        window.speechSynthesis.cancel();
-                    }
-                    var utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 0.9;
-                    utterance.pitch = 1;
-                    window.speechSynthesis.speak(utterance);
-                } else {
-                    alert('Text-to-speech not supported');
-                }
-            });
-        }
+(function () {
+  /* ── Helpers ── */
+  function showToast(msg) {
+    var t = document.getElementById('rdToast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+
+  function postJSON(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json(); });
+  }
+
+  /* ── Favourite toggle ── */
+  var favBtn = document.getElementById('favoriteBtn');
+  if (favBtn) {
+    favBtn.addEventListener('click', function () {
+      var recipeId = this.getAttribute('data-recipe-id');
+      fetch('/favorite/' + recipeId)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.success) {
+            var saved = data.is_favorite;
+            favBtn.classList.toggle('active', saved);
+            favBtn.innerHTML = saved ? '♥&nbsp; Saved' : '♡&nbsp; Save Recipe';
+            showToast(saved ? '✓ Added to favorites' : 'Removed from favorites');
+          }
+        })
+        .catch(function () { showToast('Something went wrong'); });
     });
+  }
+
+  /* ── Add individual ingredient ── */
+  document.querySelectorAll('.rd-ingr-item').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var name     = el.getAttribute('data-name');
+      var qty      = el.getAttribute('data-qty');
+      var recipeId = el.getAttribute('data-recipe-id');
+
+      postJSON('/add_to_shopping_list', {
+        ingredient_name: name,
+        quantity: qty,
+        recipe_id: recipeId
+      }).then(function (data) {
+        if (data.success) {
+          el.classList.add('added');
+          el.querySelector('.rd-plus').textContent = '✓';
+          showToast('✓ ' + name + ' added to list');
+        }
+      }).catch(function () { showToast('Could not add item'); });
+    });
+  });
+
+  /* ── Add all ingredients ── */
+  var addAllBtn = document.getElementById('addAllBtn');
+  if (addAllBtn) {
+    addAllBtn.addEventListener('click', function () {
+      var recipeId = this.getAttribute('data-recipe-id');
+      fetch('/add_recipe_to_shopping_list/' + recipeId)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.success) {
+            document.querySelectorAll('.rd-ingr-item').forEach(function (el) {
+              el.classList.add('added');
+              el.querySelector('.rd-plus').textContent = '✓';
+            });
+            showToast('✓ All ingredients added to list');
+          }
+        })
+        .catch(function () { showToast('Could not add ingredients'); });
+    });
+  }
+
+  /* ── Text-to-speech ── */
+  var speaking = null;
+  document.querySelectorAll('.rd-speak-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (!('speechSynthesis' in window)) {
+        showToast('Text-to-speech not supported');
+        return;
+      }
+      var text = btn.getAttribute('data-text');
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        if (speaking === btn) { speaking = null; return; }
+      }
+      var utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate  = 0.9;
+      utterance.pitch = 1;
+      utterance.onend = function () { speaking = null; };
+      window.speechSynthesis.speak(utterance);
+      speaking = btn;
+    });
+  });
+
+  /* Voice Assistant Logic */
+var vaStatus = document.querySelector('.va-status');
+var readBtn = document.getElementById('vaReadBtn');
+var stopBtn = document.getElementById('vaStopBtn');
+var micBtn = document.getElementById('vaMicBtn');
+
+var allSteps = Array.from(document.querySelectorAll('.rd-step-text'))
+                    .map(e => e.textContent);
+
+var currentIndex = 0;
+var reading = false;
+
+// --- Read Recipe ---
+readBtn.addEventListener('click', function () {
+  if (!('speechSynthesis' in window)) return;
+
+  reading = true;
+  vaStatus.textContent = "Reading";
+
+  currentIndex = 0;
+  speakStep();
+});
+
+function speakStep() {
+  if (!reading || currentIndex >= allSteps.length) {
+    reading = false;
+    vaStatus.textContent = "Idle";
+    return;
+  }
+
+  var utter = new SpeechSynthesisUtterance(allSteps[currentIndex]);
+  utter.rate = 0.9;
+
+  utter.onend = function () {
+    currentIndex++;
+    setTimeout(speakStep, 500);
+  };
+
+  window.speechSynthesis.speak(utter);
+}
+
+// --- STOP ---
+stopBtn.addEventListener('click', function () {
+  window.speechSynthesis.cancel();
+  reading = false;
+  vaStatus.textContent = "Idle";
+});
+
+// --- Microphone (placeholder, can be connected to commands later) ---
+micBtn.addEventListener('click', function () {
+  vaStatus.textContent = "Listening…";
+  setTimeout(() => vaStatus.textContent = "Idle", 2000);
+});
+
+/* ──────────────── Voice Command Recognition ──────────────── */
+
+var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  var recognizer = new SpeechRecognition();
+  recognizer.continuous = false;
+  recognizer.lang = "en-US";
+
+  var micBtn = document.getElementById("vaMicBtn");
+  var vaStatus = document.querySelector(".va-status");
+
+  micBtn.addEventListener("click", function () {
+    recognizer.start();
+    vaStatus.textContent = "Listening…";
+  });
+
+  recognizer.onresult = function (event) {
+    var command = event.results[0][0].transcript.toLowerCase().trim();
+    console.log("Voice Command:", command);
+
+    handleVoiceCommand(command);
+  };
+
+  recognizer.onerror = function () {
+    vaStatus.textContent = "Idle";
+  };
+
+  recognizer.onend = function () {
+    vaStatus.textContent = "Idle";
+  };
+
+} else {
+  console.warn("SpeechRecognition not supported in this browser.");
+}
+
+/* ──────────────── Command Handler ──────────────── */
+
+function handleVoiceCommand(cmd) {
+  if (!cmd) return;
+
+  if (cmd.includes("read recipe") || cmd.includes("start reading")) {
+    document.getElementById("vaReadBtn").click();
+    return;
+  }
+
+  if (cmd.includes("next")) {
+    nextStepVoice();
+    return;
+  }
+
+  if (cmd.includes("previous") || cmd.includes("back")) {
+    previousStepVoice();
+    return;
+  }
+
+  if (cmd.includes("repeat")) {
+    repeatStep();
+    return;
+  }
+
+  if (cmd.includes("ingredients")) {
+    scrollToIngredients();
+    return;
+  }
+
+  if (cmd.includes("how long")) {
+    speakDuration();
+    return;
+  }
+
+  if (cmd.includes("stop") || cmd.includes("cancel")) {
+    window.speechSynthesis.cancel();
+    reading = false;
+    vaStatus.textContent = "Idle";
+    return;
+  }
+}
+
+/* ──────────────── Voice Command Functions ──────────────── */
+
+function nextStepVoice() {
+  if (currentIndex < allSteps.length - 1) {
+    currentIndex++;
+    readSingleStep(currentIndex);
+  }
+}
+
+function previousStepVoice() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    readSingleStep(currentIndex);
+  }
+}
+
+function repeatStep() {
+  readSingleStep(currentIndex);
+}
+
+function readSingleStep(i) {
+  window.speechSynthesis.cancel();
+  var utter = new SpeechSynthesisUtterance(allSteps[i]);
+  utter.rate = 0.9;
+  window.speechSynthesis.speak(utter);
+}
+
+function scrollToIngredients() {
+  document.querySelector(".rd-section").scrollIntoView({ behavior: "smooth" });
+
+  var utter = new SpeechSynthesisUtterance("Here are the ingredients.");
+  utter.rate = 0.9;
+  window.speechSynthesis.speak(utter);
+}
+
+function speakDuration() {
+  var timeEl = document.querySelector(".rd-badge");
+  if (!timeEl) return;
+
+  var timeText = timeEl.textContent;
+  var utter = new SpeechSynthesisUtterance("The recipe takes " + timeText);
+  utter.rate = 0.9;
+  window.speechSynthesis.speak(utter);
+}
+
+let RECIPE = null;
+
+fetch(`/api/recipe/{{ recipe.id }}`)
+  .then(r => r.json())
+  .then(data => {
+    RECIPE = data;
+    console.log("Loaded recipe from DB:", RECIPE);
+  });
+
+  function interpretCommand(command) {
+  command = command.toLowerCase();
+
+  if (command.includes("ingredient")) return "SHOW_INGREDIENTS";
+  if (command.match(/step\s*\d+/)) return "SPECIFIC_STEP";
+  if (command.includes("next")) return "NEXT_STEP";
+  if (command.includes("previous") || command.includes("back")) return "PREVIOUS_STEP";
+  if (command.includes("repeat")) return "REPEAT_STEP";
+  if (command.includes("how long") || command.includes("time")) return "TOTAL_TIME";
+  if (command.includes("difficulty")) return "DIFFICULTY";
+  if (command.includes("read recipe")) return "READ_RECIPE";
+  if (command.includes("stop")) return "STOP";
+
+  return "UNKNOWN";
+}
+
+function handleSpecificStep(command) {
+  const numberMatch = command.match(/\d+/);
+  if (!numberMatch) {
+    speak("I couldn't find a step number.");
+    return;
+  }
+
+  const stepNum = parseInt(numberMatch[0]);
+  const step = RECIPE.steps.find(s => s.num === stepNum);
+
+  if (!step) {
+    speak("That step does not exist.");
+    return;
+  }
+
+  speak(`Step ${stepNum}: ${step.text}`);
+}
+
+function speakIngredients() {
+  let text = "The ingredients you need are: ";
+
+  RECIPE.ingredients.forEach(ing => {
+    text += `${ing.qty} ${ing.name}, `;
+  });
+
+  speak(text);
+}
+
+function speakTotalTime() {
+  const t = RECIPE.total_time || 0;
+  speak(`This recipe takes a total of ${t} minutes to prepare and cook.`);
+}
+
+function handleVoiceCommand(command) {
+  const intent = interpretCommand(command);
+
+  switch (intent) {
+
+    case "SHOW_INGREDIENTS":
+      speakIngredients();
+      break;
+
+    case "SPECIFIC_STEP":
+      handleSpecificStep(command);
+      break;
+
+    case "NEXT_STEP":
+      nextStepVoice();
+      break;
+
+    case "PREVIOUS_STEP":
+      previousStepVoice();
+      break;
+
+    case "REPEAT_STEP":
+      repeatStep();
+      break;
+
+    case "TOTAL_TIME":
+      speakTotalTime();
+      break;
+
+    case "DIFFICULTY":
+      speak(`This recipe is rated as ${RECIPE.difficulty}.`);
+      break;
+
+    case "READ_RECIPE":
+      startReadingRecipe();
+      break;
+
+    case "STOP":
+      window.speechSynthesis.cancel();
+      speak("Okay, stopping.");
+      break;
+
+    default:
+      speak("Sorry, I didn't understand that command.");
+  }
+}
+
+recognizer.onresult = function (event) {
+  var command = event.results[0][0].transcript.toLowerCase().trim();
+  handleVoiceCommand(command);
+};
+
+  /* ── Web Share API ── */
+  var shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', function () {
+      if (navigator.share) {
+        navigator.share({
+          title: '{{ recipe.title }}',
+          text:  'Check out this recipe on Dishly!',
+          url:   window.location.href
+        }).catch(function () {});
+      } else {
+        navigator.clipboard.writeText(window.location.href)
+          .then(function () { showToast('Link copied!'); })
+          .catch(function () { showToast('Could not copy link'); });
+      }
+    });
+  }
+})();
 </script>
 {% endblock %}

@@ -1,38 +1,693 @@
 {% extends "base.html" %}
+{% block title %}Search - Dishly{% endblock %}
 
-{% block title %}Search{% endblock %}
+{% block styles %}
+<style>
+  @keyframes s-fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes s-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+  @keyframes s-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-15px,25px) scale(0.95); }
+  }
+
+  .s-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .s-blob1 {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -80px; right: -60px;
+    animation: s-float1 9s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .s-blob2 {
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #3D0E00 0%, transparent 70%);
+    bottom: 200px; left: -40px;
+    animation: s-float2 11s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .s-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,1,0,0.55);
+    pointer-events: none;
+  }
+
+  /* Header */
+  .s-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 20px;
+    animation: s-fadeUp 0.6s ease forwards;
+  }
+
+  .s-eyebrow {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 0 0 2px;
+  }
+
+  .s-title {
+    color: #ffffff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  /* Search bar */
+  .s-search-wrap {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 16px;
+    animation: s-fadeUp 0.6s ease 0.1s both;
+  }
+
+  .s-search-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 0 14px;
+    gap: 10px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .s-search-box:focus-within {
+    border-color: rgba(192,57,43,0.6);
+    background: rgba(255,255,255,0.1);
+  }
+
+  .s-search-icon {
+    color: rgba(255,255,255,0.35);
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .s-search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 14px;
+    padding: 14px 0;
+    font-family: inherit;
+  }
+
+  .s-search-input::placeholder {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .s-search-btn {
+    background: #C0392B;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+    transition: background 0.2s;
+  }
+
+  .s-search-btn:active { background: #a93226; }
+
+  /* Filter toggle button */
+  .s-filter-toggle {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+    animation: s-fadeUp 0.6s ease 0.15s both;
+  }
+
+  .s-filter-toggle.has-filters {
+    border-color: rgba(192,57,43,0.5);
+    color: rgba(255,120,80,0.9);
+    background: rgba(192,57,43,0.15);
+  }
+
+  .s-filter-badge {
+    background: #C0392B;
+    color: #fff;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    display: none;
+  }
+
+  .s-filter-badge.visible { display: inline-block; }
+
+  /* Filter panel */
+  .s-filter-panel {
+    position: relative;
+    z-index: 1;
+    background: rgba(20,5,0,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: none;
+    animation: s-fadeUp 0.3s ease forwards;
+  }
+
+  .s-filter-panel.open { display: block; }
+
+  .s-filter-group {
+    margin-bottom: 16px;
+  }
+
+  .s-filter-group:last-child { margin-bottom: 0; }
+
+  .s-filter-group-title {
+    color: rgba(255,255,255,0.4);
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+
+  .s-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .s-chip {
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.55);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  .s-chip.active {
+    background: rgba(192,57,43,0.3);
+    border-color: rgba(192,57,43,0.6);
+    color: #fff;
+  }
+
+  .s-filter-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .s-clear-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .s-apply-btn {
+    flex: 2;
+    padding: 10px;
+    border-radius: 10px;
+    background: #C0392B;
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* Results */
+  .s-section {
+    position: relative;
+    z-index: 1;
+    animation: s-fadeUp 0.6s ease 0.2s both;
+  }
+
+  .s-section-title {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    letter-spacing: 0.3px;
+  }
+
+  .s-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .s-result-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .s-result-card:active { background: rgba(192,57,43,0.15); }
+
+  .s-result-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: rgba(139,37,0,0.3);
+    border: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .s-result-info { flex: 1; min-width: 0; }
+
+  .s-result-title {
+    color: rgba(255,255,255,0.9);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .s-result-meta {
+    color: rgba(255,255,255,0.35);
+    font-size: 11px;
+    margin: 0 0 6px;
+  }
+
+  .s-result-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .s-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .s-tag-main     { background: rgba(192,57,43,0.2);  color: rgba(255,120,100,0.9); }
+  .s-tag-dessert  { background: rgba(150,30,192,0.2); color: rgba(200,100,255,0.9); }
+  .s-tag-beverage { background: rgba(30,150,100,0.2); color: rgba(80,200,150,0.9);  }
+  .s-tag-soup     { background: rgba(30,80,192,0.2);  color: rgba(100,150,255,0.9); }
+  .s-tag-other    { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+  .s-tag-time     { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+
+  .s-result-arrow {
+    color: rgba(255,255,255,0.2);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Empty state */
+  .s-empty {
+    text-align: center;
+    padding: 48px 20px;
+  }
+
+  .s-empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.4; }
+
+  .s-empty-title {
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    margin: 0 0 6px;
+  }
+
+  .s-empty-sub {
+    color: rgba(255,255,255,0.25);
+    font-size: 12px;
+    margin: 0;
+  }
+
+  /* Default browse grid */
+  .s-browse {
+    position: relative;
+    z-index: 1;
+    animation: s-fadeUp 0.6s ease 0.2s both;
+  }
+
+  .s-browse-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .s-browse-card {
+    padding: 16px 12px;
+    border-radius: 14px;
+    background: rgba(139,37,0,0.2);
+    border: 1px solid rgba(255,255,255,0.07);
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+    display: block;
+  }
+
+  .s-browse-card:nth-child(even) { background: rgba(92,26,0,0.25); }
+  .s-browse-card:active { background: rgba(192,57,43,0.3); }
+
+  .s-browse-emoji { font-size: 26px; margin-bottom: 6px; }
+
+  .s-browse-label {
+    color: rgba(255,255,255,0.7);
+    font-size: 12px;
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  const regionMap = {
+    'Asian':          ['Philippines','South Korea','Japan','China','Indonesia'],
+    'African':        ['Nigeria','South Africa','Egypt'],
+    'Oceania':        ['Australia','New Zealand','Fiji'],
+    'European':       ['France','Germany','Italy'],
+    'North American': ['Canada','United States','Mexico'],
+    'South American': ['Brazil','Argentina','Chile']
+  };
+
+  // Restore region chips if cuisine was already selected on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    const activeCuisine = document.querySelector('.s-chip[data-group="cuisine"].active');
+    if (activeCuisine) showRegions(activeCuisine.dataset.value);
+
+    document.querySelectorAll('.s-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        const group = this.dataset.group;
+        document.querySelectorAll(`.s-chip[data-group="${group}"]`).forEach(c => c.classList.remove('active'));
+        this.classList.toggle('active');
+
+        if (group === 'cuisine') {
+          const isActive = this.classList.contains('active');
+          if (isActive) {
+            showRegions(this.dataset.value);
+          } else {
+            hideRegions();
+          }
+        }
+
+        updateFilterBadge();
+      });
+    });
+  });
+
+  function showRegions(cuisine) {
+    const regions = regionMap[cuisine] || [];
+    const container = document.getElementById('regionChips');
+    const activeRegion = '{{ request.args.get("region") or "" }}';
+
+    container.innerHTML = regions.map(r => `
+      <button class="s-chip ${r === activeRegion ? 'active' : ''}"
+              data-group="region" data-value="${r}">${r}</button>
+    `).join('');
+
+    // Re-attach click listeners for dynamically created chips
+    container.querySelectorAll('.s-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        container.querySelectorAll('.s-chip').forEach(c => c.classList.remove('active'));
+        this.classList.toggle('active');
+        updateFilterBadge();
+      });
+    });
+
+    document.getElementById('regionGroup').style.display = 'block';
+  }
+
+  function hideRegions() {
+    document.getElementById('regionGroup').style.display = 'none';
+    document.getElementById('regionChips').innerHTML = '';
+  }
+
+  function toggleFilters() {
+    const panel = document.getElementById('filterPanel');
+    const toggle = document.getElementById('filterToggle');
+    panel.classList.toggle('open');
+    toggle.textContent = panel.classList.contains('open') ? '▲ Filters' : '▼ Filters';
+  }
+
+  function updateFilterBadge() {
+    const active = document.querySelectorAll('.s-chip.active').length;
+    const badge = document.getElementById('filterBadge');
+    const toggle = document.getElementById('filterToggle');
+    if (active > 0) {
+      badge.textContent = active;
+      badge.classList.add('visible');
+      toggle.classList.add('has-filters');
+    } else {
+      badge.classList.remove('visible');
+      toggle.classList.remove('has-filters');
+    }
+  }
+
+  function clearFilters() {
+    document.querySelectorAll('.s-chip').forEach(c => c.classList.remove('active'));
+    hideRegions();
+    updateFilterBadge();
+  }
+
+  function applyFilters() {
+    const category = document.querySelector('.s-chip[data-group="category"].active')?.dataset.value || '';
+    const cuisine  = document.querySelector('.s-chip[data-group="cuisine"].active')?.dataset.value  || '';
+    const region   = document.querySelector('.s-chip[data-group="region"].active')?.dataset.value   || '';
+    const q        = document.getElementById('searchInput').value;
+
+    const params = new URLSearchParams();
+    if (q)        params.set('q', q);
+    if (category) params.set('category', category);
+    if (cuisine)  params.set('cuisine', cuisine);
+    if (region)   params.set('region', region);
+
+    window.location.href = '{{ url_for("search") }}?' + params.toString();
+  }
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="search-screen">
-    <div class="search-header">
-        <h1>Search Recipes</h1>
-    </div>
-    
-    <form method="GET" action="{{ url_for('search') }}" class="search-form">
-        <input type="text" name="q" placeholder="Search by name, cuisine, or ingredient..." value="{{ query }}" class="search-input">
-        <button type="submit" class="search-btn">Search</button>
+<div class="s-screen">
+  <div class="s-blob1"></div>
+  <div class="s-blob2"></div>
+  <div class="s-overlay"></div>
+
+  <div class="s-header">
+    <p class="s-eyebrow">Dishly</p>
+    <h1 class="s-title">Find a Recipe</h1>
+  </div>
+
+  <!-- Search bar -->
+  <div class="s-search-wrap">
+    <form method="GET" action="{{ url_for('search') }}" id="searchForm">
+      <div class="s-search-box">
+        <span class="s-search-icon">🔍</span>
+        <input
+          type="text"
+          name="q"
+          id="searchInput"
+          class="s-search-input"
+          placeholder="Name, ingredient..."
+          value="{{ query }}"
+          autocomplete="off"
+        >
+        <!-- pass active filters as hidden inputs so form submit keeps them -->
+        {% if request.args.get('category') %}<input type="hidden" name="category" value="{{ request.args.get('category') }}">{% endif %}
+        {% if request.args.get('cuisine')  %}<input type="hidden" name="cuisine"  value="{{ request.args.get('cuisine') }}">{% endif %}
+        {% if request.args.get('region')   %}<input type="hidden" name="region"   value="{{ request.args.get('region') }}">{% endif %}
+        <button type="submit" class="s-search-btn">Search</button>
+      </div>
     </form>
-    
-    {% if query %}
-        <div class="search-results">
-            <h2>Results for "{{ query }}"</h2>
-            {% if results %}
-                {% for recipe in results %}
-                <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="search-result-item">
-                    <div class="result-placeholder"></div>
-                    <div class="result-info">
-                        <div class="result-title">{{ recipe.title }}</div>
-                        <div class="result-cuisine">{{ recipe.cuisine }} • {{ recipe.region }}</div>
-                    </div>
-                </a>
-                {% endfor %}
-            {% else %}
-                <div class="no-results">
-                    <div class="no-results-icon"></div>
-                    <p>No recipes found for "{{ query }}"</p>
-                </div>
-            {% endif %}
+  </div>
+
+  <!-- Filter toggle -->
+  <button class="s-filter-toggle {% if request.args.get('category') or request.args.get('cuisine') or request.args.get('region') %}has-filters{% endif %}"
+          id="filterToggle"
+          onclick="toggleFilters()">
+    ▼ Filters
+    <span class="s-filter-badge {% if request.args.get('category') or request.args.get('cuisine') or request.args.get('region') %}visible{% endif %}"
+          id="filterBadge">
+      {{ [request.args.get('category'), request.args.get('cuisine'), request.args.get('region')] | select | list | length }}
+    </span>
+  </button>
+
+  <!-- Filter panel -->
+<div class="s-filter-panel" id="filterPanel">
+
+  <!-- Cuisine -->
+  <div class="s-filter-group">
+    <p class="s-filter-group-title">Cuisine</p>
+    <div class="s-chip-row">
+      {% for c in ['Asian', 'African', 'Oceania', 'European', 'North American', 'South American'] %}
+      <button class="s-chip {% if request.args.get('cuisine') == c %}active{% endif %}"
+              data-group="cuisine" data-value="{{ c }}">{{ c }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Region (shown dynamically based on cuisine) -->
+  <div class="s-filter-group" id="regionGroup" style="display:none;">
+    <p class="s-filter-group-title">Country / Region</p>
+    <div class="s-chip-row" id="regionChips"></div>
+  </div>
+
+  <!-- Category -->
+  <div class="s-filter-group">
+    <p class="s-filter-group-title">Category</p>
+    <div class="s-chip-row">
+      {% for cat in ['Main Course', 'Dessert', 'Beverage'] %}
+      <button class="s-chip {% if request.args.get('category') == cat %}active{% endif %}"
+              data-group="category" data-value="{{ cat }}">{{ cat }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="s-filter-actions">
+    <button class="s-clear-btn" onclick="clearFilters()">Clear</button>
+    <button class="s-apply-btn" onclick="applyFilters()">Apply Filters</button>
+  </div>
+</div>
+
+  {% set has_query    = query %}
+  {% set has_category = request.args.get('category') %}
+  {% set has_cuisine  = request.args.get('cuisine') %}
+  {% set has_region   = request.args.get('region') %}
+
+  {% if has_query or has_category or has_cuisine or has_region %}
+    <!-- Results -->
+    <div class="s-section">
+      <p class="s-section-title">
+        {% if results %}
+          {{ results|length }} recipe{{ 's' if results|length != 1 }}
+          {% if query %} for "{{ query }}"{% endif %}
+          {% if has_category %} · {{ has_category }}{% endif %}
+          {% if has_cuisine %}  · {{ has_cuisine }}{% endif %}
+          {% if has_region %}   · {{ has_region }}{% endif %}
+        {% else %}
+          No results found
+        {% endif %}
+      </p>
+
+      {% if results %}
+        <div class="s-results-list">
+          {% for recipe in results %}
+          <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="s-result-card">
+            <div class="s-result-thumb">🍽️</div>
+            <div class="s-result-info">
+              <p class="s-result-title">{{ recipe.title }}</p>
+              <p class="s-result-meta">{{ recipe.cuisine }} · {{ recipe.region }}</p>
+              <div class="s-result-tags">
+                {% set cat = recipe.category or '' %}
+                {% if cat == 'Main Course' %}
+                  <span class="s-tag s-tag-main">Main Course</span>
+                {% elif cat == 'Dessert' %}
+                  <span class="s-tag s-tag-dessert">Dessert</span>
+                {% elif cat == 'Beverage' %}
+                  <span class="s-tag s-tag-beverage">Beverage</span>
+                {% elif cat %}
+                  <span class="s-tag s-tag-other">{{ cat }}</span>
+                {% endif %}
+                {% if recipe.prep_time %}
+                  <span class="s-tag s-tag-time">{{ recipe.prep_time }}min prep</span>
+                {% endif %}
+              </div>
+            </div>
+            <span class="s-result-arrow">›</span>
+          </a>
+          {% endfor %}
         </div>
-    {% endif %}
+
+      {% else %}
+        <div class="s-empty">
+          <div class="s-empty-icon">🍳</div>
+          <p class="s-empty-title">No recipes found</p>
+          <p class="s-empty-sub">Try adjusting your search or filters</p>
+        </div>
+      {% endif %}
+    </div>
+
+  {% else %}
+    <!-- Default browse -->
+    <div class="s-browse">
+      <p class="s-section-title">Browse by category</p>
+      <div class="s-browse-grid">
+        <a href="{{ url_for('search', category='Main Course') }}" class="s-browse-card">
+          <div class="s-browse-emoji">🍖</div>
+          <div class="s-browse-label">Main Course</div>
+        </a>
+        <a href="{{ url_for('search', category='Dessert') }}" class="s-browse-card">
+          <div class="s-browse-emoji">🍮</div>
+          <div class="s-browse-label">Desserts</div>
+        </a>
+        <a href="{{ url_for('search', category='Beverage') }}" class="s-browse-card">
+          <div class="s-browse-emoji">🥤</div>
+          <div class="s-browse-label">Beverages</div>
+        </a>
+        <a href="{{ url_for('search', cuisine='Asian') }}" class="s-browse-card">
+          <div class="s-browse-emoji">🥢</div>
+          <div class="s-browse-label">Asian</div>
+        </a>
+        <a href="{{ url_for('search', region='Philippines') }}" class="s-browse-card">
+          <div class="s-browse-emoji">🇵🇭</div>
+          <div class="s-browse-label">Filipino</div>
+        </a>
+        <a href="{{ url_for('search', cuisine='European') }}" class="s-browse-card">
+          <div class="s-browse-emoji">🥐</div>
+          <div class="s-browse-label">European</div>
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
 </div>
 {% endblock %}
