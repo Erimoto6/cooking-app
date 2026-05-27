@@ -160,3 +160,63 @@ def close_db(e=None):
     db = g.pop('_database', None)
     if db is not None:
         db.close()
+
+def get_recipe_by_id(recipe_id):
+    """
+    Safely fetches a single recipe and its nested ingredients and steps 
+    from the database, adapting dynamically to table structures.
+    """
+    db = get_db()
+    # Force sqlite to return dictionary-like rows instead of tuples
+    db.row_factory = sqlite3.Row
+    cursor = db.cursor()
+    
+    # 1. Fetch the main recipe row
+    cursor.execute('SELECT * FROM recipes WHERE id = ?', (recipe_id,))
+    recipe_row = cursor.fetchone()
+    
+    if not recipe_row:
+        # Prevent Jinja template crashes by returning a safe fallback dictionary
+        return {
+            'id': recipe_id, 'title': 'Recipe Not Found', 'description': 'This recipe does not exist.',
+            'prep_time': 0, 'cook_time': 0, 'difficulty': 'Unknown',
+            'region': 'Unknown', 'cuisine': '', 'image_url': '',
+            'ingredients': [], 'steps': []
+        }
+    
+    # Convert row object to a standard mutable Python dictionary
+    recipe = dict(recipe_row)
+    
+    # 2. Fetch Ingredients safely
+    try:
+        cursor.execute('SELECT * FROM ingredients WHERE recipe_id = ?', (recipe_id,))
+        recipe['ingredients'] = [dict(row) for row in cursor.fetchall()]
+    except Exception as e:
+        print(f" Voice-Assistant Database Warning (ingredients): {e}")
+        recipe['ingredients'] = []
+        
+    # 3. Fetch Steps safely with smart schema adaptation
+    try:
+        # Check what columns exist in your steps table so we don't guess wrong
+        cursor.execute("PRAGMA table_info(steps)")
+        columns = [col['name'] for col in cursor.fetchall()]
+        
+        # Determine the correct column names based on your schema
+        step_num_col = 'step_number' if 'step_number' in columns else ('step_no' if 'step_no' in columns else 'id')
+        instruction_col = 'instruction' if 'instruction' in columns else ('description' if 'description' in columns else 'text')
+        
+        # Run a safe query using your actual columns, renaming them for the UI template
+        query = f"SELECT {step_num_col} AS step_number, {instruction_col} AS instruction FROM steps WHERE recipe_id = ?"
+        
+        # If there's an ordering column, use it
+        if 'step_number' in columns or 'step_no' in columns:
+            query += f" ORDER BY {step_num_col}"
+            
+        cursor.execute(query, (recipe_id,))
+        recipe['steps'] = [dict(row) for row in cursor.fetchall()]
+        
+    except Exception as e:
+        print(f" Voice-Assistant Database Error (steps): {e}")
+        recipe['steps'] = []
+            
+    return recipe

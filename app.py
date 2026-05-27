@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from database import *
 import hashlib
 import os
+import sys  # <-- FIX: Added missing sys import for compilation paths
 
 app = Flask(__name__)
 app.secret_key = 'whats_cookin_secret_key_2024'
@@ -63,7 +64,7 @@ def signup():
             db.commit()
             flash('Account created successfully! Please login.', 'success')
             return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
+        except Exception: # Broad fallback for varying sqlite wrappers
             flash('Username or phone number already exists', 'error')
     
     return render_template('signup.html')
@@ -84,46 +85,43 @@ def index():
     db = get_db()
     cursor = db.cursor()
     
-    # Get recent viewed (for demo, just get recent recipes)
     cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 6')
     recent_recipes = cursor.fetchall()
     
-    # Get favorite dishes (sample)
     cursor.execute('SELECT * FROM recipes WHERE region IN ("Philippines", "United States") LIMIT 3')
     favorite_dishes = cursor.fetchall()
     
-    # Get user's folders
     cursor.execute('SELECT * FROM recipe_folders WHERE user_id = ?', (session['user_id'],))
     folders = cursor.fetchall()
     
     return render_template('index.html', 
-                         username=session.get('username'),
-                         recent_recipes=recent_recipes,
-                         favorite_dishes=favorite_dishes,
-                         folders=folders)
+                           username=session.get('username'),
+                           recent_recipes=recent_recipes,
+                           favorite_dishes=favorite_dishes,
+                           folders=folders)
 
 @app.route('/cuisine/<cuisine>')
 def view_cuisine(cuisine):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Get all regions for this cuisine
     db = get_db()
     cursor = db.cursor()
     cursor.execute('SELECT DISTINCT region FROM recipes WHERE cuisine = ? ORDER BY region', (cuisine,))
     regions = cursor.fetchall()
     
-    # Get recipes grouped by region
     recipes_by_region = {}
     for region in regions:
+        # Checking if row data is array-indexed or key-mapped
+        region_name = region['region'] if isinstance(region, dict) else region[0]
         cursor.execute('SELECT * FROM recipes WHERE cuisine = ? AND region = ? ORDER BY title', 
-                      (cuisine, region['region']))
-        recipes_by_region[region['region']] = cursor.fetchall()
+                      (cuisine, region_name))
+        recipes_by_region[region_name] = cursor.fetchall()
     
     return render_template('cuisine_view.html', 
-                         cuisine=cuisine,
-                         regions=regions,
-                         recipes_by_region=recipes_by_region)
+                           cuisine=cuisine,
+                           regions=regions,
+                           recipes_by_region=recipes_by_region)
 
 @app.route('/recipe/<int:recipe_id>')
 def view_recipe(recipe_id):
@@ -132,7 +130,6 @@ def view_recipe(recipe_id):
     
     recipe = get_recipe_by_id(recipe_id)
     
-    # Check if favorited
     db = get_db()
     cursor = db.cursor()
     cursor.execute('SELECT * FROM favorites WHERE user_id = ? AND recipe_id = ?', 
@@ -186,7 +183,6 @@ def create_recipe():
         cook_time = request.form.get('cook_time')
         difficulty = request.form.get('difficulty')
         
-        # Get ingredients (dynamic)
         ingredients = []
         ingredient_names = request.form.getlist('ingredient_name[]')
         ingredient_quantities = request.form.getlist('ingredient_quantity[]')
@@ -194,7 +190,6 @@ def create_recipe():
             if name.strip():
                 ingredients.append({'name': name, 'quantity': qty})
         
-        # Get steps (dynamic)
         steps = request.form.getlist('step[]')
         steps = [s for s in steps if s.strip()]
         
@@ -248,17 +243,23 @@ def remove_shopping_item_route(item_id):
     flash('Item removed from shopping list', 'success')
     return redirect(url_for('view_shopping_list'))
 
+# FIX: Modified to flexibly support both dynamic Async JSON calls AND native browser clicks
 @app.route('/add_recipe_to_shopping_list/<int:recipe_id>')
 def add_recipe_to_shopping_list(recipe_id):
     if 'user_id' not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'Not logged in'}), 401
         return redirect(url_for('login'))
     
     recipe = get_recipe_by_id(recipe_id)
     if recipe and 'ingredients' in recipe:
         for ingredient in recipe['ingredients']:
             add_to_shopping_list(session['user_id'], ingredient['name'], ingredient['quantity'], recipe_id)
-        flash('All ingredients added to shopping list!', 'success')
-    
+            
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'All ingredients added!'})
+        
+    flash('All ingredients added to shopping list!', 'success')
     return redirect(url_for('view_recipe', recipe_id=recipe_id))
 
 @app.route('/profile')
@@ -269,15 +270,12 @@ def profile():
     db = get_db()
     cursor = db.cursor()
     
-    # Get user info
     cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
     user = cursor.fetchone()
     
-    # Get user's custom recipes
     cursor.execute('SELECT * FROM recipes WHERE user_id = ? ORDER BY created_at DESC', (session['user_id'],))
     my_recipes = cursor.fetchall()
     
-    # Get user's favorites
     favorites = get_favorite_recipes(session['user_id'])
     
     return render_template('profile.html', user=user, my_recipes=my_recipes, favorites=favorites)
@@ -316,36 +314,67 @@ def get_recent_commands():
     commands = cursor.fetchall()
     return jsonify([dict(c) for c in commands])
 
+@app.route("/api/recipe/<int:recipe_id>")
+def api_recipe(recipe_id):
+    recipe = Recipe.query.get_or_404(recipe_id)
+
+    ingredients = [
+        {
+            "name": ing.name,
+            "qty": ing.quantity or ""
+        }
+        for ing in recipe.ingredients
+    ]
+
+    steps = [
+        {
+            "num": s.step_number,
+            "text": s.instruction
+        }
+        for s in sorted(recipe.steps, key=lambda x: x.step_number)
+    ]
+
+    data = {
+        "id": recipe.id,
+        "title": recipe.title,
+        "description": recipe.description,
+        "cuisine": recipe.cuisine,
+        "region": recipe.region,
+        "category": recipe.category,
+        "difficulty": recipe.difficulty,
+        "prep_time": recipe.prep_time,
+        "cook_time": recipe.cook_time,
+        "total_time": (recipe.prep_time or 0) + (recipe.cook_time or 0),
+        "ingredients": ingredients,
+        "steps": steps
+    }
+
+    return data
+
 if __name__ == '__main__':
     import threading
     import webbrowser
     import time
     
-    # Get correct paths for EXE
     if getattr(sys, 'frozen', False):
         base_path = os.path.dirname(sys.executable)
     else:
         base_path = os.path.dirname(__file__)
     
-    # Create instance folder
     instance_path = os.path.join(base_path, 'instance')
     os.makedirs(instance_path, exist_ok=True)
     
-    # Initialize database
     with app.app_context():
         init_db()
     
-    # Function to open browser after server starts
     def open_browser():
-        time.sleep(2)  # Wait for server to start
+        time.sleep(2)
         webbrowser.open('http://127.0.0.1:5000')
     
-    # Start browser opener in background
     browser_thread = threading.Thread(target=open_browser)
     browser_thread.daemon = True
     browser_thread.start()
     
-    # Run the app
     print("Starting What's Cookin' app...")
     print("Open your browser to: http://127.0.0.1:5000")
     app.run(host='127.0.0.1', debug=False, port=5000)
