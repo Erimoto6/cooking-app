@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from database import *
+import psycopg2.extras
 import hashlib
 import os
-import sys  # <-- FIX: Added missing sys import for compilation paths
+import sys
 
 app = Flask(__name__)
 app.secret_key = 'whats_cookin_secret_key_2024'
 
-# Initialize database
 @app.before_request
 def before_request():
     get_db()
@@ -16,7 +16,6 @@ def before_request():
 def teardown_db(exception):
     close_db()
 
-# Helper function to hash passwords
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -32,8 +31,7 @@ def login():
         phone_number = request.form.get('phone_number')
         password = hash_password(request.form.get('password'))
         
-        db = get_db()
-        cursor = db.cursor()
+        cursor = get_cursor()
         cursor.execute('SELECT * FROM users WHERE phone_number = %s AND password = %s', 
                       (phone_number, password))
         user = cursor.fetchone()
@@ -56,7 +54,7 @@ def signup():
         password = hash_password(request.form.get('password'))
         
         db = get_db()
-        cursor = db.cursor()
+        cursor = get_cursor()
         
         try:
             cursor.execute('INSERT INTO users (username, phone_number, password) VALUES (%s, %s, %s)',
@@ -64,7 +62,8 @@ def signup():
             db.commit()
             flash('Account created successfully! Please login.', 'success')
             return redirect(url_for('login'))
-        except Exception: # Broad fallback for varying sqlite wrappers
+        except Exception:
+            db.rollback()
             flash('Username or phone number already exists', 'error')
     
     return render_template('signup.html')
@@ -82,13 +81,12 @@ def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     
     cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 6')
     recent_recipes = cursor.fetchall()
     
-    cursor.execute('SELECT * FROM recipes WHERE region IN ("Philippines", "United States") LIMIT 3')
+    cursor.execute("SELECT * FROM recipes WHERE region IN ('Philippines', 'United States') LIMIT 3")
     favorite_dishes = cursor.fetchall()
     
     cursor.execute('SELECT * FROM recipe_folders WHERE user_id = %s', (session['user_id'],))
@@ -105,15 +103,13 @@ def view_cuisine(cuisine):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     cursor.execute('SELECT DISTINCT region FROM recipes WHERE cuisine = %s ORDER BY region', (cuisine,))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
     for region in regions:
-        # Checking if row data is array-indexed or key-mapped
-        region_name = region['region'] if isinstance(region, dict) else region[0]
+        region_name = region['region']
         cursor.execute('SELECT * FROM recipes WHERE cuisine = %s AND region = %s ORDER BY title', 
                       (cuisine, region_name))
         recipes_by_region[region_name] = cursor.fetchall()
@@ -130,8 +126,7 @@ def view_recipe(recipe_id):
     
     recipe = get_recipe_by_id(recipe_id)
     
-    db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
                   (session['user_id'], recipe_id))
     is_favorite = cursor.fetchone() is not None
@@ -143,8 +138,7 @@ def toggle_favorite(recipe_id):
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'})
     
-    db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
                   (session['user_id'], recipe_id))
     
@@ -243,7 +237,6 @@ def remove_shopping_item_route(item_id):
     flash('Item removed from shopping list', 'success')
     return redirect(url_for('view_shopping_list'))
 
-# FIX: Modified to flexibly support both dynamic Async JSON calls AND native browser clicks
 @app.route('/add_recipe_to_shopping_list/<int:recipe_id>')
 def add_recipe_to_shopping_list(recipe_id):
     if 'user_id' not in session:
@@ -267,8 +260,7 @@ def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     
     cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
     user = cursor.fetchone()
@@ -289,7 +281,7 @@ def save_voice_command():
     
     data = request.get_json()
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     cursor.execute('''
         INSERT INTO voice_command (user_id, command, action, recipe_id)
         VALUES (%s, %s, %s, %s)
@@ -303,8 +295,7 @@ def get_recent_commands():
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'})
     
-    db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor()
     cursor.execute('''
         SELECT * FROM voice_command 
         WHERE user_id = %s
@@ -316,40 +307,10 @@ def get_recent_commands():
 
 @app.route("/api/recipe/<int:recipe_id>")
 def api_recipe(recipe_id):
-    recipe = Recipe.query.get_or_404(recipe_id)
-
-    ingredients = [
-        {
-            "name": ing.name,
-            "qty": ing.quantity or ""
-        }
-        for ing in recipe.ingredients
-    ]
-
-    steps = [
-        {
-            "num": s.step_number,
-            "text": s.instruction
-        }
-        for s in sorted(recipe.steps, key=lambda x: x.step_number)
-    ]
-
-    data = {
-        "id": recipe.id,
-        "title": recipe.title,
-        "description": recipe.description,
-        "cuisine": recipe.cuisine,
-        "region": recipe.region,
-        "category": recipe.category,
-        "difficulty": recipe.difficulty,
-        "prep_time": recipe.prep_time,
-        "cook_time": recipe.cook_time,
-        "total_time": (recipe.prep_time or 0) + (recipe.cook_time or 0),
-        "ingredients": ingredients,
-        "steps": steps
-    }
-
-    return data
+    recipe = get_recipe_by_id(recipe_id)
+    if not recipe:
+        return jsonify({'error': 'Recipe not found'}), 404
+    return jsonify(recipe)
 
 if __name__ == '__main__':
     import threading

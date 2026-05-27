@@ -21,6 +21,10 @@ def get_db():
         db = g._database = psycopg2.connect(**DB_CONFIG)
     return db
 
+def get_cursor():
+    """Always returns a dictionary cursor."""
+    return get_db().cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
 def close_db(e=None):
     db = g.pop('_database', None)
     if db is not None:
