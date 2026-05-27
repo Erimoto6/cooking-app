@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import g
 import os
 import sys
+import hashlib
 
 # Get the correct path whether running as script or EXE
 if getattr(sys, 'frozen', False):
@@ -116,14 +117,29 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
+
+    # Voice commands table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS voice_command (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            command TEXT NOT NULL,
+            action TEXT,
+            recipe_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (recipe_id) REFERENCES recipes (id)
+        )
+    ''')
     
     # Insert demo user if no users exist
     cursor.execute("SELECT COUNT(*) as count FROM users")
     if cursor.fetchone()['count'] == 0:
+        demo_password = hashlib.sha256('password123'.encode()).hexdigest()
         cursor.execute('''
             INSERT INTO users (username, phone_number, password) 
             VALUES (?, ?, ?)
-        ''', ('demo_user', '1234567890', 'password123'))
+        ''', ('demo_user', '1234567890', demo_password))
         
         # Get the user ID
         cursor.execute("SELECT id FROM users WHERE username = 'demo_user'")
