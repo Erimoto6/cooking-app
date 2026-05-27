@@ -217,8 +217,8 @@
   <div class="h-overlay"></div>
 
   <div class="h-header">
-    <p class="h-eyebrow">Good day</p>
-    <h1 class="h-title">What's Cookin'!</h1>
+    <p class="h-eyebrow">Dishly</p>
+    <h1 class="h-title">Good day, {{ username }}!</h1>
   </div>
 
   <div class="h-section h-section-anim1">
@@ -226,9 +226,9 @@
     <div class="h-cuisine-grid">
       <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">African</a>
       <a href="{{ url_for('view_cuisine', cuisine='European') }}" class="h-cuisine-card">European</a>
-      <a href="{{ url_for('view_cuisine', cuisine='Asian') }}" class="h-cuisine-card">S. Asian</a>
-      <a href="{{ url_for('view_cuisine', cuisine='North American') }}" class="h-cuisine-card">N. American</a>
-      <a href="{{ url_for('view_cuisine', cuisine='South American') }}" class="h-cuisine-card">S. American</a>
+      <a href="{{ url_for('view_cuisine', cuisine='Asian') }}" class="h-cuisine-card">Southeast Asian</a>
+      <a href="{{ url_for('view_cuisine', cuisine='North American') }}" class="h-cuisine-card">North American</a>
+      <a href="{{ url_for('view_cuisine', cuisine='South American') }}" class="h-cuisine-card">South American</a>
       <a href="{{ url_for('view_cuisine', cuisine='Oceanian') }}" class="h-cuisine-card">Oceanian</a>
     </div>
   </div>

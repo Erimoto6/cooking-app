@@ -97,6 +97,7 @@ def index():
     folders = cursor.fetchall()
     
     return render_template('index.html', 
+                         username=session.get('username'),
                          recent_recipes=recent_recipes,
                          favorite_dishes=favorite_dishes,
                          folders=folders)
