@@ -325,7 +325,6 @@
     <div class="rd-title">{{ recipe.title }}</div>
 
     {% if recipe.description %}
-    <div class="rd-description">{{ recipe.description }}</div>
     {% endif %}
 
     <div class="rd-meta">
@@ -468,7 +467,7 @@
       postJSON('/add_to_shopping_list', {
         ingredient_name: name,
         quantity: qty,
-        recipe_id: recipeId
+        dish_id: recipeId
       }).then(function (data) {
         if (data.success) {
           el.classList.add('added');

@@ -9,6 +9,9 @@ try:
     # This deletes all data in recipes and cleans up ingredients/steps tied to them
     cur.execute("TRUNCATE recipes CASCADE;")
     
+    # Reset the sequence for id column (optional)
+    cur.execute("ALTER SEQUENCE recipes_id_seq RESTART WITH 1;")
+    
     conn.commit()
     cur.close()
     conn.close()

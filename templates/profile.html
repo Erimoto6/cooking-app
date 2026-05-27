@@ -25,7 +25,7 @@
         <h3>My Recipes</h3>
         <div class="profile-recipe-list">
             {% for recipe in my_recipes %}
-            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="profile-recipe-item">
+            <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="profile-recipe-item">
                 <span>{{ recipe.title }}</span>
             </a>
             {% else %}
@@ -38,7 +38,7 @@
         <h3>Favorite Recipes</h3>
         <div class="profile-recipe-list">
             {% for recipe in favorites %}
-            <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="profile-recipe-item">
+            <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="profile-recipe-item">
                 <span>{{ recipe.title }}</span>
             </a>
             {% else %}

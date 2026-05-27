@@ -242,7 +242,7 @@
 
   <div class="cv-filters">
     <button class="cv-filter-btn active" onclick="filterRecipes('All')">All</button>
-    <button class="cv-filter-btn" onclick="filterRecipes('Main Dish')">Main Dishes</button>
+    <button class="cv-filter-btn" onclick="filterRecipes('Main Course')">Main Courses</button>
     <button class="cv-filter-btn" onclick="filterRecipes('Dessert')">Desserts</button>
     <button class="cv-filter-btn" onclick="filterRecipes('Beverage')">Beverages</button>
     <button class="cv-filter-btn" onclick="filterRecipes('Soup')">Soups</button>
@@ -254,7 +254,7 @@
     <p class="cv-region-label">{{ region.region }}</p>
     <div class="cv-grid">
       {% for recipe in recipes_by_region[region.region] %}
-      <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}"
+      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}"
          class="cv-card"
          data-category="{{ recipe.category or 'Other' }}">
         <div class="cv-card-thumb"></div>

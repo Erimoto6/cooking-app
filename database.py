@@ -73,6 +73,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS recipes (
             id SERIAL PRIMARY KEY,
+            dish_id VARCHAR(20) UNIQUE,
             title TEXT NOT NULL,
             description TEXT,
             cuisine TEXT,
@@ -146,33 +147,26 @@ def init_db():
         )
     ''')
 
-    # Demo user
-    cursor.execute("SELECT COUNT(*) FROM users")
-    if cursor.fetchone()[0] == 0:
-        demo_password = hashlib.sha256('password123'.encode()).hexdigest()
-        cursor.execute(
-            "INSERT INTO users (username, phone_number, password) VALUES (%s, %s, %s) RETURNING id",
-            ('demo_user', '1234567890', demo_password)
-        )
-        user_id = cursor.fetchone()[0]
-        for folder in ['For Breakfast', 'For Dinner', 'Quick Meals']:
-            cursor.execute(
-                'INSERT INTO recipe_folders (user_id, folder_name) VALUES (%s, %s)',
-                (user_id, folder)
-            )
-
     db.commit()
     print("✅ PostgreSQL database initialized!")
 
+def get_recipe_by_dish_id(dish_id):
+    """Fetch recipe by dish_id (e.g., PH_M01)"""
+    recipe = query('SELECT * FROM recipes WHERE dish_id = %s', (dish_id,), one=True)
+    if not recipe:
+        return None
+    recipe = dict(recipe)
+    recipe['ingredients'] = query(
+        'SELECT * FROM ingredients WHERE recipe_id = %s', (recipe['id'],))
+    recipe['steps'] = query(
+        'SELECT * FROM steps WHERE recipe_id = %s ORDER BY step_number', (recipe['id'],))
+    return recipe
+
 def get_recipe_by_id(recipe_id):
+    """Fetch recipe by numeric id"""
     recipe = query('SELECT * FROM recipes WHERE id = %s', (recipe_id,), one=True)
     if not recipe:
-        return {
-            'id': recipe_id, 'title': 'Recipe Not Found', 'description': '',
-            'prep_time': 0, 'cook_time': 0, 'difficulty': 'Unknown',
-            'region': 'Unknown', 'cuisine': '', 'image_url': '',
-            'ingredients': [], 'steps': []
-        }
+        return None
     recipe = dict(recipe)
     recipe['ingredients'] = query(
         'SELECT * FROM ingredients WHERE recipe_id = %s', (recipe_id,))
@@ -185,8 +179,8 @@ def search_recipes(q='', category='', cuisine='', region=''):
     params = []
 
     if q:
-        conditions.append("(title ILIKE %s OR cuisine ILIKE %s OR region ILIKE %s)")
-        params += [f'%{q}%', f'%{q}%', f'%{q}%']
+        conditions.append("(title ILIKE %s OR cuisine ILIKE %s OR region ILIKE %s OR dish_id ILIKE %s)")
+        params += [f'%{q}%', f'%{q}%', f'%{q}%', f'%{q}%']
     if category:
         conditions.append("category ILIKE %s")
         params.append(f'%{category}%')

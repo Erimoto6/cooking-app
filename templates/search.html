@@ -621,7 +621,7 @@
       {% if results %}
         <div class="s-results-list">
           {% for recipe in results %}
-          <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="s-result-card">
+          <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="s-result-card">
             <div class="s-result-thumb">🍽️</div>
             <div class="s-result-info">
               <p class="s-result-title">{{ recipe.title }}</p>
