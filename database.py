@@ -179,3 +179,24 @@ def get_recipe_by_id(recipe_id):
     recipe['steps'] = query(
         'SELECT * FROM steps WHERE recipe_id = %s ORDER BY step_number', (recipe_id,))
     return recipe
+
+def search_recipes(q='', category='', cuisine='', region=''):
+    conditions = []
+    params = []
+
+    if q:
+        conditions.append("(title ILIKE %s OR cuisine ILIKE %s OR region ILIKE %s)")
+        params += [f'%{q}%', f'%{q}%', f'%{q}%']
+    if category:
+        conditions.append("category ILIKE %s")
+        params.append(f'%{category}%')
+    if cuisine:
+        conditions.append("cuisine ILIKE %s")
+        params.append(f'%{cuisine}%')
+    if region:
+        conditions.append("region ILIKE %s")
+        params.append(f'%{region}%')
+
+    where = "WHERE " + " AND ".join(conditions) if conditions else ""
+    sql = f"SELECT * FROM recipes {where} ORDER BY title"
+    return query(sql, params)

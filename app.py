@@ -155,13 +155,19 @@ def toggle_favorite(recipe_id):
 def search():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    query = request.args.get('q', '')
+
+    q        = request.args.get('q', '')
+    category = request.args.get('category', '')
+    cuisine  = request.args.get('cuisine', '')
+    region   = request.args.get('region', '')
+
     results = []
-    if query:
-        results = search_recipes(query)
-    
-    return render_template('search.html', results=results, query=query)
+    if q or category or cuisine or region:
+        results = search_recipes(q, category, cuisine, region)
+
+    return render_template('search.html',
+                           results=results,
+                           query=q)
 
 @app.route('/create_recipe', methods=['GET', 'POST'])
 def create_recipe():
