@@ -119,16 +119,20 @@ def view_cuisine(cuisine):
                            regions=regions,
                            recipes_by_region=recipes_by_region)
 
-@app.route('/recipe/<int:recipe_id>')
-def view_recipe(recipe_id):
+@app.route('/recipe/<string:dish_id>')
+def view_recipe(dish_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    recipe = get_recipe_by_id(recipe_id)
+    recipe = get_recipe_by_dish_id(dish_id)
+    
+    if not recipe:
+        flash('Recipe not found', 'error')
+        return redirect(url_for('index'))
     
     cursor = get_cursor()
     cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
-                  (session['user_id'], recipe_id))
+                  (session['user_id'], recipe['id']))
     is_favorite = cursor.fetchone() is not None
     
     return render_template('recipe_detail.html', recipe=recipe, is_favorite=is_favorite)
@@ -201,9 +205,25 @@ def create_recipe():
         )
         
         flash('Recipe created successfully!', 'success')
-        return redirect(url_for('view_recipe', recipe_id=recipe_id))
+        # Redirect using numeric id for custom recipes (they don't have dish_id)
+        return redirect(url_for('view_recipe_by_id', recipe_id=recipe_id))
     
     return render_template('create_recipe.html')
+
+@app.route('/recipe/id/<int:recipe_id>')
+def view_recipe_by_id(recipe_id):
+    """Fallback route for custom recipes that only have numeric ID"""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    recipe = get_recipe_by_id(recipe_id)
+    
+    cursor = get_cursor()
+    cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
+                  (session['user_id'], recipe_id))
+    is_favorite = cursor.fetchone() is not None
+    
+    return render_template('recipe_detail.html', recipe=recipe, is_favorite=is_favorite)
 
 @app.route('/shopping_list')
 def view_shopping_list():
@@ -244,7 +264,7 @@ def remove_shopping_item_route(item_id):
     return redirect(url_for('view_shopping_list'))
 
 @app.route('/add_recipe_to_shopping_list/<int:recipe_id>')
-def add_recipe_to_shopping_list(recipe_id):
+def add_recipe_to_shopping_list_route(recipe_id):
     if 'user_id' not in session:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'success': False, 'error': 'Not logged in'}), 401
@@ -259,7 +279,7 @@ def add_recipe_to_shopping_list(recipe_id):
         return jsonify({'success': True, 'message': 'All ingredients added!'})
         
     flash('All ingredients added to shopping list!', 'success')
-    return redirect(url_for('view_recipe', recipe_id=recipe_id))
+    return redirect(url_for('view_recipe_by_id', recipe_id=recipe_id))
 
 @app.route('/profile')
 def profile():
@@ -311,12 +331,93 @@ def get_recent_commands():
     commands = cursor.fetchall()
     return jsonify([dict(c) for c in commands])
 
-@app.route("/api/recipe/<int:recipe_id>")
-def api_recipe(recipe_id):
-    recipe = get_recipe_by_id(recipe_id)
+@app.route("/api/recipe/<string:dish_id>")
+def api_recipe(dish_id):
+    recipe = get_recipe_by_dish_id(dish_id)
     if not recipe:
         return jsonify({'error': 'Recipe not found'}), 404
     return jsonify(recipe)
+
+@app.route("/api/recipe/id/<int:recipe_id>")
+def api_recipe_by_id(recipe_id):
+    recipe = get_recipe_by_id(recipe_id)
+    if not recipe or recipe.get('title') == 'Recipe Not Found':
+        return jsonify({'error': 'Recipe not found'}), 404
+    return jsonify(recipe)
+
+# ==================== HELPER FUNCTIONS ====================
+
+def add_to_favorites(user_id, recipe_id):
+    db = get_db()
+    cursor = get_cursor()
+    cursor.execute('INSERT INTO favorites (user_id, recipe_id) VALUES (%s, %s)', (user_id, recipe_id))
+    db.commit()
+
+def remove_from_favorites(user_id, recipe_id):
+    db = get_db()
+    cursor = get_cursor()
+    cursor.execute('DELETE FROM favorites WHERE user_id = %s AND recipe_id = %s', (user_id, recipe_id))
+    db.commit()
+
+def get_favorite_recipes(user_id):
+    cursor = get_cursor()
+    cursor.execute('''
+        SELECT r.* FROM recipes r
+        JOIN favorites f ON r.id = f.recipe_id
+        WHERE f.user_id = %s
+        ORDER BY f.created_at DESC
+    ''', (user_id,))
+    return cursor.fetchall()
+
+def get_shopping_list(user_id):
+    cursor = get_cursor()
+    cursor.execute('SELECT * FROM shopping_list WHERE user_id = %s ORDER BY checked, added_at', (user_id,))
+    return cursor.fetchall()
+
+def add_to_shopping_list(user_id, ingredient_name, quantity, recipe_id=None):
+    db = get_db()
+    cursor = get_cursor()
+    cursor.execute('''
+        INSERT INTO shopping_list (user_id, ingredient_name, quantity, recipe_id)
+        VALUES (%s, %s, %s, %s)
+    ''', (user_id, ingredient_name, quantity, recipe_id))
+    db.commit()
+
+def toggle_shopping_item(item_id):
+    db = get_db()
+    cursor = get_cursor()
+    cursor.execute('UPDATE shopping_list SET checked = NOT checked WHERE id = %s', (item_id,))
+    db.commit()
+
+def remove_from_shopping_list(item_id):
+    db = get_db()
+    cursor = get_cursor()
+    cursor.execute('DELETE FROM shopping_list WHERE id = %s', (item_id,))
+    db.commit()
+
+def create_custom_recipe(user_id, title, description, cuisine, region, prep_time, cook_time, difficulty, ingredients, steps):
+    db = get_db()
+    cursor = get_cursor()
+    
+    # Custom recipes don't get a dish_id (NULL allowed)
+    cursor.execute('''
+        INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
+    ''', (title, description, cuisine, region, 'Main Course', prep_time, cook_time, difficulty, user_id))
+    
+    recipe_id = cursor.fetchone()[0]
+    
+    for ing in ingredients:
+        cursor.execute('INSERT INTO ingredients (recipe_id, name, quantity) VALUES (%s, %s, %s)',
+                      (recipe_id, ing['name'], ing['quantity']))
+    
+    for idx, step in enumerate(steps, 1):
+        cursor.execute('INSERT INTO steps (recipe_id, step_number, instruction) VALUES (%s, %s, %s)',
+                      (recipe_id, idx, step))
+    
+    db.commit()
+    return recipe_id
 
 if __name__ == '__main__':
     import threading

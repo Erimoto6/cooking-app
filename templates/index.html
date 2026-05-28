@@ -225,11 +225,11 @@
     <p class="h-section-title">Discover</p>
     <div class="h-cuisine-grid">
       <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">African</a>
-      <a href="{{ url_for('view_cuisine', cuisine='European') }}" class="h-cuisine-card">European</a>
-      <a href="{{ url_for('view_cuisine', cuisine='Asian') }}" class="h-cuisine-card">Southeast Asian</a>
-      <a href="{{ url_for('view_cuisine', cuisine='North American') }}" class="h-cuisine-card">North American</a>
-      <a href="{{ url_for('view_cuisine', cuisine='South American') }}" class="h-cuisine-card">South American</a>
-      <a href="{{ url_for('view_cuisine', cuisine='Oceanian') }}" class="h-cuisine-card">Oceanian</a>
+      <a href="{{ url_for('view_cuisine', cuisine='Europe') }}" class="h-cuisine-card">Europe</a>
+      <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">Southeast Asian</a>
+      <a href="{{ url_for('view_cuisine', cuisine='North America') }}" class="h-cuisine-card">North American</a>
+      <a href="{{ url_for('view_cuisine', cuisine='South America') }}" class="h-cuisine-card">South America</a>
+      <a href="{{ url_for('view_cuisine', cuisine='Oceania') }}" class="h-cuisine-card">Oceania</a>
     </div>
   </div>
 
@@ -237,8 +237,7 @@
     <p class="h-section-title">Favorite Dishes</p>
     <div class="h-scroll">
       {% for recipe in favorite_dishes %}
-      <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb"></div>
+      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">        <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:14] }}{% if recipe.title|length > 14 %}...{% endif %}</p>
       </a>
       {% else %}
@@ -251,7 +250,7 @@
     <p class="h-section-title">Recent Viewed</p>
     <div class="h-scroll">
       {% for recipe in recent_recipes[:3] %}
-      <a href="{{ url_for('view_recipe', recipe_id=recipe.id) }}" class="h-recipe-card">
+      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">
         <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:14] }}{% if recipe.title|length > 14 %}...{% endif %}</p>
       </a>
