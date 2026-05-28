@@ -412,12 +412,12 @@
 
 <script>
   const regionMap = {
-    'Asian':          ['Philippines','South Korea','Japan','China','Indonesia'],
-    'African':        ['Nigeria','South Africa','Egypt'],
+    'Asia':          ['Philippines','South Korea','Japan','China','Indonesia'],
+    'Africa':        ['Nigeria','South Africa','Egypt'],
     'Oceania':        ['Australia','New Zealand','Fiji'],
-    'European':       ['France','Germany','Italy'],
-    'North American': ['Canada','United States','Mexico'],
-    'South American': ['Brazil','Argentina','Chile']
+    'Europe':       ['France','Germany','Italy'],
+    'North America': ['Canada','United States','Mexico'],
+    'South America': ['Brazil','Argentina','Chile']
   };
 
   // Restore region chips if cuisine was already selected on page load
@@ -568,7 +568,7 @@
   <div class="s-filter-group">
     <p class="s-filter-group-title">Cuisine</p>
     <div class="s-chip-row">
-      {% for c in ['Asian', 'African', 'Oceania', 'European', 'North American', 'South American'] %}
+      {% for c in ['Asia', 'Africa', 'Oceania', 'Europe', 'North America', 'South America'] %}
       <button class="s-chip {% if request.args.get('cuisine') == c %}active{% endif %}"
               data-group="cuisine" data-value="{{ c }}">{{ c }}</button>
       {% endfor %}
@@ -673,17 +673,17 @@
           <div class="s-browse-emoji">🥤</div>
           <div class="s-browse-label">Beverages</div>
         </a>
-        <a href="{{ url_for('search', cuisine='Asian') }}" class="s-browse-card">
+        <a href="{{ url_for('search', cuisine='Asia') }}" class="s-browse-card">
           <div class="s-browse-emoji">🥢</div>
-          <div class="s-browse-label">Asian</div>
+          <div class="s-browse-label">Asia</div>
         </a>
-        <a href="{{ url_for('search', region='Philippines') }}" class="s-browse-card">
+        <a href="{{ url_for('search', region='Philippine') }}" class="s-browse-card">
           <div class="s-browse-emoji">🇵🇭</div>
           <div class="s-browse-label">Filipino</div>
         </a>
-        <a href="{{ url_for('search', cuisine='European') }}" class="s-browse-card">
+        <a href="{{ url_for('search', cuisine='Europe') }}" class="s-browse-card">
           <div class="s-browse-emoji">🥐</div>
-          <div class="s-browse-label">European</div>
+          <div class="s-browse-label">Europe</div>
         </a>
       </div>
     </div>
