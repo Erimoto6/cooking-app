@@ -329,3 +329,66 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('What\'s Cookin\' App Ready! 🍳');
     loadShoppingListLocally();
 });
+
+// Auto-hide flash messages after 3 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.animation = 'flashFadeOut 0.3s ease forwards';
+            setTimeout(() => {
+                if (alert.parentNode) alert.remove();
+            }, 300);
+        }, 3000);
+    });
+});
+
+// Custom Modal Function
+function showConfirmModal(options) {
+    return new Promise((resolve) => {
+        // Create modal elements
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-container">
+                <div class="modal-icon">${options.icon || '❓'}</div>
+                <div class="modal-title">${options.title || 'Confirm'}</div>
+                <div class="modal-message">${options.message || 'Are you sure?'}</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-cancel" id="modalCancel">${options.cancelText || 'Cancel'}</button>
+                    <button class="modal-btn modal-confirm ${options.danger ? 'modal-danger' : ''}" id="modalConfirm">${options.confirmText || 'OK'}</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Show modal
+        setTimeout(() => modal.classList.add('active'), 10);
+        
+        // Handle buttons
+        const cancelBtn = modal.querySelector('#modalCancel');
+        const confirmBtn = modal.querySelector('#modalConfirm');
+        
+        cancelBtn.onclick = () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            resolve(false);
+        };
+        
+        confirmBtn.onclick = () => {
+            modal.classList.remove('active');
+            setTimeout(() => modal.remove(), 300);
+            resolve(true);
+        };
+        
+        // Close on overlay click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+                resolve(false);
+            }
+        };
+    });
+}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Recent Recipes - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  .rr-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+  }
+  .rr-header {
+    margin-bottom: 28px;
+  }
+  .rr-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .rr-title {
+    color: #fff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    margin: 10px 0 0;
+  }
+  .rr-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .rr-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    text-decoration: none;
+  }
+  .rr-card:active {
+    background: rgba(192,57,43,0.1);
+  }
+  .rr-icon {
+    font-size: 32px;
+  }
+  .rr-info {
+    flex: 1;
+  }
+  .rr-name {
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .rr-meta {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rr-screen">
+  <div class="rr-header">
+    <a href="{{ url_for('index') }}" class="rr-back">← Back to Home</a>
+    <h1 class="rr-title">Recent Recipes</h1>
+  </div>
+  
+  {% if recipes %}
+  <div class="rr-grid">
+    {% for recipe in recipes %}
+    <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="rr-card">
+      <div class="rr-icon">🍳</div>
+      <div class="rr-info">
+        <div class="rr-name">{{ recipe.title }}</div>
+        <div class="rr-meta">{{ recipe.cuisine or 'Various' }} · {{ recipe.category or 'Recipe' }}</div>
+      </div>
+      <span style="color:rgba(255,255,255,0.2);">›</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size: 48px; margin-bottom: 16px;">🕐</div>
+    <p>No recent recipes yet</p>
+    <p style="font-size: 12px;">Browse and view recipes to see them here!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

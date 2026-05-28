@@ -346,23 +346,52 @@
   }
 
   function deleteItem(id) {
-    if (confirm('Remove this item?')) {
-      fetch(`/remove_shopping_item/${id}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) location.reload();
-        });
-    }
-  }
+    showConfirmModal({
+        title: 'Remove Item',
+        message: 'Are you sure you want to remove this item from your shopping list?',
+        icon: '🗑️',
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        danger: true
+    }).then((confirmed) => {
+        if (confirmed) {
+            fetch(`/remove_shopping_item/${id}`, { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) location.reload();
+            });
+        }
+    });
+}
 
   function clearAllItems() {
-    if (confirm('Clear your entire shopping list?')) {
-      fetch('/clear_shopping_list', { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) location.reload();
-        });
-    }
-  }
+    showConfirmModal({
+        title: 'Clear Shopping List',
+        message: 'Are you sure you want to clear your entire shopping list? This action cannot be undone.',
+        icon: '🛒',
+        confirmText: 'Clear All',
+        cancelText: 'Cancel',
+        danger: true
+    }).then((confirmed) => {
+        if (confirmed) {
+            fetch('/clear_shopping_list', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) location.reload();
+            });
+        }
+    });
+}
+
 </script>
 {% endblock %}

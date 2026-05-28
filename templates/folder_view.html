@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ folder_name }} - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  .fv-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+  }
+  .fv-header {
+    margin-bottom: 28px;
+  }
+  .fv-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .fv-title {
+    color: #fff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    margin: 10px 0 0;
+  }
+  .fv-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fv-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    text-decoration: none;
+  }
+  .fv-card:active {
+    background: rgba(192,57,43,0.1);
+  }
+  .fv-icon {
+    font-size: 32px;
+  }
+  .fv-info {
+    flex: 1;
+  }
+  .fv-name {
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .fv-meta {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fv-screen">
+  <div class="fv-header">
+    <a href="{{ url_for('index') }}" class="fv-back">← Back to Home</a>
+    <h1 class="fv-title">📁 {{ folder_name }}</h1>
+  </div>
+  
+  {% if recipes %}
+  <div class="fv-grid">
+    {% for recipe in recipes %}
+    <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="fv-card">
+      <div class="fv-icon">🍽️</div>
+      <div class="fv-info">
+        <div class="fv-name">{{ recipe.title }}</div>
+        <div class="fv-meta">{{ recipe.cuisine or 'Various' }} · {{ recipe.category or 'Recipe' }}</div>
+      </div>
+      <span style="color:rgba(255,255,255,0.2);">›</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size: 48px; margin-bottom: 16px;">📂</div>
+    <p>This folder is empty</p>
+    <p style="font-size: 12px;">Add recipes to this folder from recipe pages!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

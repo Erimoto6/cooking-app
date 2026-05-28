@@ -83,20 +83,57 @@ def index():
     
     cursor = get_cursor()
     
+    # Get recent recipes (global)
     cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 6')
     recent_recipes = cursor.fetchall()
     
-    cursor.execute("SELECT * FROM recipes WHERE region IN ('Philippines', 'United States') LIMIT 3")
+    # Get user's favorite dishes
+    cursor.execute("""
+        SELECT r.* FROM recipes r
+        JOIN favorites f ON r.id = f.recipe_id
+        WHERE f.user_id = %s
+        ORDER BY f.created_at DESC
+        LIMIT 5
+    """, (session['user_id'],))
     favorite_dishes = cursor.fetchall()
     
-    cursor.execute('SELECT * FROM recipe_folders WHERE user_id = %s', (session['user_id'],))
-    folders = cursor.fetchall()
+    # Get folders - using proper dictionary access
+    cursor.execute("""
+        SELECT f.id, f.folder_name as name, COUNT(fr.recipe_id) as recipe_count
+        FROM recipe_folders f
+        LEFT JOIN folder_recipes fr ON f.id = fr.folder_id
+        WHERE f.user_id = %s
+        GROUP BY f.id, f.folder_name
+        ORDER BY f.created_at DESC
+    """, (session['user_id'],))
+    folders_data = cursor.fetchall()
+    
+    folders_list = []
+    for folder in folders_data:
+        folders_list.append({
+            'id': folder['id'],
+            'name': folder['name'],
+            'recipe_count': folder['recipe_count'] if folder['recipe_count'] else 0
+        })
+    
+    # Get recent views
+    cursor.execute("""
+        SELECT r.* FROM recent_views rv
+        JOIN recipes r ON rv.recipe_id = r.id
+        WHERE rv.user_id = %s
+        ORDER BY rv.viewed_at DESC
+        LIMIT 5
+    """, (session['user_id'],))
+    recent_views = cursor.fetchall()
+    
+    # Use recent_views if available, otherwise use recent_recipes
+    display_recipes = recent_views if recent_views else recent_recipes
     
     return render_template('index.html', 
                            username=session.get('username'),
-                           recent_recipes=recent_recipes,
+                           recent_recipes=display_recipes,
                            favorite_dishes=favorite_dishes,
-                           folders=folders)
+                           folders=folders_list)
 
 @app.route('/cuisine/<cuisine>')
 def view_cuisine(cuisine):
@@ -130,10 +167,31 @@ def view_recipe(dish_id):
         flash('Recipe not found', 'error')
         return redirect(url_for('index'))
     
+    # Track this view - DON'T close the connection manually
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("""
+            DELETE FROM recent_views 
+            WHERE user_id = %s AND recipe_id = %s
+        """, (session['user_id'], recipe['id']))
+        cur.execute("""
+            INSERT INTO recent_views (user_id, recipe_id) 
+            VALUES (%s, %s)
+        """, (session['user_id'], recipe['id']))
+        db.commit()
+        # DON'T close cur or db here - let Flask manage it
+    except Exception as e:
+        print(f"Track view error (non-fatal): {e}")
+    
+    # Use get_cursor for the favorites query
     cursor = get_cursor()
-    cursor.execute('SELECT * FROM favorites WHERE user_id = %s AND recipe_id = %s', 
-                  (session['user_id'], recipe['id']))
+    cursor.execute("""
+        SELECT * FROM favorites 
+        WHERE user_id = %s AND recipe_id = %s
+    """, (session['user_id'], recipe['id']))
     is_favorite = cursor.fetchone() is not None
+    # DON'T close cursor here
     
     return render_template('recipe_detail.html', recipe=recipe, is_favorite=is_favorite)
 
@@ -815,6 +873,220 @@ def profile():
         traceback.print_exc()
         flash('Error loading profile', 'error')
         return redirect(url_for('index'))
+    
+    # ============ RECENT VIEWED TRACKING ============
+
+@app.route('/track_recent/<int:recipe_id>')
+def track_recent(recipe_id):
+    """Track recently viewed recipes"""
+    if 'user_id' not in session:
+        return jsonify({'success': False})
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Remove if already exists to move to top
+        cur.execute("DELETE FROM recent_views WHERE user_id = %s AND recipe_id = %s",
+                   (session['user_id'], recipe_id))
+        
+        # Add new view
+        cur.execute("INSERT INTO recent_views (user_id, recipe_id) VALUES (%s, %s)",
+                   (session['user_id'], recipe_id))
+        
+        # Keep only last 10
+        cur.execute("""
+            DELETE FROM recent_views 
+            WHERE id IN (
+                SELECT id FROM recent_views 
+                WHERE user_id = %s 
+                ORDER BY viewed_at DESC OFFSET 10
+            )
+        """, (session['user_id'],))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Track recent error: {e}")
+    
+    return jsonify({'success': True})
+
+
+@app.route('/recent_recipes')
+def recent_recipes():
+    """View all recently viewed recipes"""
+    if 'user_id' not in session:
+        flash('Please login to view recent recipes', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT r.* FROM recent_views rv
+            JOIN recipes r ON rv.recipe_id = r.id
+            WHERE rv.user_id = %s
+            ORDER BY rv.viewed_at DESC
+        """, (session['user_id'],))
+        
+        recent = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return render_template('recent_recipes.html', recipes=recent)
+    except Exception as e:
+        print(f"Recent recipes error: {e}")
+        flash('Error loading recent recipes', 'error')
+        return redirect(url_for('index'))
+
+
+# ============ RECIPE FOLDERS ============
+
+@app.route('/create_folder', methods=['POST'])
+def create_folder():
+    """Create a new recipe folder"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    data = request.get_json()
+    folder_name = data.get('name')
+    
+    if not folder_name:
+        return jsonify({'success': False, 'error': 'Folder name required'}), 400
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Use 'folder_name' column, not 'name'
+        cur.execute("""
+            INSERT INTO recipe_folders (user_id, folder_name)
+            VALUES (%s, %s)
+            RETURNING id
+        """, (session['user_id'], folder_name))
+        folder_id = cur.fetchone()[0]
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'folder_id': folder_id})
+        
+    except Exception as e:
+        print(f"Create folder error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/folder/<int:folder_id>')
+def view_folder(folder_id):
+    """View recipes in a folder"""
+    if 'user_id' not in session:
+        flash('Please login to view folder', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Use 'folder_name' column
+        cur.execute("SELECT folder_name FROM recipe_folders WHERE id = %s AND user_id = %s",
+                   (folder_id, session['user_id']))
+        folder = cur.fetchone()
+        
+        if not folder:
+            flash('Folder not found', 'error')
+            return redirect(url_for('index'))
+        
+        cur.execute("""
+            SELECT r.* FROM folder_recipes fr
+            JOIN recipes r ON fr.recipe_id = r.id
+            WHERE fr.folder_id = %s AND fr.user_id = %s
+            ORDER BY fr.added_at DESC
+        """, (folder_id, session['user_id']))
+        
+        recipes = cur.fetchall()
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('folder_view.html', recipes=recipes, folder_name=folder[0])
+    except Exception as e:
+        print(f"View folder error: {e}")
+        flash('Error loading folder', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/add_to_folder/<int:recipe_id>', methods=['POST'])
+def add_to_folder(recipe_id):
+    """Add a recipe to a folder"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    data = request.get_json()
+    folder_id = data.get('folder_id')
+    
+    if not folder_id:
+        return jsonify({'success': False, 'error': 'Folder ID required'}), 400
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Check if already in folder
+        cur.execute("""
+            SELECT id FROM folder_recipes 
+            WHERE folder_id = %s AND recipe_id = %s AND user_id = %s
+        """, (folder_id, recipe_id, session['user_id']))
+        
+        if cur.fetchone():
+            return jsonify({'success': False, 'error': 'Recipe already in folder'}), 400
+        
+        cur.execute("""
+            INSERT INTO folder_recipes (folder_id, recipe_id, user_id)
+            VALUES (%s, %s, %s)
+        """, (folder_id, recipe_id, session['user_id']))
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Add to folder error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    
+@app.route('/delete_folder/<int:folder_id>', methods=['DELETE'])
+def delete_folder(folder_id):
+    """Delete a recipe folder and its contents"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Check if folder exists and belongs to user
+        cur.execute("SELECT id FROM recipe_folders WHERE id = %s AND user_id = %s",
+                   (folder_id, session['user_id']))
+        folder = cur.fetchone()
+        
+        if not folder:
+            return jsonify({'success': False, 'error': 'Folder not found'}), 404
+        
+        # Delete folder (cascade will delete folder_recipes entries automatically)
+        cur.execute("DELETE FROM recipe_folders WHERE id = %s AND user_id = %s",
+                   (folder_id, session['user_id']))
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Delete folder error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ==================== HELPER FUNCTIONS ====================
 

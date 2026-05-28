@@ -11,88 +11,63 @@
 <body>
     <div class="app-container">
         <div class="main-content">
+            <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
+                    <div class="flash-wrapper">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             {% endwith %}
             
             {% block content %}{% endblock %}
         </div>
+    </div>
         
-        <!-- Bottom Navigation with your icons -->
-{% if session.user_id and request.endpoint not in ['welcome', 'login', 'signup'] %}        
-<div class="bottom-nav" style="
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  max-width: 390px;
-  margin: 0 auto;
-  background: rgba(15,5,0,0.97);
-  border-top: 1px solid rgba(255,255,255,0.08);
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  padding: 10px 0 20px;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-">
-  <a href="{{ url_for('index') }}" style="
-    text-align: center;
-    text-decoration: none;
-    color: {% if request.endpoint == 'index' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};
-  ">
-    <img src="{{ url_for('static', filename='icons/home.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'index' %}1{% else %}0.3{% endif %};">
-    <span style="font-size:10px;">Home</span>
-  </a>
+    <!-- Bottom Navigation -->
+    {% if session.user_id and request.endpoint not in ['welcome', 'login', 'signup'] %}        
+    <div class="bottom-nav" style="
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        max-width: 390px;
+        margin: 0 auto;
+        background: rgba(15,5,0,0.97);
+        border-top: 1px solid rgba(255,255,255,0.08);
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end;
+        padding: 10px 0 20px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+    ">
+        <a href="{{ url_for('index') }}" style="text-align: center; text-decoration: none; color: {% if request.endpoint == 'index' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};">
+            <img src="{{ url_for('static', filename='icons/home.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'index' %}1{% else %}0.3{% endif %};">
+            <span style="font-size:10px;">Home</span>
+        </a>
 
-  <a href="{{ url_for('search') }}" style="
-    text-align: center;
-    text-decoration: none;
-    color: {% if request.endpoint == 'search' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};
-">
-    <img src="{{ url_for('static', filename='icons/search.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'search' %}1{% else %}0.3{% endif %};">
-    <span style="font-size:10px;">Search</span>
-  </a>
+        <a href="{{ url_for('search') }}" style="text-align: center; text-decoration: none; color: {% if request.endpoint == 'search' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};">
+            <img src="{{ url_for('static', filename='icons/search.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'search' %}1{% else %}0.3{% endif %};">
+            <span style="font-size:10px;">Search</span>
+        </a>
 
-  <a href="{{ url_for('create_recipe') }}" style="
-    text-align: center;
-    text-decoration: none;
-    color: {% if request.endpoint == 'create_recipe' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};
-  ">
-    <div style="
-      width: 42px; height: 42px;
-      border-radius: 50%;
-      background: {% if request.endpoint == 'create_recipe' %}#C0392B{% else %}rgba(192,57,43,0.25){% endif %};
-      border: 1px solid rgba(192,57,43,0.4);
-      display: flex; align-items: center; justify-content: center;
-      margin: -10px auto 3px;
-      font-size: 22px;
-      color: #ffffff;
-    ">+</div>
-    <span style="font-size:10px;">Create</span>
-  </a>
+        <a href="{{ url_for('create_recipe') }}" style="text-align: center; text-decoration: none; color: {% if request.endpoint == 'create_recipe' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};">
+            <div style="width: 42px; height: 42px; border-radius: 50%; background: {% if request.endpoint == 'create_recipe' %}#C0392B{% else %}rgba(192,57,43,0.25){% endif %}; border: 1px solid rgba(192,57,43,0.4); display: flex; align-items: center; justify-content: center; margin: -10px auto 3px; font-size: 22px; color: #ffffff;">+</div>
+            <span style="font-size:10px;">Create</span>
+        </a>
 
-  <a href="{{ url_for('view_shopping_list') }}" style="
-    text-align: center;
-    text-decoration: none;
-    color: {% if request.endpoint == 'view_shopping_list' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};
-  ">
-    <img src="{{ url_for('static', filename='icons/shopping.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'view_shopping_list' %}1{% else %}0.3{% endif %};">
-    <span style="font-size:10px;">Shopping</span>
-  </a>
+        <a href="{{ url_for('view_shopping_list') }}" style="text-align: center; text-decoration: none; color: {% if request.endpoint == 'view_shopping_list' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};">
+            <img src="{{ url_for('static', filename='icons/shopping.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'view_shopping_list' %}1{% else %}0.3{% endif %};">
+            <span style="font-size:10px;">Shopping</span>
+        </a>
 
-  <a href="{{ url_for('profile') }}" style="
-    text-align: center;
-    text-decoration: none;
-    color: {% if request.endpoint == 'profile' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};
-  ">
-    <img src="{{ url_for('static', filename='icons/profile.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'profile' %}1{% else %}0.3{% endif %};">
-    <span style="font-size:10px;">Profile</span>
-  </a>
-</div>
-{% endif %}
+        <a href="{{ url_for('profile') }}" style="text-align: center; text-decoration: none; color: {% if request.endpoint == 'profile' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};">
+            <img src="{{ url_for('static', filename='icons/profile.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'profile' %}1{% else %}0.3{% endif %};">
+            <span style="font-size:10px;">Profile</span>
+        </a>
+    </div>
+    {% endif %}
     
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>

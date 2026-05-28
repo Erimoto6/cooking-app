@@ -24,26 +24,25 @@
     overflow: hidden;
   }
 
-  .h-blob1 {
+  .h-blob1, .h-blob2 {
     position: absolute;
-    width: 300px; height: 300px;
     border-radius: 50%;
-    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
-    top: -80px; right: -60px;
-    animation: h-float1 9s ease-in-out infinite;
     opacity: 0.5;
     pointer-events: none;
   }
 
+  .h-blob1 {
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -80px; right: -60px;
+    animation: h-float1 9s ease-in-out infinite;
+  }
+
   .h-blob2 {
-    position: absolute;
     width: 220px; height: 220px;
-    border-radius: 50%;
     background: radial-gradient(circle, #3D0E00 0%, transparent 70%);
     bottom: 200px; left: -40px;
     animation: h-float2 11s ease-in-out infinite;
-    opacity: 0.5;
-    pointer-events: none;
   }
 
   .h-overlay {
@@ -89,93 +88,171 @@
     font-weight: 500;
     margin: 0 0 12px;
     letter-spacing: 0.3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .h-view-all {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    text-decoration: none;
   }
 
   .h-cuisine-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 10px;
   }
 
   .h-cuisine-card {
-    padding: 16px 8px;
-    border-radius: 14px;
-    background: rgba(139,37,0,0.3);
+    padding: 14px 8px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(139,37,0,0.35), rgba(92,26,0,0.25));
     border: 1px solid rgba(255,255,255,0.08);
     text-align: center;
-    font-size: 12px;
-    font-weight: 500;
-    color: rgba(255,255,255,0.85);
     text-decoration: none;
-    transition: background 0.2s;
-  }
-
-  .h-cuisine-card:nth-child(even) {
-    background: rgba(92,26,0,0.3);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
   }
 
   .h-cuisine-card:active {
+    transform: scale(0.96);
     background: rgba(192,57,43,0.4);
+  }
+
+  .h-cuisine-emoji {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .h-cuisine-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
   }
 
   .h-scroll {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 4px;
+    scrollbar-width: thin;
+    padding-bottom: 6px;
   }
 
-  .h-scroll::-webkit-scrollbar { display: none; }
+  .h-scroll::-webkit-scrollbar {
+    height: 3px;
+  }
+  .h-scroll::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+  }
+  .h-scroll::-webkit-scrollbar-thumb {
+    background: #C0392B;
+    border-radius: 3px;
+  }
 
   .h-recipe-card {
     flex-shrink: 0;
-    width: 95px;
+    width: 100px;
     text-align: center;
     text-decoration: none;
+    transition: transform 0.2s;
   }
+  .h-recipe-card:active { transform: scale(0.96); }
 
   .h-recipe-thumb {
-    width: 95px;
-    height: 85px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.06);
+    width: 100px;
+    height: 90px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(139,37,0,0.4), rgba(92,26,0,0.3));
     border: 1px solid rgba(255,255,255,0.1);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
   }
 
   .h-recipe-name {
     color: rgba(255,255,255,0.7);
     font-size: 11px;
     margin: 0;
+    line-height: 1.3;
   }
 
   .h-folder-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
+  }
+
+  .h-folder-card-wrapper {
+    position: relative;
   }
 
   .h-folder-card {
     padding: 16px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.08);
     text-align: center;
     cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .h-folder-card:active {
+    transform: scale(0.97);
+    background: rgba(192,57,43,0.15);
+  }
+
+  .folder-delete-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 10;
+  }
+
+  .folder-delete-btn:hover {
+    background: #C0392B;
+    color: white;
   }
 
   .h-folder-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: rgba(192,57,43,0.3);
-    margin: 0 auto 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(192,57,43,0.25);
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
   }
 
   .h-folder-name {
     color: rgba(255,255,255,0.7);
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .h-folder-count {
+    color: rgba(255,255,255,0.3);
+    font-size: 10px;
+    margin-top: 4px;
   }
 
   .h-folder-add {
@@ -185,28 +262,34 @@
 
   .h-folder-add .h-folder-icon {
     background: rgba(255,255,255,0.05);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 22px;
     color: rgba(255,255,255,0.3);
-    font-size: 20px;
   }
 
   .h-folder-add .h-folder-name {
     color: rgba(255,255,255,0.3);
   }
 
+  .empty-state {
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+  }
+
+  @keyframes h-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+  @keyframes h-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-15px,25px) scale(0.95); }
+  }
+
   .h-section-anim1 { animation: h-fadeUp 0.6s ease 0.1s both; }
   .h-section-anim2 { animation: h-fadeUp 0.6s ease 0.2s both; }
   .h-section-anim3 { animation: h-fadeUp 0.6s ease 0.25s both; }
   .h-section-anim4 { animation: h-fadeUp 0.6s ease 0.3s both; }
-
-  .alert-success {
-    background: rgba(46,125,50,0.2);
-    border-color: rgba(76,175,80,0.4);
-    color: rgba(255,255,255,0.8);
-    border-radius: 10px;
-}
 </style>
 {% endblock %}
 
@@ -221,59 +304,242 @@
     <h1 class="h-title">Good day, {{ username }}!</h1>
   </div>
 
+  <!-- Discover Cuisines -->
   <div class="h-section h-section-anim1">
     <p class="h-section-title">Discover</p>
     <div class="h-cuisine-grid">
-      <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">African</a>
-      <a href="{{ url_for('view_cuisine', cuisine='Europe') }}" class="h-cuisine-card">Europe</a>
-      <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">Southeast Asian</a>
-      <a href="{{ url_for('view_cuisine', cuisine='North America') }}" class="h-cuisine-card">North American</a>
-      <a href="{{ url_for('view_cuisine', cuisine='South America') }}" class="h-cuisine-card">South America</a>
-      <a href="{{ url_for('view_cuisine', cuisine='Oceania') }}" class="h-cuisine-card">Oceania</a>
+      <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🦁🌍</span>
+        <span class="h-cuisine-name">African</span>
+      </a>
+      <a href="{{ url_for('view_cuisine', cuisine='Europe') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🍝🥖</span>
+        <span class="h-cuisine-name">European</span>
+      </a>
+      <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🍜🥢</span>
+        <span class="h-cuisine-name">Asian</span>
+      </a>
+      <a href="{{ url_for('view_cuisine', cuisine='North America') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🍔🌮</span>
+        <span class="h-cuisine-name">North American</span>
+      </a>
+      <a href="{{ url_for('view_cuisine', cuisine='South America') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🥩🌽</span>
+        <span class="h-cuisine-name">South American</span>
+      </a>
+      <a href="{{ url_for('view_cuisine', cuisine='Oceania') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🦘🥝</span>
+        <span class="h-cuisine-name">Oceanian</span>
+      </a>
     </div>
   </div>
 
+  <!-- Favorite Dishes -->
   <div class="h-section h-section-anim2">
-    <p class="h-section-title">Favorite Dishes</p>
+    <div class="h-section-title">
+      <span>❤️ Favorite Dishes</span>
+      <a href="{{ url_for('favorites') }}" class="h-view-all">View all →</a>
+    </div>
     <div class="h-scroll">
       {% for recipe in favorite_dishes %}
-      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">        <div class="h-recipe-thumb"></div>
-        <p class="h-recipe-name">{{ recipe.title[:14] }}{% if recipe.title|length > 14 %}...{% endif %}</p>
-      </a>
-      {% else %}
-      <p style="color:rgba(255,255,255,0.3);font-size:13px;">No favorites yet</p>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="h-section h-section-anim3">
-    <p class="h-section-title">Recent Viewed</p>
-    <div class="h-scroll">
-      {% for recipe in recent_recipes[:3] %}
       <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb"></div>
-        <p class="h-recipe-name">{{ recipe.title[:14] }}{% if recipe.title|length > 14 %}...{% endif %}</p>
+        <div class="h-recipe-thumb">🍽️</div>
+        <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
-      <p style="color:rgba(255,255,255,0.3);font-size:13px;">No recent recipes</p>
+      <div class="empty-state">No favorites yet. ❤️ recipes to see them here!</div>
       {% endfor %}
     </div>
   </div>
 
+  <!-- Recent Viewed -->
+  <div class="h-section h-section-anim3">
+    <div class="h-section-title">
+      <span>🕐 Recent Viewed</span>
+      <a href="{{ url_for('recent_recipes') }}" class="h-view-all">View all →</a>
+    </div>
+    <div class="h-scroll">
+      {% for recipe in recent_recipes[:5] %}
+      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">
+        <div class="h-recipe-thumb">🍳</div>
+        <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
+      </a>
+      {% else %}
+      <div class="empty-state">No recent recipes. Browse and view recipes!</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recipe Folders -->
   <div class="h-section h-section-anim4">
-    <p class="h-section-title">Your Recipe Folder</p>
+    <div class="h-section-title">
+      <span>📁 Your Recipe Folders</span>
+    </div>
     <div class="h-folder-grid">
       {% for folder in folders %}
-      <div class="h-folder-card" onclick="alert('{{ folder.folder_name }} coming soon!')">
-        <div class="h-folder-icon"></div>
-        <div class="h-folder-name">{{ folder.folder_name }}</div>
+      <div class="h-folder-card-wrapper">
+        <div class="h-folder-card" onclick="viewFolder({{ folder.id }})">
+          <div class="h-folder-icon">📂</div>
+          <div class="h-folder-name">{{ folder.name }}</div>
+          <div class="h-folder-count">{{ folder.recipe_count or 0 }} recipes</div>
+        </div>
+        <button class="folder-delete-btn" onclick="event.stopPropagation(); showDeleteFolderModal({{ folder.id }}, '{{ folder.name }}')">🗑️</button>
       </div>
       {% endfor %}
-      <div class="h-folder-card h-folder-add" onclick="alert('Add new folder coming soon!')">
+      <div class="h-folder-card h-folder-add" onclick="showCreateFolderModal()">
         <div class="h-folder-icon">+</div>
-        <div class="h-folder-name">Add Folder</div>
+        <div class="h-folder-name">New Folder</div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  function viewFolder(folderId) {
+    window.location.href = `/folder/${folderId}`;
+  }
+
+  function showCreateFolderModal() {
+    const modal = document.createElement('div');
+    modal.className = 'folder-modal-overlay';
+    modal.innerHTML = `
+      <div class="folder-modal">
+        <div class="folder-modal-icon">📁</div>
+        <div class="folder-modal-title">New Folder</div>
+        <div class="folder-modal-message">Enter a name for your recipe folder</div>
+        <input type="text" class="folder-modal-input" id="folderNameInput" placeholder="e.g., Weeknight Dinners" autocomplete="off">
+        <div class="folder-modal-buttons">
+          <button class="folder-modal-btn folder-modal-cancel" id="cancelFolderBtn">Cancel</button>
+          <button class="folder-modal-btn folder-modal-create" id="createFolderBtn">Create</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 10);
+    
+    const input = modal.querySelector('#folderNameInput');
+    input.focus();
+    
+    const cancelBtn = modal.querySelector('#cancelFolderBtn');
+    cancelBtn.onclick = () => {
+      modal.classList.remove('active');
+      setTimeout(() => modal.remove(), 300);
+    };
+    
+    const createBtn = modal.querySelector('#createFolderBtn');
+    createBtn.onclick = () => {
+      const folderName = input.value.trim();
+      if (folderName) {
+        createFolder(folderName, modal);
+      } else {
+        input.style.borderColor = '#f44336';
+        input.placeholder = 'Please enter a name';
+      }
+    };
+    
+    input.onkeypress = (e) => {
+      if (e.key === 'Enter') {
+        const folderName = input.value.trim();
+        if (folderName) {
+          createFolder(folderName, modal);
+        }
+      }
+    };
+    
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      }
+    };
+  }
+  
+  function createFolder(folderName, modalElement) {
+    fetch('/create_folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: folderName })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        modalElement.classList.remove('active');
+        setTimeout(() => modalElement.remove(), 300);
+        location.reload();
+      } else {
+        alert('Error creating folder: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error creating folder');
+    });
+  }
+
+  function showDeleteFolderModal(folderId, folderName) {
+    const modal = document.createElement('div');
+    modal.className = 'delete-modal-overlay';
+    modal.innerHTML = `
+      <div class="delete-modal">
+        <div class="delete-modal-icon">🗑️</div>
+        <div class="delete-modal-title">Delete Folder</div>
+        <div class="delete-modal-message">Are you sure you want to delete "<strong>${escapeHtml(folderName)}</strong>"?<br>This will also remove all recipes from this folder.</div>
+        <div class="delete-modal-buttons">
+          <button class="delete-modal-btn delete-modal-cancel" id="cancelDeleteBtn">Cancel</button>
+          <button class="delete-modal-btn delete-modal-confirm" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 10);
+    
+    const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+    cancelBtn.onclick = () => {
+      modal.classList.remove('active');
+      setTimeout(() => modal.remove(), 300);
+    };
+    
+    const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+    confirmBtn.onclick = () => {
+      deleteFolder(folderId, modal);
+    };
+    
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      }
+    };
+  }
+  
+  function deleteFolder(folderId, modalElement) {
+    fetch(`/delete_folder/${folderId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        modalElement.classList.remove('active');
+        setTimeout(() => modalElement.remove(), 300);
+        location.reload();
+      } else {
+        alert('Error deleting folder: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error deleting folder');
+    });
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
 {% endblock %}
