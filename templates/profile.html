@@ -1,52 +1,428 @@
 {% extends "base.html" %}
+{% block title %}Profile - Dishly{% endblock %}
 
-{% block title %}Profile{% endblock %}
+{% block styles %}
+<style>
+  @keyframes p-fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes p-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+  @keyframes p-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-15px,25px) scale(0.95); }
+  }
+
+  .p-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .p-blob1 {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -80px; right: -60px;
+    animation: p-float1 9s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .p-blob2 {
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #3D0E00 0%, transparent 70%);
+    bottom: 200px; left: -40px;
+    animation: p-float2 11s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .p-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,1,0,0.55);
+    pointer-events: none;
+  }
+
+  .p-header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: 28px;
+    animation: p-fadeUp 0.6s ease forwards;
+  }
+
+  .p-avatar {
+    width: 88px;
+    height: 88px;
+    background: linear-gradient(135deg, rgba(192,57,43,0.3), rgba(139,37,0,0.3));
+    border: 2px solid rgba(192,57,43,0.5);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+
+  .p-name {
+    color: #ffffff;
+    font-size: 24px;
+    font-family: 'Georgia', serif;
+    font-weight: bold;
+    margin: 0 0 4px;
+  }
+
+  .p-phone {
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .p-stats {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: p-fadeUp 0.6s ease 0.1s both;
+  }
+
+  .p-stat-card {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .p-stat-card:active {
+    background: rgba(192,57,43,0.1);
+    transform: scale(0.98);
+  }
+
+  .p-stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    color: #C0392B;
+    margin-bottom: 4px;
+  }
+
+  .p-stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.5px;
+  }
+
+  .p-section {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 24px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.05);
+    animation: p-fadeUp 0.6s ease 0.15s both;
+  }
+
+  .p-section-title {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    letter-spacing: 0.3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .p-setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .p-setting-item:last-child {
+    border-bottom: none;
+  }
+
+  .p-setting-label {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+  }
+
+  .p-setting-value {
+    color: rgba(255,255,255,0.9);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .p-setting-change {
+    color: #C0392B;
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  .p-badge-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .p-badge {
+    background: rgba(192,57,43,0.15);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .p-badge-locked {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.3);
+  }
+
+  .p-badge-icon {
+    font-size: 14px;
+  }
+
+  .p-progress-text {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    margin-left: 8px;
+  }
+
+  .p-logout-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 14px;
+    color: rgba(192,57,43,0.8);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    margin-top: 16px;
+    transition: all 0.2s;
+  }
+
+  .p-logout-btn:active {
+    background: rgba(192,57,43,0.1);
+    transform: scale(0.98);
+  }
+
+  .p-view-all {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+  }
+
+  .p-recipe-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .p-recipe-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-decoration: none;
+  }
+
+  .p-recipe-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(139,37,0,0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .p-recipe-name {
+    flex: 1;
+    color: rgba(255,255,255,0.8);
+    font-size: 13px;
+  }
+
+  .p-empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="profile-screen">
-    <div class="profile-header">
-        <div class="profile-avatar"></div>
-        <h2>{{ user.username }}</h2>
-        <p>{{ user.phone_number }}</p>
+<div class="p-screen">
+  <div class="p-blob1"></div>
+  <div class="p-blob2"></div>
+  <div class="p-overlay"></div>
+
+  <!-- Profile Header -->
+  <div class="p-header">
+    <div class="p-avatar">👨‍🍳</div>
+    <h1 class="p-name">{{ user.username }}</h1>
+    <p class="p-phone">{{ user.phone_number }}</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="p-stats">
+    <a href="{{ url_for('my_recipes') }}" class="p-stat-card">
+      <div class="p-stat-number">{{ user_recipes_count }}</div>
+      <div class="p-stat-label">My Recipes</div>
+    </a>
+    <a href="{{ url_for('favorites') }}" class="p-stat-card">
+      <div class="p-stat-number">{{ favorite_count }}</div>
+      <div class="p-stat-label">Favorites</div>
+    </a>
+    <a href="{{ url_for('view_shopping_list') }}" class="p-stat-card">
+      <div class="p-stat-number">{{ shopping_count }}</div>
+      <div class="p-stat-label">Shopping</div>
+    </a>
+  </div>
+
+  <!-- Account Settings -->
+  <div class="p-section">
+    <div class="p-section-title">
+      ⚙️ Account Settings
     </div>
-    
-    <div class="profile-stats">
-        <div class="stat-box">
-            <div class="stat-number">{{ my_recipes|length }}</div>
-            <div class="stat-label">My Recipes</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-number">{{ favorites|length }}</div>
-            <div class="stat-label">Favorites</div>
-        </div>
+    <div class="p-setting-item">
+      <span class="p-setting-label">Edit Profile</span>
+      <a href="{{ url_for('edit_profile') }}" class="p-setting-change">Update →</a>
     </div>
-    
-    <div class="profile-section">
-        <h3>My Recipes</h3>
-        <div class="profile-recipe-list">
-            {% for recipe in my_recipes %}
-            <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="profile-recipe-item">
-                <span>{{ recipe.title }}</span>
-            </a>
-            {% else %}
-            <p class="empty-text">No recipes created yet</p>
-            {% endfor %}
-        </div>
+    <div class="p-setting-item">
+      <span class="p-setting-label">Change Password</span>
+      <a href="{{ url_for('change_password') }}" class="p-setting-change">Update →</a>
     </div>
-    
-    <div class="profile-section">
-        <h3>Favorite Recipes</h3>
-        <div class="profile-recipe-list">
-            {% for recipe in favorites %}
-            <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="profile-recipe-item">
-                <span>{{ recipe.title }}</span>
-            </a>
-            {% else %}
-            <p class="empty-text">No favorite recipes yet</p>
-            {% endfor %}
-        </div>
+  </div>
+
+  <!-- Achievements / Milestones -->
+  <div class="p-section">
+    <div class="p-section-title">
+      🏆 Achievements
+      <a href="{{ url_for('achievements') }}" class="p-view-all">View all →</a>
     </div>
-    
-    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    <div class="p-badge-grid">
+      {% if user_recipes_count >= 5 %}
+      <span class="p-badge">
+        <span class="p-badge-icon">🏆</span> Apprentice Cook
+      </span>
+      {% else %}
+      <span class="p-badge p-badge-locked">
+        <span class="p-badge-icon">🔒</span> 5 Recipes
+        <span class="p-progress-text">({{ user_recipes_count }}/5)</span>
+      </span>
+      {% endif %}
+      
+      {% if user_recipes_count >= 10 %}
+      <span class="p-badge">
+        <span class="p-badge-icon">🏆</span> Home Chef
+      </span>
+      {% else %}
+      <span class="p-badge p-badge-locked">
+        <span class="p-badge-icon">🔒</span> 10 Recipes
+        <span class="p-progress-text">({{ user_recipes_count }}/10)</span>
+      </span>
+      {% endif %}
+      
+      {% if user_recipes_count >= 25 %}
+      <span class="p-badge">
+        <span class="p-badge-icon">🏆</span> Master Chef
+      </span>
+      {% else %}
+      <span class="p-badge p-badge-locked">
+        <span class="p-badge-icon">🔒</span> 25 Recipes
+        <span class="p-progress-text">({{ user_recipes_count }}/25)</span>
+      </span>
+      {% endif %}
+
+      {% if favorite_count >= 10 %}
+      <span class="p-badge">
+        <span class="p-badge-icon">❤️</span> Food Lover
+      </span>
+      {% else %}
+      <span class="p-badge p-badge-locked">
+        <span class="p-badge-icon">🔒</span> 10 Favorites
+        <span class="p-progress-text">({{ favorite_count }}/10)</span>
+      </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- My Recipes Preview -->
+  <div class="p-section">
+    <div class="p-section-title">
+      📝 Recent Recipes
+      <a href="{{ url_for('my_recipes') }}" class="p-view-all">View all →</a>
+    </div>
+    {% if user_recipes %}
+    <div class="p-recipe-list">
+      {% for recipe in user_recipes[:3] %}
+      <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="p-recipe-item">
+        <div class="p-recipe-icon">🍽️</div>
+        <span class="p-recipe-name">{{ recipe.title }}</span>
+        <span style="color:rgba(255,255,255,0.2);">›</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-empty">
+      No recipes yet. Start creating!
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Favorite Recipes Preview -->
+  <div class="p-section">
+    <div class="p-section-title">
+      ❤️ Favorite Dishes
+      <a href="{{ url_for('favorites') }}" class="p-view-all">View all →</a>
+    </div>
+    {% if favorite_recipes %}
+    <div class="p-recipe-list">
+      {% for recipe in favorite_recipes[:3] %}
+      <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="p-recipe-item">
+        <div class="p-recipe-icon">❤️</div>
+        <span class="p-recipe-name">{{ recipe.title }}</span>
+        <span style="color:rgba(255,255,255,0.2);">›</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="p-empty">
+      No favorites yet. Save recipes you love!
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Logout Button -->
+  <a href="{{ url_for('logout') }}" class="p-logout-btn">🚪 Log Out</a>
 </div>
 {% endblock %}
