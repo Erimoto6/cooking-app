@@ -122,7 +122,8 @@ def insert_recipes(recipes):
     
     for r in recipes:
         # Check if dish_id already exists
-        cur.execute("SELECT id FROM recipes WHERE dish_id = %s", (r['dish_id'],))
+        sql_check = "SELECT id FROM recipes WHERE dish_id = %s"
+        cur.execute(sql_check, (r['dish_id'],))
         if cur.fetchone():
             print(f"  ⏭ Skipping duplicate: {r['dish_id']} - {r['title']}")
             skipped += 1
@@ -130,12 +131,13 @@ def insert_recipes(recipes):
         
         try:
             # Insert recipe with dish_id
-            cur.execute('''
+            sql_insert = """
                 INSERT INTO recipes 
                 (dish_id, title, description, cuisine, region, category, difficulty, prep_time, cook_time)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            ''', (
+            """
+            cur.execute(sql_insert, (
                 r['dish_id'], r['title'], r['description'], 
                 r.get('cuisine', ''), r.get('region', ''), r.get('category', ''),
                 r['difficulty'], r['prep_time'], r['cook_time']
@@ -153,14 +155,14 @@ def insert_recipes(recipes):
                     name = ing
                     qty = ''
                 cur.execute(
-                    'INSERT INTO ingredients (recipe_id, name, quantity) VALUES (%s, %s, %s)',
+                    "INSERT INTO ingredients (recipe_id, name, quantity) VALUES (%s, %s, %s)",
                     (recipe_id, name, qty)
                 )
             
             # Insert steps
             for idx, step in enumerate(r['steps'], start=1):
                 cur.execute(
-                    'INSERT INTO steps (recipe_id, step_number, instruction) VALUES (%s, %s, %s)',
+                    "INSERT INTO steps (recipe_id, step_number, instruction) VALUES (%s, %s, %s)",
                     (recipe_id, idx, step)
                 )
             
@@ -180,7 +182,7 @@ def insert_recipes(recipes):
     return inserted, skipped
 
 if __name__ == '__main__':
-    # Use your existing file (it's already in the correct format!)
+    # Use your existing file
     FILE = "Cooking_Application_Drafts__1_.txt"
     
     if not os.path.exists(FILE):
@@ -193,9 +195,6 @@ if __name__ == '__main__':
     
     if len(recipes) == 0:
         print("⚠️ No recipes found! The file might be empty or in wrong format.")
-        print("   First 500 characters of file:")
-        with open(FILE, 'r', encoding='utf-8') as f:
-            print(f.read(500))
         exit(1)
     
     print("💾 Inserting into PostgreSQL...")
