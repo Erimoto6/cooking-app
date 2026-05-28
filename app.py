@@ -205,7 +205,6 @@ def create_recipe():
         )
         
         flash('Recipe created successfully!', 'success')
-        # Redirect using numeric id for custom recipes (they don't have dish_id)
         return redirect(url_for('view_recipe_by_id', recipe_id=recipe_id))
     
     return render_template('create_recipe.html')
@@ -226,12 +225,11 @@ def view_recipe_by_id(recipe_id):
     return render_template('recipe_detail.html', recipe=recipe, is_favorite=is_favorite)
 
 @app.route('/shopping_list')
-def view_shopping_list():
+def view_shopping_list_old():
+    """Legacy shopping list route - redirect to new one"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    items = get_shopping_list(session['user_id'])
-    return render_template('shopping_list.html', items=items)
+    return redirect(url_for('view_shopping_list'))
 
 @app.route('/add_to_shopping_list', methods=['POST'])
 def add_to_shopping_list_route():
@@ -247,7 +245,8 @@ def add_to_shopping_list_route():
     return jsonify({'success': True})
 
 @app.route('/toggle_shopping_item/<int:item_id>')
-def toggle_shopping_item_route(item_id):
+def toggle_shopping_item_route_old(item_id):
+    """Legacy GET route - redirect to POST version"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
@@ -255,7 +254,8 @@ def toggle_shopping_item_route(item_id):
     return redirect(url_for('view_shopping_list'))
 
 @app.route('/remove_shopping_item/<int:item_id>')
-def remove_shopping_item_route(item_id):
+def remove_shopping_item_route_old(item_id):
+    """Legacy GET route - redirect to POST version"""
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
@@ -280,23 +280,6 @@ def add_recipe_to_shopping_list_route(recipe_id):
         
     flash('All ingredients added to shopping list!', 'success')
     return redirect(url_for('view_recipe_by_id', recipe_id=recipe_id))
-
-@app.route('/profile')
-def profile():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
-    cursor = get_cursor()
-    
-    cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
-    user = cursor.fetchone()
-    
-    cursor.execute('SELECT * FROM recipes WHERE user_id = %s ORDER BY created_at DESC', (session['user_id'],))
-    my_recipes = cursor.fetchall()
-    
-    favorites = get_favorite_recipes(session['user_id'])
-    
-    return render_template('profile.html', user=user, my_recipes=my_recipes, favorites=favorites)
 
 # ==================== VOICE COMMAND ROUTES ====================
 
@@ -344,6 +327,494 @@ def api_recipe_by_id(recipe_id):
     if not recipe or recipe.get('title') == 'Recipe Not Found':
         return jsonify({'error': 'Recipe not found'}), 404
     return jsonify(recipe)
+
+# ============ SHOPPING LIST ROUTES (NEW) ============
+
+@app.route('/toggle_shopping_item/<int:item_id>', methods=['POST'])
+def toggle_shopping_item(item_id):
+    """Toggle checkbox status of a shopping list item"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT checked FROM shopping_list 
+            WHERE id = %s AND user_id = %s
+        """, (item_id, session['user_id']))
+        
+        result = cur.fetchone()
+        if result:
+            new_status = not result[0]
+            cur.execute("""
+                UPDATE shopping_list 
+                SET checked = %s 
+                WHERE id = %s AND user_id = %s
+            """, (new_status, item_id, session['user_id']))
+            conn.commit()
+            
+        cur.close()
+        conn.close()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error toggling item: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/remove_shopping_item/<int:item_id>', methods=['POST'])
+def remove_shopping_item(item_id):
+    """Remove a single item from shopping list"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            DELETE FROM shopping_list 
+            WHERE id = %s AND user_id = %s
+        """, (item_id, session['user_id']))
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error removing item: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/clear_shopping_list', methods=['POST'])
+def clear_shopping_list():
+    """Clear all items from shopping list"""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            DELETE FROM shopping_list 
+            WHERE user_id = %s
+        """, (session['user_id'],))
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Error clearing shopping list: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============ PROFILE MANAGEMENT ROUTES ============
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    """Edit user profile (username, phone)"""
+    if 'user_id' not in session:
+        flash('Please login to edit your profile', 'error')
+        return redirect(url_for('login'))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        phone_number = request.form.get('phone_number')
+        
+        if not username or not phone_number:
+            flash('All fields are required', 'error')
+            return redirect(url_for('edit_profile'))
+        
+        try:
+            cur.execute("""
+                SELECT id FROM users 
+                WHERE username = %s AND id != %s
+            """, (username, session['user_id']))
+            if cur.fetchone():
+                flash('Username already taken', 'error')
+                return redirect(url_for('edit_profile'))
+            
+            cur.execute("""
+                SELECT id FROM users 
+                WHERE phone_number = %s AND id != %s
+            """, (phone_number, session['user_id']))
+            if cur.fetchone():
+                flash('Phone number already registered', 'error')
+                return redirect(url_for('edit_profile'))
+            
+            cur.execute("""
+                UPDATE users 
+                SET username = %s, phone_number = %s 
+                WHERE id = %s
+            """, (username, phone_number, session['user_id']))
+            conn.commit()
+            
+            session['username'] = username
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('profile'))
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"Edit profile error: {e}")
+            flash('Error updating profile', 'error')
+            return redirect(url_for('edit_profile'))
+    
+    cur.execute("""
+        SELECT username, phone_number 
+        FROM users 
+        WHERE id = %s
+    """, (session['user_id'],))
+    user = cur.fetchone()
+    
+    cur.close()
+    conn.close()
+    
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('profile'))
+    
+    user_data = {
+        'username': user[0],
+        'phone_number': user[1]
+    }
+    
+    return render_template('edit_profile.html', user=user_data)
+
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    """Change user password"""
+    if 'user_id' not in session:
+        flash('Please login to change your password', 'error')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Validation
+        if not current_password or not new_password or not confirm_password:
+            flash('All fields are required', 'error')
+            return redirect(url_for('change_password'))
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match', 'error')
+            return redirect(url_for('change_password'))
+        
+        if len(new_password) < 4:
+            flash('Password must be at least 4 characters', 'error')
+            return redirect(url_for('change_password'))
+        
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Verify current password
+        current_hash = hash_password(current_password)
+        cur.execute("SELECT id FROM users WHERE id = %s AND password = %s", 
+                   (session['user_id'], current_hash))
+        
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            flash('Current password is incorrect', 'error')
+            return redirect(url_for('change_password'))
+        
+        # Update password
+        new_hash = hash_password(new_password)
+        cur.execute("UPDATE users SET password = %s WHERE id = %s", 
+                   (new_hash, session['user_id']))
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        flash('Password changed successfully! Please login again.', 'success')
+        session.clear()
+        return redirect(url_for('login'))
+    
+    return render_template('change_password.html')
+
+@app.route('/my_recipes')
+def my_recipes():
+    """View all recipes created by the user"""
+    if 'user_id' not in session:
+        flash('Please login to view your recipes', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT id, title, cuisine, region, category, prep_time, created_at
+            FROM recipes 
+            WHERE user_id = %s 
+            ORDER BY created_at DESC
+        """, (session['user_id'],))
+        recipes = cur.fetchall()
+        
+        recipes_list = [
+            {
+                'id': r[0], 
+                'title': r[1], 
+                'cuisine': r[2] or 'Various',
+                'region': r[3] or '',
+                'category': r[4] or 'Recipe',
+                'prep_time': r[5],
+                'created_at': r[6]
+            }
+            for r in recipes
+        ]
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('my_recipes.html', recipes=recipes_list)
+        
+    except Exception as e:
+        print(f"My recipes error: {e}")
+        flash('Error loading your recipes', 'error')
+        return redirect(url_for('profile'))
+
+@app.route('/favorites')
+def favorites():
+    """View all favorite recipes"""
+    if 'user_id' not in session:
+        flash('Please login to view your favorites', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT r.id, r.title, r.cuisine, r.region, r.category, r.prep_time
+            FROM favorites f
+            JOIN recipes r ON f.recipe_id = r.id
+            WHERE f.user_id = %s
+            ORDER BY f.created_at DESC
+        """, (session['user_id'],))
+        favorites = cur.fetchall()
+        
+        favorites_list = [
+            {
+                'id': r[0], 
+                'title': r[1], 
+                'cuisine': r[2] or 'Various',
+                'region': r[3] or '',
+                'category': r[4] or 'Recipe',
+                'prep_time': r[5]
+            }
+            for r in favorites
+        ]
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('favorites.html', favorites=favorites_list)
+        
+    except Exception as e:
+        print(f"Favorites error: {e}")
+        flash('Error loading favorites', 'error')
+        return redirect(url_for('profile'))
+
+@app.route('/view_shopping_list')
+def view_shopping_list():
+    """View shopping list page"""
+    if 'user_id' not in session:
+        flash('Please login to view your shopping list', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT id, ingredient_name, quantity, recipe_id, checked, added_at
+            FROM shopping_list 
+            WHERE user_id = %s 
+            ORDER BY checked ASC, added_at DESC
+        """, (session['user_id'],))
+        items = cur.fetchall()
+        
+        shopping_items = [
+            {
+                'id': i[0],
+                'name': i[1],
+                'quantity': i[2] or '1 unit',
+                'recipe_id': i[3],
+                'checked': i[4],
+                'added_at': i[5]
+            }
+            for i in items
+        ]
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('shopping_list.html', shopping_items=shopping_items)
+        
+    except Exception as e:
+        print(f"Shopping list error: {e}")
+        flash('Error loading shopping list', 'error')
+        return render_template('shopping_list.html', shopping_items=[])
+
+@app.route('/achievements')
+def achievements():
+    """View user achievements and milestones"""
+    if 'user_id' not in session:
+        flash('Please login to view achievements', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute("SELECT COUNT(*) FROM recipes WHERE user_id = %s", (session['user_id'],))
+        recipe_count = cur.fetchone()[0]
+        
+        cur.execute("SELECT COUNT(*) FROM favorites WHERE user_id = %s", (session['user_id'],))
+        favorite_count = cur.fetchone()[0]
+        
+        milestones = {
+            'recipe': [
+                {'target': 5, 'title': '🥘 Apprentice Cook', 'description': 'Created 5 recipes', 'unlocked': recipe_count >= 5, 'current': recipe_count},
+                {'target': 10, 'title': '🍳 Home Chef', 'description': 'Created 10 recipes', 'unlocked': recipe_count >= 10, 'current': recipe_count},
+                {'target': 25, 'title': '👨‍🍳 Master Chef', 'description': 'Created 25 recipes', 'unlocked': recipe_count >= 25, 'current': recipe_count},
+            ],
+            'favorite': [
+                {'target': 10, 'title': '❤️ Food Lover', 'description': 'Favorited 10 recipes', 'unlocked': favorite_count >= 10, 'current': favorite_count},
+                {'target': 25, 'title': '⭐ Super Fan', 'description': 'Favorited 25 recipes', 'unlocked': favorite_count >= 25, 'current': favorite_count},
+            ]
+        }
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('achievements.html', 
+                             milestones=milestones, 
+                             recipe_count=recipe_count,
+                             favorite_count=favorite_count)
+        
+    except Exception as e:
+        print(f"Achievements error: {e}")
+        flash('Error loading achievements', 'error')
+        return redirect(url_for('profile'))
+
+# ==================== PROFILE ROUTE (FIXED) ====================
+
+@app.route('/profile')
+def profile():
+    """User profile page"""
+    if 'user_id' not in session:
+        flash('Please login to view your profile', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Get user info as DICTIONARY for template
+        cur.execute("""
+            SELECT id, username, phone_number 
+            FROM users 
+            WHERE id = %s
+        """, (session['user_id'],))
+        user_row = cur.fetchone()
+        
+        if not user_row:
+            session.clear()
+            flash('User not found', 'error')
+            return redirect(url_for('login'))
+        
+        # Convert to dictionary so template can use user.username, user.phone_number
+        user_dict = {
+            'id': user_row[0],
+            'username': user_row[1],
+            'phone_number': user_row[2] if len(user_row) > 2 else ''
+        }
+        
+        # Get user's created recipes count
+        cur.execute("""
+            SELECT COUNT(*) FROM recipes 
+            WHERE user_id = %s
+        """, (session['user_id'],))
+        user_recipes_count = cur.fetchone()[0]
+        
+        # Get user's created recipes (for preview)
+        cur.execute("""
+            SELECT id, title, cuisine, category 
+            FROM recipes 
+            WHERE user_id = %s 
+            ORDER BY created_at DESC 
+            LIMIT 3
+        """, (session['user_id'],))
+        user_recipes = cur.fetchall()
+        user_recipes_list = []
+        for r in user_recipes:
+            user_recipes_list.append({
+                'id': r[0],
+                'title': r[1],
+                'cuisine': r[2] if r[2] else 'Various',
+                'category': r[3] if r[3] else 'Recipe'
+            })
+        
+        # Get favorite recipes count
+        cur.execute("""
+            SELECT COUNT(*) FROM favorites 
+            WHERE user_id = %s
+        """, (session['user_id'],))
+        favorite_count = cur.fetchone()[0]
+        
+        # Get favorite recipes (for preview)
+        cur.execute("""
+            SELECT r.id, r.title, r.cuisine, r.category
+            FROM favorites f
+            JOIN recipes r ON f.recipe_id = r.id
+            WHERE f.user_id = %s
+            ORDER BY f.created_at DESC
+            LIMIT 3
+        """, (session['user_id'],))
+        favorite_recipes = cur.fetchall()
+        favorite_recipes_list = []
+        for r in favorite_recipes:
+            favorite_recipes_list.append({
+                'id': r[0],
+                'title': r[1],
+                'cuisine': r[2] if r[2] else 'Various',
+                'category': r[3] if r[3] else 'Recipe'
+            })
+        
+        # Get shopping list count
+        cur.execute("""
+            SELECT COUNT(*) FROM shopping_list 
+            WHERE user_id = %s AND checked = false
+        """, (session['user_id'],))
+        shopping_count = cur.fetchone()[0]
+        
+        cur.close()
+        conn.close()
+        
+        return render_template('profile.html', 
+                             user=user_dict,
+                             user_recipes=user_recipes_list,
+                             user_recipes_count=user_recipes_count,
+                             favorite_recipes=favorite_recipes_list,
+                             favorite_count=favorite_count,
+                             shopping_count=shopping_count)
+        
+    except Exception as e:
+        print(f"Profile error DETAIL: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading profile', 'error')
+        return redirect(url_for('index'))
 
 # ==================== HELPER FUNCTIONS ====================
 
@@ -399,7 +870,6 @@ def create_custom_recipe(user_id, title, description, cuisine, region, prep_time
     db = get_db()
     cursor = get_cursor()
     
-    # Custom recipes don't get a dish_id (NULL allowed)
     cursor.execute('''
         INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)

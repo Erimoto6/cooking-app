@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}Achievements - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .ach-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ach-blob1 {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -80px; right: -60px;
+    animation: float1 9s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  @keyframes float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+
+  .ach-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,1,0,0.55);
+    pointer-events: none;
+  }
+
+  .ach-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .ach-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-block;
+    margin-bottom: 20px;
+  }
+
+  .ach-title {
+    color: #ffffff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .ach-section {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .ach-section-title {
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px;
+  }
+
+  .ach-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ach-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+  }
+
+  .ach-card.unlocked {
+    border-color: rgba(192,57,43,0.3);
+    background: rgba(192,57,43,0.1);
+  }
+
+  .ach-card.locked {
+    opacity: 0.6;
+  }
+
+  .ach-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .ach-card.unlocked .ach-icon {
+    background: rgba(192,57,43,0.2);
+  }
+
+  .ach-info {
+    flex: 1;
+  }
+
+  .ach-name {
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .ach-desc {
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+  }
+
+  .ach-progress {
+    color: #C0392B;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .ach-progress-bar {
+    width: 100px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .ach-progress-fill {
+    height: 100%;
+    background: #C0392B;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .ach-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .ach-stat-card {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .ach-stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    color: #C0392B;
+  }
+
+  .ach-stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ach-screen">
+  <div class="ach-blob1"></div>
+  <div class="ach-overlay"></div>
+
+  <div class="ach-header">
+    <a href="{{ url_for('profile') }}" class="ach-back">← Back to Profile</a>
+    <h1 class="ach-title">Achievements</h1>
+  </div>
+
+  <div class="ach-stats">
+    <div class="ach-stat-card">
+      <div class="ach-stat-number">{{ recipe_count }}</div>
+      <div class="ach-stat-label">Recipes Created</div>
+    </div>
+    <div class="ach-stat-card">
+      <div class="ach-stat-number">{{ favorite_count }}</div>
+      <div class="ach-stat-label">Favorites</div>
+    </div>
+  </div>
+
+  <div class="ach-section">
+    <h2 class="ach-section-title">🍳 Recipe Milestones</h2>
+    <div class="ach-grid">
+      {% for milestone in milestones.recipe %}
+      <div class="ach-card {% if milestone.unlocked %}unlocked{% else %}locked{% endif %}">
+        <div class="ach-icon">{% if milestone.unlocked %}🏆{% else %}🔒{% endif %}</div>
+        <div class="ach-info">
+          <div class="ach-name">{{ milestone.title }}</div>
+          <div class="ach-desc">{{ milestone.description }}</div>
+        </div>
+        <div class="ach-progress">
+          {% if milestone.unlocked %}
+          ✓ Unlocked
+          {% else %}
+          {{ milestone.current }}/{{ milestone.target }}
+          <div class="ach-progress-bar">
+            <div class="ach-progress-fill" style="width: {{ (milestone.current / milestone.target * 100) if milestone.target > 0 else 0 }}%"></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="ach-section">
+    <h2 class="ach-section-title">❤️ Favorite Milestones</h2>
+    <div class="ach-grid">
+      {% for milestone in milestones.favorite %}
+      <div class="ach-card {% if milestone.unlocked %}unlocked{% else %}locked{% endif %}">
+        <div class="ach-icon">{% if milestone.unlocked %}🏆{% else %}🔒{% endif %}</div>
+        <div class="ach-info">
+          <div class="ach-name">{{ milestone.title }}</div>
+          <div class="ach-desc">{{ milestone.description }}</div>
+        </div>
+        <div class="ach-progress">
+          {% if milestone.unlocked %}
+          ✓ Unlocked
+          {% else %}
+          {{ milestone.current }}/{{ milestone.target }}
+          <div class="ach-progress-bar">
+            <div class="ach-progress-fill" style="width: {{ (milestone.current / milestone.target * 100) if milestone.target > 0 else 0 }}%"></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
