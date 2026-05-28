@@ -12,7 +12,7 @@ DB_CONFIG = {
     'port':     os.getenv('DB_PORT', '5432'),
     'dbname':   os.getenv('DB_NAME', 'dishlydb'),
     'user':     os.getenv('DB_USER', 'dishly'),
-    'password': os.getenv('DB_PASSWORD', ''),
+    'password': os.getenv('DB_PASSWORD', 'Dishly2026'),
 }
 
 def get_db():
