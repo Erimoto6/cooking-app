@@ -47,7 +47,7 @@
     pointer-events: none;
   }
 
-  /* ── Hero ── */
+  /* Hero */
   .rd-hero {
     position: relative; z-index: 1;
     padding: 52px 20px 24px;
@@ -113,7 +113,7 @@
     color: #ffffff;
   }
 
-  /* ── Sections ── */
+  /* Sections */
   .rd-divider {
     height: 1px;
     background: rgba(255,255,255,0.06);
@@ -137,7 +137,7 @@
     font-size: 12px; color: rgba(255,120,80,0.8); padding: 0;
   }
 
-  /* ── Ingredients ── */
+  /* Ingredients */
   .rd-ingr-item {
     display: flex; align-items: center;
     justify-content: space-between;
@@ -167,7 +167,7 @@
     font-size: 12px;
   }
 
-  /* ── Steps ── */
+  /* Steps */
   .rd-step {
     display: flex; gap: 14px; align-items: flex-start;
     margin-bottom: 18px;
@@ -194,7 +194,7 @@
   }
   .rd-speak-btn:active { background: rgba(255,255,255,0.1); }
 
-  /* ── Toast ── */
+  /* Toast */
   .rd-toast {
     position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
     background: rgba(20,70,30,0.92);
@@ -207,97 +207,97 @@
   .rd-toast.show { opacity: 1; }
 
   /* Voice Assistant */
-.va-container {
-  padding: 0 20px;
-  margin-top: -10px;
-  margin-bottom: 28px;
-  animation: rd-fadeUp 0.5s ease both;
-}
+  .va-container {
+    padding: 0 20px;
+    margin-top: -10px;
+    margin-bottom: 28px;
+    animation: rd-fadeUp 0.5s ease both;
+  }
 
-.va-header {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.8);
-  margin-bottom: 10px;
-  letter-spacing: 0.5px;
-}
+  .va-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
 
-.va-status {
-  float: right;
-  font-size: 13px;
-  color: rgba(255,255,255,0.45);
-}
+  .va-status {
+    float: right;
+    font-size: 13px;
+    color: rgba(255,255,255,0.45);
+  }
 
-.va-box {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  padding: 16px;
-  border-radius: 14px;
-}
+  .va-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 16px;
+    border-radius: 14px;
+  }
 
-.va-subtext {
-  font-size: 12px;
-  color: rgba(255,255,255,0.38);
-  margin-bottom: 14px;
-  text-align: center;
-}
+  .va-subtext {
+    font-size: 12px;
+    color: rgba(255,255,255,0.38);
+    margin-bottom: 14px;
+    text-align: center;
+  }
 
-.va-main-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 14px;
-}
+  .va-main-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
 
-.va-mic-btn,
-.va-read-btn,
-.va-stop-btn {
-  border: none;
-  cursor: pointer;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 14px;
-}
+  .va-mic-btn,
+  .va-read-btn,
+  .va-stop-btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
 
-.va-mic-btn {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
-  width: 40px; height: 40px;
-  border-radius: 50%;
-}
+  .va-mic-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+  }
 
-.va-read-btn {
-  background: rgba(139,37,0,0.25);
-  border: 1px solid rgba(192,57,43,0.4);
-  color: rgba(255,130,90,0.85);
-  padding: 10px 22px;
-  border-radius: 18px;
-}
+  .va-read-btn {
+    background: rgba(139,37,0,0.25);
+    border: 1px solid rgba(192,57,43,0.4);
+    color: rgba(255,130,90,0.85);
+    padding: 10px 22px;
+    border-radius: 18px;
+  }
 
-.va-stop-btn {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
-  width: 40px; height: 40px;
-  border-radius: 8px;
-}
+  .va-stop-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    width: 40px; height: 40px;
+    border-radius: 8px;
+  }
 
-.va-quick-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
+  .va-quick-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
 
-.va-small {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 6px 10px;
-  font-size: 11px;
-  border-radius: 8px;
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-}
+  .va-small {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+  }
 </style>
 {% endblock %}
 
@@ -309,9 +309,9 @@
 
   <!-- Hero -->
   <div class="rd-hero">
-    <a class="rd-back" href="{{ request.referrer or url_for('home') }}">&#8592;</a>
+    <a class="rd-back" href="{{ request.referrer or url_for('index') }}">←</a>
 
-    <button class="rd-share-btn" id="shareBtn" title="Share recipe">&#8599;</button>
+    <button class="rd-share-btn" id="shareBtn" title="Share recipe">↗</button>
 
     <div class="rd-img-wrap">
       {% if recipe.image_url %}
@@ -324,13 +324,10 @@
 
     <div class="rd-title">{{ recipe.title }}</div>
 
-    {% if recipe.description %}
-    {% endif %}
-
     <div class="rd-meta">
-      <span class="rd-badge">🕒 {{ recipe.prep_time + recipe.cook_time }} min</span>
-      <span class="rd-badge">⚡ {{ recipe.difficulty }}</span>
-      <span class="rd-badge">🌏 {{ recipe.region }}</span>
+      <span class="rd-badge">🕒 {{ (recipe.prep_time or 0) + (recipe.cook_time or 0) }} min</span>
+      <span class="rd-badge">⚡ {{ recipe.difficulty or 'Medium' }}</span>
+      <span class="rd-badge">🌏 {{ recipe.region or 'Global' }}</span>
       {% if recipe.cuisine %}
       <span class="rd-badge">{{ recipe.cuisine }}</span>
       {% endif %}
@@ -338,33 +335,33 @@
 
     <button class="rd-fav-btn {% if is_favorite %}active{% endif %}"
             id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
-      {% if is_favorite %}♥&nbsp; Saved{% else %}♡&nbsp; Add to favorites{% endif %}
+      {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
     </button>
   </div>
 
   <!-- Voice Assistant -->
-<div class="va-container">
-  <div class="va-header">VOICE ASSISTANT <span class="va-status">Idle</span></div>
+  <div class="va-container">
+    <div class="va-header">VOICE ASSISTANT <span class="va-status" id="vaStatus">Idle</span></div>
 
-  <div class="va-box">
-    <p class="va-subtext">Tap the mic and say a command, or press "Read Recipe" to start.</p>
+    <div class="va-box">
+      <p class="va-subtext">Tap the mic and say a command, or press "Read Recipe" to start.</p>
 
-    <div class="va-main-controls">
-      <button class="va-mic-btn" id="vaMicBtn">🎤</button>
-      <button class="va-read-btn" id="vaReadBtn">▶ Read Recipe</button>
-      <button class="va-stop-btn" id="vaStopBtn">■</button>
-    </div>
+      <div class="va-main-controls">
+        <button class="va-mic-btn" id="vaMicBtn">🎤</button>
+        <button class="va-read-btn" id="vaReadBtn">▶ Read Recipe</button>
+        <button class="va-stop-btn" id="vaStopBtn">■</button>
+      </div>
 
-    <div class="va-quick-controls">
-      <button class="va-small">next step</button>
-      <button class="va-small">previous step</button>
-      <button class="va-small">repeat</button>
-      <button class="va-small">ingredients</button>
-      <button class="va-small">how long</button>
-      <button class="va-small">stop</button>
+      <div class="va-quick-controls">
+        <button class="va-small" data-command="next">next step</button>
+        <button class="va-small" data-command="prev">previous step</button>
+        <button class="va-small" data-command="repeat">repeat</button>
+        <button class="va-small" data-command="ingredients">ingredients</button>
+        <button class="va-small" data-command="time">how long</button>
+        <button class="va-small" data-command="stop">stop</button>
+      </div>
     </div>
   </div>
-</div>
 
   <div class="rd-divider"></div>
 
@@ -421,9 +418,10 @@
 
 <script>
 (function () {
-  /* ── Helpers ── */
+  // ========== Helper Functions ==========
   function showToast(msg) {
     var t = document.getElementById('rdToast');
+    if (!t) return;
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(t._timer);
@@ -438,390 +436,308 @@
     }).then(function (r) { return r.json(); });
   }
 
-  /* ── Favourite toggle ── */
+  // ========== Get Recipe Data from API ==========
+  var recipeData = null;
+  var recipeId = '{{ recipe.dish_id }}';
+  var recipeNumericId = {{ recipe.id }};
+  
+  // Fetch full recipe data for voice commands
+  fetch('/api/recipe/' + recipeId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      recipeData = data;
+      console.log('Recipe loaded for voice:', recipeData);
+    })
+    .catch(function(err) {
+      console.log('Trying numeric ID fallback...');
+      return fetch('/api/recipe/id/' + recipeNumericId);
+    })
+    .then(function(r) { if (r) return r.json(); })
+    .then(function(data) {
+      if (data && data.title) recipeData = data;
+      console.log('Recipe loaded (fallback):', recipeData);
+    })
+    .catch(function(err) { console.error('Could not load recipe:', err); });
+
+  // ========== Text-to-Speech ==========
+  function speak(text, onEnd) {
+    if (!('speechSynthesis' in window)) {
+      showToast('Text-to-speech not supported');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    if (onEnd) utterance.onend = onEnd;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // ========== Steps from Page ==========
+  var stepElements = document.querySelectorAll('.rd-step-text');
+  var stepTexts = Array.from(stepElements).map(function(el) { return el.textContent; });
+  var currentStepIndex = 0;
+  var isReading = false;
+
+  function readStep(index) {
+    if (index >= 0 && index < stepTexts.length) {
+      speak(stepTexts[index], function() {
+        if (isReading && index + 1 < stepTexts.length) {
+          currentStepIndex = index + 1;
+          readStep(currentStepIndex);
+        } else if (isReading) {
+          isReading = false;
+          document.getElementById('vaStatus').textContent = 'Idle';
+        }
+      });
+    }
+  }
+
+  function startReadingRecipe() {
+    if (stepTexts.length === 0) {
+      speak('No steps found for this recipe.');
+      return;
+    }
+    isReading = true;
+    currentStepIndex = 0;
+    document.getElementById('vaStatus').textContent = 'Reading...';
+    readStep(0);
+  }
+
+  function stopReading() {
+    window.speechSynthesis.cancel();
+    isReading = false;
+    document.getElementById('vaStatus').textContent = 'Idle';
+  }
+
+  function nextStep() {
+    if (currentStepIndex + 1 < stepTexts.length) {
+      currentStepIndex++;
+      speak(stepTexts[currentStepIndex]);
+    } else {
+      speak('You are on the last step.');
+    }
+  }
+
+  function previousStep() {
+    if (currentStepIndex - 1 >= 0) {
+      currentStepIndex--;
+      speak(stepTexts[currentStepIndex]);
+    } else {
+      speak('This is the first step.');
+    }
+  }
+
+  function repeatStep() {
+    if (stepTexts[currentStepIndex]) {
+      speak(stepTexts[currentStepIndex]);
+    }
+  }
+
+  function speakIngredients() {
+    var ingredients = document.querySelectorAll('.rd-ingr-name');
+    if (ingredients.length === 0) {
+      speak('No ingredients listed.');
+      return;
+    }
+    var text = 'You need: ';
+    for (var i = 0; i < ingredients.length; i++) {
+      text += ingredients[i].textContent;
+      if (i < ingredients.length - 1) text += ', ';
+    }
+    speak(text);
+  }
+
+  function speakTotalTime() {
+    var timeEl = document.querySelector('.rd-badge');
+    if (timeEl) {
+      speak('This recipe takes ' + timeEl.textContent);
+    } else {
+      speak('Cooking time information is not available.');
+    }
+  }
+
+  // ========== Individual Step Read Aloud Buttons ==========
+  document.querySelectorAll('.rd-speak-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var text = this.getAttribute('data-text');
+      if (text) {
+        speak(text);
+      }
+    });
+  });
+
+  // ========== Voice Recognition ==========
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognizer = null;
+  var micBtn = document.getElementById('vaMicBtn');
+  var vaStatus = document.getElementById('vaStatus');
+
+  if (SpeechRecognition) {
+    recognizer = new SpeechRecognition();
+    recognizer.continuous = false;
+    recognizer.lang = 'en-US';
+
+    micBtn.addEventListener('click', function() {
+      try {
+        recognizer.start();
+        vaStatus.textContent = 'Listening...';
+      } catch (e) {
+        vaStatus.textContent = 'Error';
+        showToast('Microphone error. Check permissions.');
+      }
+    });
+
+    recognizer.onresult = function(event) {
+      var command = event.results[0][0].transcript.toLowerCase().trim();
+      console.log('Voice command:', command);
+      vaStatus.textContent = 'Command: ' + command.slice(0, 30);
+
+      // Process commands
+      if (command.includes('read recipe') || command.includes('start reading')) {
+        startReadingRecipe();
+      }
+      else if (command.includes('next')) {
+        nextStep();
+      }
+      else if (command.includes('previous') || command.includes('back')) {
+        previousStep();
+      }
+      else if (command.includes('repeat')) {
+        repeatStep();
+      }
+      else if (command.includes('ingredient')) {
+        speakIngredients();
+      }
+      else if (command.includes('how long') || command.includes('time')) {
+        speakTotalTime();
+      }
+      else if (command.includes('stop') || command.includes('cancel')) {
+        stopReading();
+      }
+      else if (command.includes('hello')) {
+        speak('Hello! Say read recipe, next step, or ingredients to get started.');
+      }
+      else {
+        speak('I heard: ' + command + '. Say "read recipe" or "next step".');
+      }
+
+      setTimeout(function() {
+        if (vaStatus.textContent !== 'Reading...') {
+          vaStatus.textContent = 'Idle';
+        }
+      }, 2000);
+    };
+
+    recognizer.onerror = function(event) {
+      console.error('Recognition error:', event.error);
+      vaStatus.textContent = 'Idle';
+      if (event.error === 'not-allowed') {
+        showToast('Microphone access denied. Check browser permissions.');
+      }
+    };
+
+    recognizer.onend = function() {
+      if (vaStatus.textContent === 'Listening...') {
+        vaStatus.textContent = 'Idle';
+      }
+    };
+  } else {
+    micBtn.disabled = true;
+    micBtn.style.opacity = '0.5';
+    micBtn.title = 'Speech recognition not supported in this browser';
+    showToast('Voice commands not supported. Try Chrome or Edge.');
+  }
+
+  // ========== Button Handlers ==========
+  document.getElementById('vaReadBtn').addEventListener('click', startReadingRecipe);
+  document.getElementById('vaStopBtn').addEventListener('click', stopReading);
+
+  // Quick control buttons
+  document.querySelectorAll('.va-small').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var cmd = this.getAttribute('data-command');
+      switch(cmd) {
+        case 'next': nextStep(); break;
+        case 'prev': previousStep(); break;
+        case 'repeat': repeatStep(); break;
+        case 'ingredients': speakIngredients(); break;
+        case 'time': speakTotalTime(); break;
+        case 'stop': stopReading(); break;
+      }
+    });
+  });
+
+  // ========== Favorite Button ==========
   var favBtn = document.getElementById('favoriteBtn');
   if (favBtn) {
-    favBtn.addEventListener('click', function () {
+    favBtn.addEventListener('click', function() {
       var recipeId = this.getAttribute('data-recipe-id');
       fetch('/favorite/' + recipeId)
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
           if (data.success) {
-            var saved = data.is_favorite;
-            favBtn.classList.toggle('active', saved);
-            favBtn.innerHTML = saved ? '♥&nbsp; Saved' : '♡&nbsp; Save Recipe';
-            showToast(saved ? '✓ Added to favorites' : 'Removed from favorites');
+            favBtn.classList.toggle('active', data.is_favorite);
+            favBtn.innerHTML = data.is_favorite ? '♥ Saved' : '♡ Save Recipe';
+            showToast(data.is_favorite ? 'Added to favorites!' : 'Removed from favorites');
           }
-        })
-        .catch(function () { showToast('Something went wrong'); });
+        });
     });
   }
 
-  /* ── Add individual ingredient ── */
-  document.querySelectorAll('.rd-ingr-item').forEach(function (el) {
-    el.addEventListener('click', function () {
-      var name     = el.getAttribute('data-name');
-      var qty      = el.getAttribute('data-qty');
+  // ========== Add Individual Ingredient ==========
+  document.querySelectorAll('.rd-ingr-item').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var name = el.getAttribute('data-name');
+      var qty = el.getAttribute('data-qty');
       var recipeId = el.getAttribute('data-recipe-id');
 
       postJSON('/add_to_shopping_list', {
         ingredient_name: name,
         quantity: qty,
-        dish_id: recipeId
-      }).then(function (data) {
+        recipe_id: recipeId
+      }).then(function(data) {
         if (data.success) {
           el.classList.add('added');
           el.querySelector('.rd-plus').textContent = '✓';
-          showToast('✓ ' + name + ' added to list');
+          showToast('Added: ' + name);
         }
-      }).catch(function () { showToast('Could not add item'); });
+      });
     });
   });
 
-  /* ── Add all ingredients ── */
+  // ========== Add All Ingredients ==========
   var addAllBtn = document.getElementById('addAllBtn');
   if (addAllBtn) {
-    addAllBtn.addEventListener('click', function () {
+    addAllBtn.addEventListener('click', function() {
       var recipeId = this.getAttribute('data-recipe-id');
       fetch('/add_recipe_to_shopping_list/' + recipeId)
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
           if (data.success) {
-            document.querySelectorAll('.rd-ingr-item').forEach(function (el) {
+            document.querySelectorAll('.rd-ingr-item').forEach(function(el) {
               el.classList.add('added');
               el.querySelector('.rd-plus').textContent = '✓';
             });
-            showToast('✓ All ingredients added to list');
+            showToast('All ingredients added to shopping list!');
           }
-        })
-        .catch(function () { showToast('Could not add ingredients'); });
+        });
     });
   }
 
-  /* ── Text-to-speech ── */
-  var speaking = null;
-  document.querySelectorAll('.rd-speak-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      if (!('speechSynthesis' in window)) {
-        showToast('Text-to-speech not supported');
-        return;
-      }
-      var text = btn.getAttribute('data-text');
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-        if (speaking === btn) { speaking = null; return; }
-      }
-      var utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate  = 0.9;
-      utterance.pitch = 1;
-      utterance.onend = function () { speaking = null; };
-      window.speechSynthesis.speak(utterance);
-      speaking = btn;
-    });
-  });
-
-  /* Voice Assistant Logic */
-var vaStatus = document.querySelector('.va-status');
-var readBtn = document.getElementById('vaReadBtn');
-var stopBtn = document.getElementById('vaStopBtn');
-var micBtn = document.getElementById('vaMicBtn');
-
-var allSteps = Array.from(document.querySelectorAll('.rd-step-text'))
-                    .map(e => e.textContent);
-
-var currentIndex = 0;
-var reading = false;
-
-// --- Read Recipe ---
-readBtn.addEventListener('click', function () {
-  if (!('speechSynthesis' in window)) return;
-
-  reading = true;
-  vaStatus.textContent = "Reading";
-
-  currentIndex = 0;
-  speakStep();
-});
-
-function speakStep() {
-  if (!reading || currentIndex >= allSteps.length) {
-    reading = false;
-    vaStatus.textContent = "Idle";
-    return;
-  }
-
-  var utter = new SpeechSynthesisUtterance(allSteps[currentIndex]);
-  utter.rate = 0.9;
-
-  utter.onend = function () {
-    currentIndex++;
-    setTimeout(speakStep, 500);
-  };
-
-  window.speechSynthesis.speak(utter);
-}
-
-// --- STOP ---
-stopBtn.addEventListener('click', function () {
-  window.speechSynthesis.cancel();
-  reading = false;
-  vaStatus.textContent = "Idle";
-});
-
-// --- Microphone (placeholder, can be connected to commands later) ---
-micBtn.addEventListener('click', function () {
-  vaStatus.textContent = "Listening…";
-  setTimeout(() => vaStatus.textContent = "Idle", 2000);
-});
-
-/* ──────────────── Voice Command Recognition ──────────────── */
-
-var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (SpeechRecognition) {
-  var recognizer = new SpeechRecognition();
-  recognizer.continuous = false;
-  recognizer.lang = "en-US";
-
-  var micBtn = document.getElementById("vaMicBtn");
-  var vaStatus = document.querySelector(".va-status");
-
-  micBtn.addEventListener("click", function () {
-    recognizer.start();
-    vaStatus.textContent = "Listening…";
-  });
-
-  recognizer.onresult = function (event) {
-    var command = event.results[0][0].transcript.toLowerCase().trim();
-    console.log("Voice Command:", command);
-
-    handleVoiceCommand(command);
-  };
-
-  recognizer.onerror = function () {
-    vaStatus.textContent = "Idle";
-  };
-
-  recognizer.onend = function () {
-    vaStatus.textContent = "Idle";
-  };
-
-} else {
-  console.warn("SpeechRecognition not supported in this browser.");
-}
-
-/* ──────────────── Command Handler ──────────────── */
-
-function handleVoiceCommand(cmd) {
-  if (!cmd) return;
-
-  if (cmd.includes("read recipe") || cmd.includes("start reading")) {
-    document.getElementById("vaReadBtn").click();
-    return;
-  }
-
-  if (cmd.includes("next")) {
-    nextStepVoice();
-    return;
-  }
-
-  if (cmd.includes("previous") || cmd.includes("back")) {
-    previousStepVoice();
-    return;
-  }
-
-  if (cmd.includes("repeat")) {
-    repeatStep();
-    return;
-  }
-
-  if (cmd.includes("ingredients")) {
-    scrollToIngredients();
-    return;
-  }
-
-  if (cmd.includes("how long")) {
-    speakDuration();
-    return;
-  }
-
-  if (cmd.includes("stop") || cmd.includes("cancel")) {
-    window.speechSynthesis.cancel();
-    reading = false;
-    vaStatus.textContent = "Idle";
-    return;
-  }
-}
-
-/* ──────────────── Voice Command Functions ──────────────── */
-
-function nextStepVoice() {
-  if (currentIndex < allSteps.length - 1) {
-    currentIndex++;
-    readSingleStep(currentIndex);
-  }
-}
-
-function previousStepVoice() {
-  if (currentIndex > 0) {
-    currentIndex--;
-    readSingleStep(currentIndex);
-  }
-}
-
-function repeatStep() {
-  readSingleStep(currentIndex);
-}
-
-function readSingleStep(i) {
-  window.speechSynthesis.cancel();
-  var utter = new SpeechSynthesisUtterance(allSteps[i]);
-  utter.rate = 0.9;
-  window.speechSynthesis.speak(utter);
-}
-
-function scrollToIngredients() {
-  document.querySelector(".rd-section").scrollIntoView({ behavior: "smooth" });
-
-  var utter = new SpeechSynthesisUtterance("Here are the ingredients.");
-  utter.rate = 0.9;
-  window.speechSynthesis.speak(utter);
-}
-
-function speakDuration() {
-  var timeEl = document.querySelector(".rd-badge");
-  if (!timeEl) return;
-
-  var timeText = timeEl.textContent;
-  var utter = new SpeechSynthesisUtterance("The recipe takes " + timeText);
-  utter.rate = 0.9;
-  window.speechSynthesis.speak(utter);
-}
-
-let RECIPE = null;
-
-fetch(`/api/recipe/{{ recipe.id }}`)
-  .then(r => r.json())
-  .then(data => {
-    RECIPE = data;
-    console.log("Loaded recipe from DB:", RECIPE);
-  });
-
-  function interpretCommand(command) {
-  command = command.toLowerCase();
-
-  if (command.includes("ingredient")) return "SHOW_INGREDIENTS";
-  if (command.match(/step\s*\d+/)) return "SPECIFIC_STEP";
-  if (command.includes("next")) return "NEXT_STEP";
-  if (command.includes("previous") || command.includes("back")) return "PREVIOUS_STEP";
-  if (command.includes("repeat")) return "REPEAT_STEP";
-  if (command.includes("how long") || command.includes("time")) return "TOTAL_TIME";
-  if (command.includes("difficulty")) return "DIFFICULTY";
-  if (command.includes("read recipe")) return "READ_RECIPE";
-  if (command.includes("stop")) return "STOP";
-
-  return "UNKNOWN";
-}
-
-function handleSpecificStep(command) {
-  const numberMatch = command.match(/\d+/);
-  if (!numberMatch) {
-    speak("I couldn't find a step number.");
-    return;
-  }
-
-  const stepNum = parseInt(numberMatch[0]);
-  const step = RECIPE.steps.find(s => s.num === stepNum);
-
-  if (!step) {
-    speak("That step does not exist.");
-    return;
-  }
-
-  speak(`Step ${stepNum}: ${step.text}`);
-}
-
-function speakIngredients() {
-  let text = "The ingredients you need are: ";
-
-  RECIPE.ingredients.forEach(ing => {
-    text += `${ing.qty} ${ing.name}, `;
-  });
-
-  speak(text);
-}
-
-function speakTotalTime() {
-  const t = RECIPE.total_time || 0;
-  speak(`This recipe takes a total of ${t} minutes to prepare and cook.`);
-}
-
-function handleVoiceCommand(command) {
-  const intent = interpretCommand(command);
-
-  switch (intent) {
-
-    case "SHOW_INGREDIENTS":
-      speakIngredients();
-      break;
-
-    case "SPECIFIC_STEP":
-      handleSpecificStep(command);
-      break;
-
-    case "NEXT_STEP":
-      nextStepVoice();
-      break;
-
-    case "PREVIOUS_STEP":
-      previousStepVoice();
-      break;
-
-    case "REPEAT_STEP":
-      repeatStep();
-      break;
-
-    case "TOTAL_TIME":
-      speakTotalTime();
-      break;
-
-    case "DIFFICULTY":
-      speak(`This recipe is rated as ${RECIPE.difficulty}.`);
-      break;
-
-    case "READ_RECIPE":
-      startReadingRecipe();
-      break;
-
-    case "STOP":
-      window.speechSynthesis.cancel();
-      speak("Okay, stopping.");
-      break;
-
-    default:
-      speak("Sorry, I didn't understand that command.");
-  }
-}
-
-recognizer.onresult = function (event) {
-  var command = event.results[0][0].transcript.toLowerCase().trim();
-  handleVoiceCommand(command);
-};
-
-  /* ── Web Share API ── */
+  // ========== Share Button ==========
   var shareBtn = document.getElementById('shareBtn');
   if (shareBtn) {
-    shareBtn.addEventListener('click', function () {
+    shareBtn.addEventListener('click', function() {
       if (navigator.share) {
         navigator.share({
           title: '{{ recipe.title }}',
-          text:  'Check out this recipe on Dishly!',
-          url:   window.location.href
-        }).catch(function () {});
+          text: 'Check out this recipe!',
+          url: window.location.href
+        }).catch(function() {});
       } else {
-        navigator.clipboard.writeText(window.location.href)
-          .then(function () { showToast('Link copied!'); })
-          .catch(function () { showToast('Could not copy link'); });
+        navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied!');
       }
     });
   }

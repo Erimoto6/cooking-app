@@ -19,4 +19,4 @@ for row in cur.fetchall():
     print(f"{row[0]} - {row[1]}: {row[2]} recipes")
 
 cur.close()
-conn.close()py 
+conn.close()
