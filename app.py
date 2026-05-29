@@ -89,7 +89,6 @@ def index():
     cursor.execute("SELECT * FROM recipes WHERE region IN ('Philippines', 'United States') LIMIT 3")
     favorite_dishes = cursor.fetchall()
     
-    # TODO: Create folder_recipes table later - using empty list for now
     folders = []
     
     return render_template('index.html', 
@@ -290,11 +289,118 @@ def profile():
     user = cursor.fetchone()
     
     cursor.execute('SELECT * FROM recipes WHERE user_id = %s ORDER BY created_at DESC', (session['user_id'],))
-    my_recipes = cursor.fetchall()
+    user_recipes = cursor.fetchall()
     
     favorites = get_favorite_recipes(session['user_id'])
     
-    return render_template('profile.html', user=user, my_recipes=my_recipes, favorites=favorites)
+    user_recipes_count = len(user_recipes)
+    favorite_count = len(favorites)
+    
+    cursor.execute('SELECT COUNT(*) as count FROM shopping_list WHERE user_id = %s', (session['user_id'],))
+    shopping_count = cursor.fetchone()['count']
+    
+    return render_template('profile.html', 
+                          user=user, 
+                          user_recipes=user_recipes,
+                          user_recipes_count=user_recipes_count,
+                          favorite_recipes=favorites,
+                          favorite_count=favorite_count,
+                          shopping_count=shopping_count)
+
+# ==================== MISSING ROUTES (FIXED) ====================
+
+@app.route('/favorites')
+def favorites():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    favorites_list = get_favorite_recipes(session['user_id'])
+    return render_template('favorites.html', favorites=favorites_list)
+
+@app.route('/my_recipes')
+def my_recipes():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = get_cursor()
+    cursor.execute('SELECT * FROM recipes WHERE user_id = %s ORDER BY created_at DESC', (session['user_id'],))
+    my_recipes_list = cursor.fetchall()
+    return render_template('my_recipes.html', recipes=my_recipes_list)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = get_cursor()
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        phone_number = request.form.get('phone_number')
+        
+        cursor.execute('UPDATE users SET username = %s, phone_number = %s WHERE id = %s',
+                      (username, phone_number, session['user_id']))
+        get_db().commit()
+        session['username'] = username
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+    
+    cursor.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
+    user = cursor.fetchone()
+    return render_template('edit_profile.html', user=user)
+
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        current = hash_password(request.form.get('current_password'))
+        new = hash_password(request.form.get('new_password'))
+        confirm = hash_password(request.form.get('confirm_password'))
+        
+        if new != confirm:
+            flash('New passwords do not match', 'error')
+            return redirect(url_for('change_password'))
+        
+        cursor = get_cursor()
+        cursor.execute('SELECT * FROM users WHERE id = %s AND password = %s', (session['user_id'], current))
+        if not cursor.fetchone():
+            flash('Current password is incorrect', 'error')
+            return redirect(url_for('change_password'))
+        
+        cursor.execute('UPDATE users SET password = %s WHERE id = %s', (new, session['user_id']))
+        get_db().commit()
+        flash('Password changed successfully!', 'success')
+        return redirect(url_for('profile'))
+    
+    return render_template('change_password.html')
+
+@app.route('/achievements')
+def achievements():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = get_cursor()
+    cursor.execute('SELECT COUNT(*) as count FROM recipes WHERE user_id = %s', (session['user_id'],))
+    recipe_count = cursor.fetchone()['count']
+    
+    cursor.execute('SELECT COUNT(*) as count FROM favorites WHERE user_id = %s', (session['user_id'],))
+    favorite_count = cursor.fetchone()['count']
+    
+    return render_template('achievements.html', 
+                          recipe_count=recipe_count, 
+                          favorite_count=favorite_count)
+
+@app.route('/recent_recipes')
+def recent_recipes():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = get_cursor()
+    cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 20')
+    recipes = cursor.fetchall()
+    return render_template('recent_recipes.html', recipes=recipes)
 
 # ==================== VOICE COMMAND ROUTES ====================
 
