@@ -287,7 +287,7 @@
 
   <!-- Profile Header -->
   <div class="p-header">
-    <div class="p-avatar">👨‍🍳</div>
+    <div class="p-avatar"></div>
     <h1 class="p-name">{{ user.username }}</h1>
     <p class="p-phone">{{ user.phone_number }}</p>
   </div>
@@ -311,7 +311,7 @@
   <!-- Account Settings -->
   <div class="p-section">
     <div class="p-section-title">
-      ⚙️ Account Settings
+      Account Settings
     </div>
     <div class="p-setting-item">
       <span class="p-setting-label">Edit Profile</span>
@@ -326,50 +326,50 @@
   <!-- Achievements / Milestones -->
   <div class="p-section">
     <div class="p-section-title">
-      🏆 Achievements
+      Achievements
       <a href="{{ url_for('achievements') }}" class="p-view-all">View all →</a>
     </div>
     <div class="p-badge-grid">
       {% if user_recipes_count >= 5 %}
       <span class="p-badge">
-        <span class="p-badge-icon">🏆</span> Apprentice Cook
+        <span class="p-badge-icon"></span> Apprentice Cook
       </span>
       {% else %}
       <span class="p-badge p-badge-locked">
-        <span class="p-badge-icon">🔒</span> 5 Recipes
+        <span class="p-badge-icon"></span> 5 Recipes
         <span class="p-progress-text">({{ user_recipes_count }}/5)</span>
       </span>
       {% endif %}
       
       {% if user_recipes_count >= 10 %}
       <span class="p-badge">
-        <span class="p-badge-icon">🏆</span> Home Chef
+        <span class="p-badge-icon"></span> Home Chef
       </span>
       {% else %}
       <span class="p-badge p-badge-locked">
-        <span class="p-badge-icon">🔒</span> 10 Recipes
+        <span class="p-badge-icon"></span> 10 Recipes
         <span class="p-progress-text">({{ user_recipes_count }}/10)</span>
       </span>
       {% endif %}
       
       {% if user_recipes_count >= 25 %}
       <span class="p-badge">
-        <span class="p-badge-icon">🏆</span> Master Chef
+        <span class="p-badge-icon"></span> Master Chef
       </span>
       {% else %}
       <span class="p-badge p-badge-locked">
-        <span class="p-badge-icon">🔒</span> 25 Recipes
+        <span class="p-badge-icon"></span> 25 Recipes
         <span class="p-progress-text">({{ user_recipes_count }}/25)</span>
       </span>
       {% endif %}
 
       {% if favorite_count >= 10 %}
       <span class="p-badge">
-        <span class="p-badge-icon">❤️</span> Food Lover
+        <span class="p-badge-icon"></span> Food Lover
       </span>
       {% else %}
       <span class="p-badge p-badge-locked">
-        <span class="p-badge-icon">🔒</span> 10 Favorites
+        <span class="p-badge-icon"></span> 10 Favorites
         <span class="p-progress-text">({{ favorite_count }}/10)</span>
       </span>
       {% endif %}
@@ -379,14 +379,14 @@
   <!-- My Recipes Preview -->
   <div class="p-section">
     <div class="p-section-title">
-      📝 Recent Recipes
+      Recent Recipes
       <a href="{{ url_for('my_recipes') }}" class="p-view-all">View all →</a>
     </div>
     {% if user_recipes %}
     <div class="p-recipe-list">
       {% for recipe in user_recipes[:3] %}
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="p-recipe-item">
-        <div class="p-recipe-icon">🍽️</div>
+        <div class="p-recipe-icon"></div>
         <span class="p-recipe-name">{{ recipe.title }}</span>
         <span style="color:rgba(255,255,255,0.2);">›</span>
       </a>
@@ -402,14 +402,14 @@
   <!-- Favorite Recipes Preview -->
   <div class="p-section">
     <div class="p-section-title">
-      ❤️ Favorite Dishes
+      Favorite Dishes
       <a href="{{ url_for('favorites') }}" class="p-view-all">View all →</a>
     </div>
     {% if favorite_recipes %}
     <div class="p-recipe-list">
       {% for recipe in favorite_recipes[:3] %}
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="p-recipe-item">
-        <div class="p-recipe-icon">❤️</div>
+        <div class="p-recipe-icon"></div>
         <span class="p-recipe-name">{{ recipe.title }}</span>
         <span style="color:rgba(255,255,255,0.2);">›</span>
       </a>
@@ -423,6 +423,6 @@
   </div>
 
   <!-- Logout Button -->
-  <a href="{{ url_for('logout') }}" class="p-logout-btn">🚪 Log Out</a>
+  <a href="{{ url_for('logout') }}" class="p-logout-btn">Log Out</a>
 </div>
 {% endblock %}

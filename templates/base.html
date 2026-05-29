@@ -53,7 +53,7 @@
         </a>
 
         <a href="{{ url_for('create_recipe') }}" style="text-align: center; text-decoration: none; color: {% if request.endpoint == 'create_recipe' %}#C0392B{% else %}rgba(255,255,255,0.3){% endif %};">
-            <div style="width: 42px; height: 42px; border-radius: 50%; background: {% if request.endpoint == 'create_recipe' %}#C0392B{% else %}rgba(192,57,43,0.25){% endif %}; border: 1px solid rgba(192,57,43,0.4); display: flex; align-items: center; justify-content: center; margin: -10px auto 3px; font-size: 22px; color: #ffffff;">+</div>
+            <img src="{{ url_for('static', filename='icons/create.png') }}" style="width:22px;height:22px;display:block;margin:0 auto 3px;opacity:{% if request.endpoint == 'create_recipe' %}1{% else %}0.3{% endif %};">
             <span style="font-size:10px;">Create</span>
         </a>
 

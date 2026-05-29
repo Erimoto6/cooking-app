@@ -309,27 +309,21 @@
     <p class="h-section-title">Discover</p>
     <div class="h-cuisine-grid">
       <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🦁🌍</span>
         <span class="h-cuisine-name">African</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Europe') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🍝🥖</span>
         <span class="h-cuisine-name">European</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🍜🥢</span>
         <span class="h-cuisine-name">Asian</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='North America') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🍔🌮</span>
         <span class="h-cuisine-name">North American</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='South America') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🥩🌽</span>
         <span class="h-cuisine-name">South American</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Oceania') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🦘🥝</span>
         <span class="h-cuisine-name">Oceanian</span>
       </a>
     </div>
@@ -338,17 +332,17 @@
   <!-- Favorite Dishes -->
   <div class="h-section h-section-anim2">
     <div class="h-section-title">
-      <span>❤️ Favorite Dishes</span>
+      <span>Favorite Dishes</span>
       <a href="{{ url_for('favorites') }}" class="h-view-all">View all →</a>
     </div>
     <div class="h-scroll">
       {% for recipe in favorite_dishes %}
       <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb">🍽️</div>
+        <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
-      <div class="empty-state">No favorites yet. ❤️ recipes to see them here!</div>
+      <div class="empty-state">No favorites yet. Save recipes to see them here!</div>
       {% endfor %}
     </div>
   </div>
@@ -356,13 +350,13 @@
   <!-- Recent Viewed -->
   <div class="h-section h-section-anim3">
     <div class="h-section-title">
-      <span>🕐 Recent Viewed</span>
+      <span>Recent Viewed</span>
       <a href="{{ url_for('recent_recipes') }}" class="h-view-all">View all →</a>
     </div>
     <div class="h-scroll">
       {% for recipe in recent_recipes[:5] %}
       <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb">🍳</div>
+        <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
@@ -374,21 +368,21 @@
   <!-- Recipe Folders -->
   <div class="h-section h-section-anim4">
     <div class="h-section-title">
-      <span>📁 Your Recipe Folders</span>
+      <span>Your Recipe Folders</span>
     </div>
     <div class="h-folder-grid">
       {% for folder in folders %}
       <div class="h-folder-card-wrapper">
         <div class="h-folder-card" onclick="viewFolder({{ folder.id }})">
-          <div class="h-folder-icon">📂</div>
+          <div class="h-folder-icon"></div>
           <div class="h-folder-name">{{ folder.name }}</div>
           <div class="h-folder-count">{{ folder.recipe_count or 0 }} recipes</div>
         </div>
-        <button class="folder-delete-btn" onclick="event.stopPropagation(); showDeleteFolderModal({{ folder.id }}, '{{ folder.name }}')">🗑️</button>
+        <button class="folder-delete-btn" onclick="event.stopPropagation(); showDeleteFolderModal({{ folder.id }}, '{{ folder.name }}')"></button>
       </div>
       {% endfor %}
       <div class="h-folder-card h-folder-add" onclick="showCreateFolderModal()">
-        <div class="h-folder-icon">+</div>
+        <div class="h-folder-icon"></div>
         <div class="h-folder-name">New Folder</div>
       </div>
     </div>
@@ -405,7 +399,6 @@
     modal.className = 'folder-modal-overlay';
     modal.innerHTML = `
       <div class="folder-modal">
-        <div class="folder-modal-icon">📁</div>
         <div class="folder-modal-title">New Folder</div>
         <div class="folder-modal-message">Enter a name for your recipe folder</div>
         <input type="text" class="folder-modal-input" id="folderNameInput" placeholder="e.g., Weeknight Dinners" autocomplete="off">
@@ -483,7 +476,6 @@
     modal.className = 'delete-modal-overlay';
     modal.innerHTML = `
       <div class="delete-modal">
-        <div class="delete-modal-icon">🗑️</div>
         <div class="delete-modal-title">Delete Folder</div>
         <div class="delete-modal-message">Are you sure you want to delete "<strong>${escapeHtml(folderName)}</strong>"?<br>This will also remove all recipes from this folder.</div>
         <div class="delete-modal-buttons">
