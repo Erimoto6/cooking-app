@@ -2,23 +2,27 @@ import psycopg2
 import psycopg2.extras
 from flask import g
 import os
-import hashlib
 from dotenv import load_dotenv
+import urllib.parse
 
 load_dotenv()
 
-DB_CONFIG = {
-    'host':     os.getenv('DB_HOST', 'localhost'),
-    'port':     os.getenv('DB_PORT', '5432'),
-    'dbname':   os.getenv('DB_NAME', 'dishlydb'),
-    'user':     os.getenv('DB_USER', 'dishly'),
-    'password': os.getenv('DB_PASSWORD', 'Dishly2026'),
-}
+def get_db_url():
+    """Get database URL from environment (works for Railway and local)"""
+    database_url = os.getenv('DATABASE_URL')
+    
+    if database_url:
+        # Railway provides DATABASE_URL
+        return database_url
+    else:
+        # Local development fallback
+        return f"postgresql://{os.getenv('DB_USER', 'dishly')}:{os.getenv('DB_PASSWORD', 'Dishly2026')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'dishlydb')}"
 
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = psycopg2.connect(**DB_CONFIG)
+        db_url = get_db_url()
+        db = g._database = psycopg2.connect(db_url)
     return db
 
 def get_cursor():
@@ -32,7 +36,7 @@ def close_db(e=None):
 
 def query(sql, args=(), one=False):
     """Helper: run a SELECT and return dict rows."""
-    cur = get_db().cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur = get_cursor()
     cur.execute(sql, args)
     rv = cur.fetchall()
     cur.close()
