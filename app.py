@@ -8,6 +8,12 @@ import sys
 app = Flask(__name__)
 app.secret_key = 'whats_cookin_secret_key_2024'
 
+# Initialize database tables on startup
+with app.app_context():
+    print("Creating database tables...")
+    init_db()
+    print("Database tables created!")
+
 @app.before_request
 def before_request():
     get_db()
@@ -307,7 +313,7 @@ def profile():
                           favorite_count=favorite_count,
                           shopping_count=shopping_count)
 
-# ==================== MISSING ROUTES (FIXED) ====================
+# ==================== MISSING ROUTES ====================
 
 @app.route('/favorites')
 def favorites():
@@ -523,29 +529,5 @@ def create_custom_recipe(user_id, title, description, cuisine, region, prep_time
     return recipe_id
 
 if __name__ == '__main__':
-    import threading
-    import webbrowser
-    import time
-    
-    if getattr(sys, 'frozen', False):
-        base_path = os.path.dirname(sys.executable)
-    else:
-        base_path = os.path.dirname(__file__)
-    
-    instance_path = os.path.join(base_path, 'instance')
-    os.makedirs(instance_path, exist_ok=True)
-    
-    with app.app_context():
-        init_db()
-    
-    def open_browser():
-        time.sleep(2)
-        webbrowser.open('http://127.0.0.1:5000')
-    
-    browser_thread = threading.Thread(target=open_browser)
-    browser_thread.daemon = True
-    browser_thread.start()
-    
-    print("Starting What's Cookin' app...")
-    print("Open your browser to: http://127.0.0.1:5000")
-    app.run(host='127.0.0.1', debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

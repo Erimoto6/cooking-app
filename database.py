@@ -15,7 +15,7 @@ def get_db():
         if not database_url:
             raise Exception("DATABASE_URL environment variable not set!")
         
-        print(f"Connecting to database...")
+        print("Connecting to database...")
         db = g._database = psycopg2.connect(database_url)
         print("Database connected successfully!")
         
