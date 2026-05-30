@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Database config for local fallback
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'port': os.getenv('DB_PORT', '5432'),
@@ -15,12 +16,11 @@ DB_CONFIG = {
 }
 
 def parse_recipes_from_pipe_format(filepath):
-    """Parse the pipe-delimited recipe format from Cooking_Application_Drafts__1.txt"""
+    """Parse the pipe-delimited recipe format from Cooking_Application_Drafts__1_.txt"""
     
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # Split into sections (ASIAN, AFRICAN, OCEANIA, EUROPE, NORTH AMERICA, SOUTH AMERICA)
     recipes = []
     
     # Pattern to match each recipe block
@@ -37,7 +37,6 @@ def parse_recipes_from_pipe_format(filepath):
         procedure_text = match[5].strip()
         
         # Parse category to get cuisine and region
-        # Subcategory format: "Philippines Main Course" or "Korea Main Course"
         parts = subcategory.split(' ')
         region = parts[0] if parts else ''
         
@@ -52,7 +51,6 @@ def parse_recipes_from_pipe_format(filepath):
         for line in procedure_text.strip().split('\n'):
             line = line.strip()
             if line and (line[0].isdigit() or line.startswith('-')):
-                # Remove the number/prefix
                 step = re.sub(r'^\d+\.\s*', '', line)
                 step = step.strip()
                 if step:
@@ -99,8 +97,10 @@ def insert_recipes(recipes):
     database_url = os.environ.get('DATABASE_URL')
     
     if database_url:
+        print(f"Connecting to Railway database...")
         conn = psycopg2.connect(database_url)
     else:
+        print(f"Connecting to local database...")
         conn = psycopg2.connect(**DB_CONFIG)
     
     cur = conn.cursor()
