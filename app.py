@@ -528,6 +528,12 @@ def create_custom_recipe(user_id, title, description, cuisine, region, prep_time
     db.commit()
     return recipe_id
 
+@app.route('/import')
+def import_route():
+    import subprocess
+    result = subprocess.run(['python', 'import_recipes.py'], capture_output=True, text=True)
+    return f"<pre>{result.stdout}\n\n{result.stderr}</pre>"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
