@@ -9,16 +9,23 @@ load_dotenv()
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        # Get database URL from environment (Railway sets this automatically)
+        # Try DATABASE_URL first (Railway)
         database_url = os.environ.get('DATABASE_URL')
         
-        if not database_url:
-            raise Exception("DATABASE_URL environment variable not set!")
-        
-        print("Connecting to database...")
-        db = g._database = psycopg2.connect(database_url)
+        if database_url:
+            print("Connecting via DATABASE_URL...")
+            db = g._database = psycopg2.connect(database_url)
+        else:
+            # Fall back to individual settings (local)
+            print("Connecting via individual settings...")
+            db = g._database = psycopg2.connect(
+                host=os.getenv('DB_HOST', 'localhost'),
+                port=os.getenv('DB_PORT', '5432'),
+                dbname=os.getenv('DB_NAME', 'dishlydb'),
+                user=os.getenv('DB_USER', 'dishly'),
+                password=os.getenv('DB_PASSWORD', 'Dishly2026')
+            )
         print("Database connected successfully!")
-        
     return db
 
 def get_cursor():
