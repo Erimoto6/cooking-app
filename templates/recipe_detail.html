@@ -357,6 +357,7 @@
         <button class="va-small" data-cmd="ingredients">ingredients</button>
         <button class="va-small" data-cmd="time">how long</button>
         <button class="va-small" data-cmd="stop">stop</button>
+        <button class="va-small" data-cmd="micoff">mic off</button>
       </div>
     </div>
   </div>
@@ -441,12 +442,10 @@
     toastEl._timer = setTimeout(function() { toastEl.classList.remove('show'); }, 2500);
   }
   
-  // Get total time from the badge (cleaned of emojis)
   function getTotalTime() {
     var badges = document.querySelectorAll('.rd-badge');
     for (var i = 0; i < badges.length; i++) {
       var text = badges[i].innerText;
-      // Remove emojis (clock, lightning, earth) and trim
       var cleanText = text.replace(/[🕒⚡🌏]/g, '').trim();
       if (cleanText.includes('min') || cleanText.includes('hour') || cleanText.includes('hr')) {
         return cleanText;
@@ -473,13 +472,12 @@
     return text;
   }
   
+  // ========== Text-to-Speech ==========
   function stopSpeaking() {
-    // Aggressive speech killing
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       window.speechSynthesis.cancel();
-      // This helps in some browsers
-      if (window.speechSynthesis.pending) {
+      if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
       }
     }
@@ -487,7 +485,7 @@
     isReading = false;
     
     if (statusEl) {
-      statusEl.innerHTML = '⚪ Idle';
+      statusEl.innerHTML = isListening ? '🎤 Listening...' : '⚪ Idle';
       statusEl.classList.remove('reading');
     }
   }
@@ -516,7 +514,7 @@
         currentUtterance = null;
         if (!isReading) {
           if (statusEl) {
-            statusEl.innerHTML = '⚪ Idle';
+            statusEl.innerHTML = isListening ? '🎤 Listening...' : '⚪ Idle';
             statusEl.classList.remove('reading');
           }
         }
@@ -527,7 +525,7 @@
         currentUtterance = null;
         if (!isReading) {
           if (statusEl) {
-            statusEl.innerHTML = '⚪ Idle';
+            statusEl.innerHTML = isListening ? '🎤 Listening...' : '⚪ Idle';
             statusEl.classList.remove('reading');
           }
         }
@@ -563,7 +561,7 @@
         if (!isReading || currentStep >= stepTexts.length) {
           isReading = false;
           if (statusEl && !currentUtterance) {
-            statusEl.innerHTML = '⚪ Idle';
+            statusEl.innerHTML = isListening ? '🎤 Listening...' : '⚪ Idle';
             statusEl.classList.remove('reading');
           }
           return;
@@ -662,58 +660,54 @@
     }, 100);
   }
   
+  function turnMicOff() {
+    if (isListening) {
+      isListening = false;
+      if (recognition) recognition.stop();
+      if (statusEl) {
+        statusEl.innerHTML = '⚪ Idle';
+        statusEl.classList.remove('listening');
+      }
+      if (micBtn) micBtn.classList.remove('listening');
+      showToast('🎤 Microphone turned off');
+    }
+  }
+  
   // ========== Voice Command Processing ==========
   function processCommand(command) {
     console.log('Command heard:', command);
     showToast('🎤 You said: "' + command + '"');
     
-    // Normalize the command
     var cmd = command.toLowerCase().trim();
     
-    // ========== STOP COMMAND - MOST IMPORTANT ==========
-    // Check for stop FIRST before anything else
-    var stopWords = ['stop', 'stop reading', 'quiet', 'enough', 'cancel', 'shut up', 'stop talking', 'be quiet', 'cease', 'halt'];
-    var isStop = false;
-    for (var i = 0; i < stopWords.length; i++) {
-      if (cmd.includes(stopWords[i])) {
-        isStop = true;
-        break;
-      }
+    // ========== TURN OFF MIC - "mic off" ==========
+    if (cmd === 'mic off' || cmd.includes('mic off')) {
+      turnMicOff();
+      return;
     }
     
-    if (isStop) {
-      // KILL ALL SPEECH IMMEDIATELY
+    // ========== STOP COMMAND ==========
+    if (cmd.includes('stop') || cmd.includes('stop reading') || cmd.includes('quiet') || 
+        cmd.includes('enough') || cmd.includes('cancel') || cmd.includes('shut up') || 
+        cmd.includes('stop talking') || cmd.includes('be quiet')) {
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
         window.speechSynthesis.cancel();
-        // Force cancel any pending speech
-        try {
-          window.speechSynthesis.resume();
-          window.speechSynthesis.cancel();
-        } catch(e) {}
       }
       currentUtterance = null;
       isReading = false;
-      
       if (statusEl) {
-        statusEl.innerHTML = '⚪ Idle';
+        statusEl.innerHTML = isListening ? '🎤 Listening...' : '⚪ Idle';
         statusEl.classList.remove('reading');
       }
-      showToast('⏹️ Stopped');
+      showToast('⏹️ Stopped speaking');
       return;
     }
     
     // ========== READ RECIPE ==========
-    var readWords = ['read recipe', 'read all steps', 'start reading', 'read steps', 'read the recipe', 'tell me the steps', 'read everything', 'read all', 'start'];
-    var isRead = false;
-    for (var i = 0; i < readWords.length; i++) {
-      if (cmd.includes(readWords[i])) {
-        isRead = true;
-        break;
-      }
-    }
-    
-    if (isRead) {
+    if (cmd.includes('read recipe') || cmd.includes('read all steps') || cmd.includes('start reading') ||
+        cmd.includes('read steps') || cmd.includes('read the recipe') || cmd.includes('tell me the steps') ||
+        cmd.includes('read everything') || cmd.includes('read all') || cmd.includes('start')) {
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       currentUtterance = null;
       isReading = false;
@@ -788,10 +782,10 @@
     
     // Unknown command - silent
     console.log('Unknown command:', cmd);
-    showToast('❌ Try: read recipe, next step, ingredients, how long, or stop');
+    showToast('❌ Try: read recipe, next step, ingredients, how long, stop, or mic off');
   }
   
-  // ========== Speech Recognition with Better Sensitivity ==========
+  // ========== Speech Recognition ==========
   function initRecognition() {
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -802,9 +796,9 @@
     
     recognition = new SpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = true;  // Show interim results for better feedback
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.maxAlternatives = 3;     // Get multiple possible interpretations
+    recognition.maxAlternatives = 3;
     
     recognition.onstart = function() {
       isListening = true;
@@ -813,17 +807,14 @@
         statusEl.classList.add('listening');
       }
       if (micBtn) micBtn.classList.add('listening');
-      showToast('🎤 Listening... Say a command');
     };
     
     recognition.onresult = function(event) {
-      // Get the best result
       var lastResult = event.results[event.results.length - 1];
       if (lastResult.isFinal) {
         var command = lastResult[0].transcript.toLowerCase();
         processCommand(command);
       } else {
-        // Show interim result for feedback
         var interim = lastResult[0].transcript.toLowerCase();
         if (statusEl && !currentUtterance) {
           statusEl.innerHTML = '🎤 "' + interim + '"';
@@ -872,28 +863,22 @@
     }
     
     if (isListening) {
-      isListening = false;
-      recognition.stop();
-      if (statusEl && !currentUtterance) {
-        statusEl.innerHTML = '⚪ Idle';
-        statusEl.classList.remove('listening');
-      }
-      if (micBtn) micBtn.classList.remove('listening');
-      showToast('Mic off');
+      turnMicOff();
     } else {
+      // Turn mic on
       isListening = true;
       try {
         recognition.start();
       } catch(e) {
-        console.log(e);
         initRecognition();
-        try {
-          recognition.start();
-        } catch(e2) {
-          isListening = false;
-          showToast('Please click the mic again');
-        }
+        try { recognition.start(); } catch(e2) {}
       }
+      if (statusEl) {
+        statusEl.innerHTML = '🎤 Listening...';
+        statusEl.classList.add('listening');
+      }
+      if (micBtn) micBtn.classList.add('listening');
+      showToast('🎤 Microphone turned on');
     }
   }
   
@@ -922,6 +907,7 @@
       else if (cmd === 'ingredients') readIngredients();
       else if (cmd === 'time') readTotalTime();
       else if (cmd === 'stop') stopSpeaking();
+      else if (cmd === 'micoff') turnMicOff();
     });
   });
   
