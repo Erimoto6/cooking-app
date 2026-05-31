@@ -534,6 +534,43 @@ def import_route():
     result = subprocess.run(['python', 'import_recipes.py'], capture_output=True, text=True)
     return f"<pre>{result.stdout}\n\n{result.stderr}</pre>"
 
+@app.route('/fix-steps')
+def fix_steps():
+    import psycopg2
+    import os
+    import re
+    
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Get all existing steps
+    cur.execute("SELECT id, recipe_id, instruction FROM steps")
+    rows = cur.fetchall()
+    
+    # Delete all existing steps
+    cur.execute("DELETE FROM steps")
+    
+    # Process and re-insert steps properly
+    for row in rows:
+        recipe_id = row[1]
+        instruction = row[2]
+        
+        steps = re.split(r'\d+\.\s*', instruction)
+        steps = [s.strip() for s in steps if s.strip()]
+        
+        for i, step_text in enumerate(steps, 1):
+            cur.execute(
+                "INSERT INTO steps (recipe_id, step_number, instruction) VALUES (%s, %s, %s)",
+                (recipe_id, i, step_text)
+            )
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return "Steps fixed! Go back to your recipe page."
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
