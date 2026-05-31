@@ -595,4 +595,157 @@
   }
 })();
 </script>
+
+<script>
+(function() {
+  // Get elements
+  var micBtn = document.getElementById('vaMicBtn');
+  var statusEl = document.getElementById('vaStatus');
+  var readBtn = document.getElementById('vaReadBtn');
+  var stopBtn = document.getElementById('vaStopBtn');
+  
+  if (!micBtn) {
+    console.log('Mic button not found - check if id="vaMicBtn" exists');
+    return;
+  }
+  
+  // Get all step texts
+  var stepElements = document.querySelectorAll('.rd-step-text');
+  var stepTexts = [];
+  for (var i = 0; i < stepElements.length; i++) {
+    stepTexts.push(stepElements[i].innerText);
+  }
+  
+  var currentStep = 0;
+  var isReading = false;
+  var recognition = null;
+  var isListening = false;
+  
+  function speak(text, callback) {
+    if (!window.speechSynthesis) {
+      console.log('Speech synthesis not supported');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    if (callback) utterance.onend = callback;
+    window.speechSynthesis.speak(utterance);
+  }
+  
+  function readAllSteps() {
+    if (stepTexts.length === 0) return;
+    isReading = true;
+    currentStep = 0;
+    if (statusEl) statusEl.innerText = 'Reading...';
+    
+    function readNext() {
+      if (!isReading || currentStep >= stepTexts.length) {
+        isReading = false;
+        if (statusEl) statusEl.innerText = 'Idle';
+        return;
+      }
+      speak(stepTexts[currentStep], function() {
+        currentStep++;
+        readNext();
+      });
+    }
+    readNext();
+  }
+  
+  function stopReading() {
+    window.speechSynthesis.cancel();
+    isReading = false;
+    if (statusEl) statusEl.innerText = 'Idle';
+  }
+  
+  function initRecognition() {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.log('Speech recognition not supported');
+      return false;
+    }
+    
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = function() {
+      isListening = true;
+      if (statusEl) statusEl.innerText = 'Listening...';
+      if (micBtn) micBtn.style.background = '#2ecc71';
+      console.log('Listening started');
+    };
+    
+    recognition.onresult = function(event) {
+      var command = event.results[0][0].transcript.toLowerCase();
+      console.log('Command:', command);
+      
+      if (command.includes('read recipe') || command.includes('read all')) {
+        readAllSteps();
+      }
+      else if (command.includes('stop')) {
+        stopReading();
+      }
+      else {
+        speak('Say read recipe or stop');
+      }
+      
+      if (statusEl) statusEl.innerText = 'Idle';
+      if (micBtn) micBtn.style.background = '';
+      isListening = false;
+    };
+    
+    recognition.onerror = function(event) {
+      console.log('Error:', event.error);
+      if (statusEl) statusEl.innerText = 'Idle';
+      if (micBtn) micBtn.style.background = '';
+      isListening = false;
+    };
+    
+    recognition.onend = function() {
+      if (micBtn) micBtn.style.background = '';
+      isListening = false;
+    };
+    
+    return true;
+  }
+  
+  function toggleMic() {
+    if (!recognition) {
+      if (!initRecognition()) {
+        alert('Speech recognition not supported in this browser. Try Chrome.');
+        return;
+      }
+    }
+    
+    if (isListening) {
+      recognition.stop();
+      if (statusEl) statusEl.innerText = 'Idle';
+      if (micBtn) micBtn.style.background = '';
+    } else {
+      try {
+        recognition.start();
+      } catch(e) {
+        console.log(e);
+        initRecognition();
+        try {
+          recognition.start();
+        } catch(e2) {
+          alert('Please click the mic again');
+        }
+      }
+    }
+  }
+  
+  // Attach events
+  if (micBtn) micBtn.addEventListener('click', toggleMic);
+  if (readBtn) readBtn.addEventListener('click', readAllSteps);
+  if (stopBtn) stopBtn.addEventListener('click', stopReading);
+  
+  console.log('Voice assistant loaded');
+})();
+</script>
+
 {% endblock %}

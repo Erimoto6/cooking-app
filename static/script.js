@@ -392,3 +392,9 @@ function showConfirmModal(options) {
         };
     });
 }
+
+function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+}
