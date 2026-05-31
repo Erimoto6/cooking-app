@@ -427,7 +427,7 @@
   }
   
   // ========== State Variables ==========
-  var currentStep = 0;
+  var currentStep = 0;  // 0-based index
   var isReading = false;
   var currentUtterance = null;
   var recognition = null;
@@ -576,56 +576,73 @@
   }
   
   function nextStep() {
+    // Cancel current speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     currentUtterance = null;
     isReading = false;
     
-    setTimeout(function() {
+    // Clear any pending timeouts
+    if (window.nextStepTimeout) clearTimeout(window.nextStepTimeout);
+    
+    window.nextStepTimeout = setTimeout(function() {
       if (currentStep + 1 < stepTexts.length) {
         currentStep++;
         speak(stepTexts[currentStep]);
         showToast('Step ' + (currentStep + 1));
       } else {
         speak('You are on the last step');
+        showToast('Last step');
       }
-    }, 100);
+    }, 50);
   }
   
   function previousStep() {
+    // Cancel current speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     currentUtterance = null;
     isReading = false;
     
-    setTimeout(function() {
+    if (window.prevStepTimeout) clearTimeout(window.prevStepTimeout);
+    
+    window.prevStepTimeout = setTimeout(function() {
       if (currentStep - 1 >= 0) {
         currentStep--;
         speak(stepTexts[currentStep]);
         showToast('Step ' + (currentStep + 1));
       } else {
         speak('This is the first step');
+        showToast('First step');
       }
-    }, 100);
+    }, 50);
   }
   
   function repeatStep() {
+    // Cancel current speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     currentUtterance = null;
     isReading = false;
     
-    setTimeout(function() {
+    if (window.repeatStepTimeout) clearTimeout(window.repeatStepTimeout);
+    
+    window.repeatStepTimeout = setTimeout(function() {
       if (stepTexts[currentStep]) {
         speak(stepTexts[currentStep]);
         showToast('Repeating step ' + (currentStep + 1));
+      } else if (stepTexts.length > 0) {
+        // If currentStep is invalid but we have steps, read step 1
+        currentStep = 0;
+        speak(stepTexts[0]);
+        showToast('Starting from step 1');
       } else {
-        speak('No step to repeat');
+        speak('No steps to repeat');
       }
-    }, 100);
+    }, 50);
   }
   
   function readIngredients() {
@@ -680,7 +697,7 @@
     
     var cmd = command.toLowerCase().trim();
     
-    // ========== TURN OFF MIC - "mic off" ==========
+    // ========== TURN OFF MIC ==========
     if (cmd === 'mic off' || cmd.includes('mic off')) {
       turnMicOff();
       return;
@@ -708,55 +725,41 @@
     if (cmd.includes('read recipe') || cmd.includes('read all steps') || cmd.includes('start reading') ||
         cmd.includes('read steps') || cmd.includes('read the recipe') || cmd.includes('tell me the steps') ||
         cmd.includes('read everything') || cmd.includes('read all') || cmd.includes('start')) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      currentUtterance = null;
-      isReading = false;
-      setTimeout(function() { readAllSteps(); }, 100);
+      readAllSteps();
       return;
     }
     
     // ========== NEXT STEP ==========
-    if (cmd.includes('next step') || cmd.includes('next') || cmd.includes('go to next') || cmd.includes('continue')) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      currentUtterance = null;
-      isReading = false;
-      setTimeout(function() { nextStep(); }, 100);
+    if (cmd.includes('next step') || cmd === 'next' || cmd.includes('go to next') || 
+        cmd.includes('move to next') || cmd.includes('step forward') || cmd.includes('continue')) {
+      nextStep();
       return;
     }
     
     // ========== PREVIOUS STEP ==========
-    if (cmd.includes('previous step') || cmd.includes('previous') || cmd.includes('go back') || cmd.includes('step back')) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      currentUtterance = null;
-      isReading = false;
-      setTimeout(function() { previousStep(); }, 100);
+    if (cmd.includes('previous step') || cmd === 'previous' || cmd.includes('go back') || 
+        cmd.includes('move back') || cmd.includes('step back') || cmd.includes('back up') ||
+        cmd.includes('last step') || cmd.includes('go to previous')) {
+      previousStep();
       return;
     }
     
     // ========== REPEAT STEP ==========
-    if (cmd.includes('repeat step') || cmd.includes('repeat') || cmd.includes('say again') || cmd.includes('once more')) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      currentUtterance = null;
-      isReading = false;
-      setTimeout(function() { repeatStep(); }, 100);
+    if (cmd.includes('repeat step') || cmd === 'repeat' || cmd.includes('say again') || 
+        cmd.includes('read again') || cmd.includes('tell me again') || cmd.includes('once more')) {
+      repeatStep();
       return;
     }
     
     // ========== INGREDIENTS ==========
     if (cmd.includes('ingredients') || cmd.includes('what ingredients') || cmd.includes('ingredient list')) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      currentUtterance = null;
-      isReading = false;
-      setTimeout(function() { readIngredients(); }, 100);
+      readIngredients();
       return;
     }
     
     // ========== HOW LONG ==========
     if (cmd.includes('how long') || cmd.includes('total time') || cmd.includes('cooking time') || cmd.includes('how many minutes')) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      currentUtterance = null;
-      isReading = false;
-      setTimeout(function() { readTotalTime(); }, 100);
+      readTotalTime();
       return;
     }
     
@@ -782,7 +785,7 @@
     
     // Unknown command - silent
     console.log('Unknown command:', cmd);
-    showToast('❌ Try: read recipe, next step, ingredients, how long, stop, or mic off');
+    showToast('❌ Try: read recipe, next step, previous step, repeat, ingredients, how long, stop, or mic off');
   }
   
   // ========== Speech Recognition ==========
@@ -865,7 +868,6 @@
     if (isListening) {
       turnMicOff();
     } else {
-      // Turn mic on
       isListening = true;
       try {
         recognition.start();

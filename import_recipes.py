@@ -1,12 +1,10 @@
 import psycopg2
-import psycopg2.extras
 import os
 import re
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database config for local fallback
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'port': os.getenv('DB_PORT', '5432'),
@@ -16,14 +14,10 @@ DB_CONFIG = {
 }
 
 def parse_recipes_from_pipe_format(filepath):
-    """Parse the pipe-delimited recipe format from Cooking_Application_Drafts__1_.txt"""
-    
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
     
     recipes = []
-    
-    # Pattern to match each recipe block
     recipe_pattern = r'\[DISH_ID:(.*?)\]\n\[TITLE:(.*?)\]\n\[CATEGORY:(.*?)\]\n\[SUBCATEGORY:(.*?)\]\n\[INGREDIENTS:(.*?)\]\n\[PROCEDURE:(.*?)\]'
     
     matches = re.findall(recipe_pattern, content, re.DOTALL)
@@ -36,27 +30,30 @@ def parse_recipes_from_pipe_format(filepath):
         ingredients_text = match[4].strip()
         procedure_text = match[5].strip()
         
-        # Parse category to get cuisine and region
         parts = subcategory.split(' ')
         region = parts[0] if parts else ''
-        
-        # Determine cuisine from category
         cuisine = category
         
-        # Parse ingredients (pipe-separated)
         ingredients = [ing.strip() for ing in ingredients_text.split('|')]
         
-        # Parse procedure (numbered steps)
+        # IMPROVED: Split steps properly
         steps = []
-        for line in procedure_text.strip().split('\n'):
-            line = line.strip()
-            if line and (line[0].isdigit() or line.startswith('-')):
-                step = re.sub(r'^\d+\.\s*', '', line)
+        # Split by patterns like "1. ", "2. ", "3. " etc.
+        step_matches = re.findall(r'\d+\.\s*(.*?)(?=\d+\.\s*|$)', procedure_text, re.DOTALL)
+        if step_matches:
+            for step in step_matches:
                 step = step.strip()
                 if step:
                     steps.append(step)
+        else:
+            # Fallback: split by newlines
+            for line in procedure_text.strip().split('\n'):
+                line = line.strip()
+                if line and not line.startswith('['):
+                    clean_step = re.sub(r'^\d+\.\s*', '', line)
+                    if clean_step:
+                        steps.append(clean_step)
         
-        # Determine difficulty based on number of steps
         if len(steps) <= 5:
             difficulty = 'Easy'
         elif len(steps) <= 8:
@@ -64,7 +61,6 @@ def parse_recipes_from_pipe_format(filepath):
         else:
             difficulty = 'Hard'
         
-        # Determine if it's Main, Dessert, or Beverage
         if 'Main' in subcategory or 'MAIN' in subcategory.upper():
             category_type = 'Main Course'
         elif 'Dessert' in subcategory or 'DESSERT' in subcategory.upper():
@@ -84,16 +80,13 @@ def parse_recipes_from_pipe_format(filepath):
             'prep_time': 15,
             'cook_time': 30,
             'ingredients': ingredients,
-            'steps': steps
+            'steps': steps  # Now steps is a list of individual steps
         }
         recipes.append(recipe)
     
     return recipes
 
 def insert_recipes(recipes):
-    """Insert recipes into PostgreSQL database"""
-    
-    # Try DATABASE_URL first (for Railway), then fall back to DB_CONFIG
     database_url = os.environ.get('DATABASE_URL')
     
     if database_url:
@@ -107,18 +100,16 @@ def insert_recipes(recipes):
     inserted = 0
     skipped = 0
     
+    # Clear existing steps and ingredients first
+    cur.execute("DELETE FROM steps")
+    cur.execute("DELETE FROM ingredients")
+    cur.execute("DELETE FROM recipes")
+    print("Cleared existing recipes, ingredients, and steps")
+    
     for recipe in recipes:
-        # Check if recipe already exists
-        cur.execute("SELECT id FROM recipes WHERE title = %s", (recipe['title'],))
-        if cur.fetchone():
-            print(f"  ⏭ Skipping duplicate: {recipe['title']}")
-            skipped += 1
-            continue
-        
-        # Generate dish_id if not present
+        # Insert recipe
         dish_id = recipe.get('dish_id', f"{recipe['cuisine'][:2]}_{inserted+1:02d}")
         
-        # Insert recipe
         cur.execute('''
             INSERT INTO recipes 
             (dish_id, title, description, cuisine, region, category, difficulty, prep_time, cook_time)
@@ -145,7 +136,7 @@ def insert_recipes(recipes):
                     (recipe_id, ing, '')
                 )
         
-        # Insert steps
+        # Insert steps - EACH STEP AS A SEPARATE ROW
         for idx, step in enumerate(recipe['steps'], start=1):
             if step:
                 cur.execute(
@@ -153,7 +144,7 @@ def insert_recipes(recipes):
                     (recipe_id, idx, step)
                 )
         
-        print(f"  ✅ Inserted: {recipe['title']} ({recipe['region']} / {recipe['category']})")
+        print(f"  Inserted: {recipe['title']} ({len(recipe['steps'])} steps)")
         inserted += 1
     
     conn.commit()
@@ -162,20 +153,19 @@ def insert_recipes(recipes):
     return inserted, skipped
 
 if __name__ == '__main__':
-    # Path to your recipe file
     FILE = os.path.join(os.path.dirname(__file__), 'Cooking_Application_Drafts__1_.txt')
     
     if not os.path.exists(FILE):
-        print(f"❌ File not found: {FILE}")
+        print(f"File not found: {FILE}")
         exit(1)
     
-    print("📖 Parsing recipes from pipe-delimited format...")
+    print("Parsing recipes...")
     recipes = parse_recipes_from_pipe_format(FILE)
     print(f"   Found {len(recipes)} recipes.\n")
     
-    print("💾 Inserting into PostgreSQL...")
+    print("Inserting into PostgreSQL...")
     inserted, skipped = insert_recipes(recipes)
     
-    print(f"\n🎉 Done!")
+    print(f"\nDone!")
     print(f"   Inserted : {inserted}")
-    print(f"   Skipped  : {skipped} (duplicates)")
+    print(f"   Skipped  : {skipped}")
