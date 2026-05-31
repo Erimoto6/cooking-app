@@ -219,6 +219,12 @@
     font-size: 13px;
     color: rgba(255,255,255,0.45);
   }
+  .va-status.listening {
+    color: #2ecc71;
+  }
+  .va-status.reading {
+    color: #e74c3c;
+  }
   .va-box {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.07);
@@ -246,12 +252,23 @@
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 14px;
+    transition: all 0.2s;
   }
   .va-mic-btn {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.09);
     width: 40px; height: 40px;
     border-radius: 50%;
+  }
+  .va-mic-btn.listening {
+    background: #2ecc71;
+    border-color: #2ecc71;
+    animation: micPulse 1s infinite;
+  }
+  @keyframes micPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46,204,113,0.4); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(46,204,113,0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46,204,113,0); }
   }
   .va-read-btn {
     background: rgba(139,37,0,0.25);
@@ -280,6 +297,10 @@
     border-radius: 8px;
     color: rgba(255,255,255,0.6);
     cursor: pointer;
+    transition: all 0.2s;
+  }
+  .va-small:active {
+    background: rgba(192,57,43,0.3);
   }
 </style>
 {% endblock %}
@@ -321,7 +342,7 @@
   </div>
 
   <div class="va-container">
-    <div class="va-header">VOICE ASSISTANT <span class="va-status" id="vaStatus">Idle</span></div>
+    <div class="va-header">VOICE ASSISTANT <span class="va-status" id="vaStatus">⚪ Idle</span></div>
     <div class="va-box">
       <p class="va-subtext">Tap the mic and say a command, or press "Read Recipe" to start.</p>
       <div class="va-main-controls">
@@ -330,12 +351,12 @@
         <button class="va-stop-btn" id="vaStopBtn">■</button>
       </div>
       <div class="va-quick-controls">
-        <button class="va-small" data-command="next">next step</button>
-        <button class="va-small" data-command="prev">previous step</button>
-        <button class="va-small" data-command="repeat">repeat</button>
-        <button class="va-small" data-command="ingredients">ingredients</button>
-        <button class="va-small" data-command="time">how long</button>
-        <button class="va-small" data-command="stop">stop</button>
+        <button class="va-small" data-cmd="next">next step</button>
+        <button class="va-small" data-cmd="prev">previous step</button>
+        <button class="va-small" data-cmd="repeat">repeat</button>
+        <button class="va-small" data-cmd="ingredients">ingredients</button>
+        <button class="va-small" data-cmd="time">how long</button>
+        <button class="va-small" data-cmd="stop">stop</button>
       </div>
     </div>
   </div>
@@ -390,141 +411,534 @@
 
 <script>
 (function() {
-  function showToast(msg) {
-    var t = document.getElementById('rdToast');
-    if (!t) return;
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(function() { t.classList.remove('show'); }, 2400);
-  }
-
-  function postJSON(url, body) {
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }).then(function(r) { return r.json(); });
-  }
-
+  // ========== DOM Elements ==========
+  var micBtn = document.getElementById('vaMicBtn');
+  var statusEl = document.getElementById('vaStatus');
+  var readBtn = document.getElementById('vaReadBtn');
+  var stopBtn = document.getElementById('vaStopBtn');
+  var toastEl = document.getElementById('rdToast');
+  
+  // ========== Get Recipe Data ==========
   var stepElements = document.querySelectorAll('.rd-step-text');
-  var stepTexts = Array.from(stepElements).map(function(el) { return el.textContent; });
-  var currentStepIndex = 0;
+  var stepTexts = [];
+  for (var i = 0; i < stepElements.length; i++) {
+    stepTexts.push(stepElements[i].innerText);
+  }
+  
+  // ========== State Variables ==========
+  var currentStep = 0;
   var isReading = false;
-
-  function speak(text, onEnd) {
-    if (!('speechSynthesis' in window)) {
-      showToast('Text-to-speech not supported');
-      return;
+  var currentUtterance = null;
+  var recognition = null;
+  var isListening = false;
+  
+  // ========== Helper Functions ==========
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(function() { toastEl.classList.remove('show'); }, 2500);
+  }
+  
+  // Get total time from the badge (cleaned of emojis)
+  function getTotalTime() {
+    var badges = document.querySelectorAll('.rd-badge');
+    for (var i = 0; i < badges.length; i++) {
+      var text = badges[i].innerText;
+      // Remove emojis (clock, lightning, earth) and trim
+      var cleanText = text.replace(/[🕒⚡🌏]/g, '').trim();
+      if (cleanText.includes('min') || cleanText.includes('hour') || cleanText.includes('hr')) {
+        return cleanText;
+      }
     }
-    window.speechSynthesis.cancel();
-    var utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    if (onEnd) utterance.onend = onEnd;
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function readStep(index) {
-    if (index >= 0 && index < stepTexts.length) {
-      speak(stepTexts[index], function() {
-        if (isReading && index + 1 < stepTexts.length) {
-          currentStepIndex = index + 1;
-          readStep(currentStepIndex);
-        } else if (isReading) {
-          isReading = false;
-          document.getElementById('vaStatus').textContent = 'Idle';
-        }
-      });
+    for (var i = 0; i < badges.length; i++) {
+      var text = badges[i].innerText;
+      var cleanText = text.replace(/[🕒⚡🌏]/g, '').trim();
+      if (/\d+/.test(cleanText)) {
+        return cleanText;
+      }
     }
+    return 'not available';
   }
-
-  function startReadingRecipe() {
-    if (stepTexts.length === 0) {
-      speak('No steps found for this recipe.');
-      return;
-    }
-    isReading = true;
-    currentStepIndex = 0;
-    document.getElementById('vaStatus').textContent = 'Reading...';
-    readStep(0);
-  }
-
-  function stopReading() {
-    window.speechSynthesis.cancel();
-    isReading = false;
-    document.getElementById('vaStatus').textContent = 'Idle';
-  }
-
-  function nextStep() {
-    if (currentStepIndex + 1 < stepTexts.length) {
-      currentStepIndex++;
-      speak(stepTexts[currentStepIndex]);
-    } else {
-      speak('You are on the last step.');
-    }
-  }
-
-  function previousStep() {
-    if (currentStepIndex - 1 >= 0) {
-      currentStepIndex--;
-      speak(stepTexts[currentStepIndex]);
-    } else {
-      speak('This is the first step.');
-    }
-  }
-
-  function repeatStep() {
-    if (stepTexts[currentStepIndex]) {
-      speak(stepTexts[currentStepIndex]);
-    }
-  }
-
-  function speakIngredients() {
+  
+  function getIngredientsText() {
     var ingredients = document.querySelectorAll('.rd-ingr-name');
-    if (ingredients.length === 0) {
-      speak('No ingredients listed.');
-      return;
-    }
+    if (ingredients.length === 0) return 'No ingredients listed';
     var text = 'You need: ';
     for (var i = 0; i < ingredients.length; i++) {
-      text += ingredients[i].textContent;
+      text += ingredients[i].innerText;
       if (i < ingredients.length - 1) text += ', ';
     }
-    speak(text);
+    return text;
   }
-
-  function speakTotalTime() {
-    var timeEl = document.querySelector('.rd-badge');
-    if (timeEl) {
-      speak('This recipe takes ' + timeEl.textContent);
-    } else {
-      speak('Cooking time information is not available.');
+  
+  function stopSpeaking() {
+    // Aggressive speech killing
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.cancel();
+      // This helps in some browsers
+      if (window.speechSynthesis.pending) {
+        window.speechSynthesis.cancel();
+      }
+    }
+    currentUtterance = null;
+    isReading = false;
+    
+    if (statusEl) {
+      statusEl.innerHTML = '⚪ Idle';
+      statusEl.classList.remove('reading');
     }
   }
-
-  document.querySelectorAll('.rd-speak-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var text = this.getAttribute('data-text');
-      if (text) speak(text);
+  
+  function speak(text, callback) {
+    if (!window.speechSynthesis) {
+      showToast('Text-to-speech not supported');
+      if (callback) callback();
+      return;
+    }
+    
+    window.speechSynthesis.cancel();
+    
+    setTimeout(function() {
+      var utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      currentUtterance = utterance;
+      
+      if (statusEl) {
+        statusEl.innerHTML = '🔴 Speaking...';
+        statusEl.classList.add('reading');
+      }
+      
+      utterance.onend = function() {
+        currentUtterance = null;
+        if (!isReading) {
+          if (statusEl) {
+            statusEl.innerHTML = '⚪ Idle';
+            statusEl.classList.remove('reading');
+          }
+        }
+        if (callback) callback();
+      };
+      
+      utterance.onerror = function() {
+        currentUtterance = null;
+        if (!isReading) {
+          if (statusEl) {
+            statusEl.innerHTML = '⚪ Idle';
+            statusEl.classList.remove('reading');
+          }
+        }
+        if (callback) callback();
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  }
+  
+  // ========== Reading Functions ==========
+  function readAllSteps() {
+    if (stepTexts.length === 0) {
+      speak('No steps found');
+      return;
+    }
+    
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    currentUtterance = null;
+    
+    setTimeout(function() {
+      isReading = true;
+      currentStep = 0;
+      if (statusEl) {
+        statusEl.innerHTML = '🔴 Reading recipe...';
+        statusEl.classList.add('reading');
+      }
+      showToast('Reading recipe from step 1');
+      
+      function readNext() {
+        if (!isReading || currentStep >= stepTexts.length) {
+          isReading = false;
+          if (statusEl && !currentUtterance) {
+            statusEl.innerHTML = '⚪ Idle';
+            statusEl.classList.remove('reading');
+          }
+          return;
+        }
+        speak(stepTexts[currentStep], function() {
+          currentStep++;
+          readNext();
+        });
+      }
+      readNext();
+    }, 100);
+  }
+  
+  function nextStep() {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    currentUtterance = null;
+    isReading = false;
+    
+    setTimeout(function() {
+      if (currentStep + 1 < stepTexts.length) {
+        currentStep++;
+        speak(stepTexts[currentStep]);
+        showToast('Step ' + (currentStep + 1));
+      } else {
+        speak('You are on the last step');
+      }
+    }, 100);
+  }
+  
+  function previousStep() {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    currentUtterance = null;
+    isReading = false;
+    
+    setTimeout(function() {
+      if (currentStep - 1 >= 0) {
+        currentStep--;
+        speak(stepTexts[currentStep]);
+        showToast('Step ' + (currentStep + 1));
+      } else {
+        speak('This is the first step');
+      }
+    }, 100);
+  }
+  
+  function repeatStep() {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    currentUtterance = null;
+    isReading = false;
+    
+    setTimeout(function() {
+      if (stepTexts[currentStep]) {
+        speak(stepTexts[currentStep]);
+        showToast('Repeating step ' + (currentStep + 1));
+      } else {
+        speak('No step to repeat');
+      }
+    }, 100);
+  }
+  
+  function readIngredients() {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    currentUtterance = null;
+    isReading = false;
+    
+    setTimeout(function() {
+      speak(getIngredientsText());
+      showToast('Reading ingredients');
+    }, 100);
+  }
+  
+  function readTotalTime() {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    currentUtterance = null;
+    isReading = false;
+    
+    setTimeout(function() {
+      var timeText = getTotalTime();
+      if (timeText !== 'not available') {
+        speak('This recipe takes ' + timeText);
+        showToast('Total time: ' + timeText);
+      } else {
+        speak('Cooking time information is not available for this recipe');
+        showToast('Time not available');
+      }
+    }, 100);
+  }
+  
+  // ========== Voice Command Processing ==========
+  function processCommand(command) {
+    console.log('Command heard:', command);
+    showToast('🎤 You said: "' + command + '"');
+    
+    // Normalize the command
+    var cmd = command.toLowerCase().trim();
+    
+    // ========== STOP COMMAND - MOST IMPORTANT ==========
+    // Check for stop FIRST before anything else
+    var stopWords = ['stop', 'stop reading', 'quiet', 'enough', 'cancel', 'shut up', 'stop talking', 'be quiet', 'cease', 'halt'];
+    var isStop = false;
+    for (var i = 0; i < stopWords.length; i++) {
+      if (cmd.includes(stopWords[i])) {
+        isStop = true;
+        break;
+      }
+    }
+    
+    if (isStop) {
+      // KILL ALL SPEECH IMMEDIATELY
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel();
+        // Force cancel any pending speech
+        try {
+          window.speechSynthesis.resume();
+          window.speechSynthesis.cancel();
+        } catch(e) {}
+      }
+      currentUtterance = null;
+      isReading = false;
+      
+      if (statusEl) {
+        statusEl.innerHTML = '⚪ Idle';
+        statusEl.classList.remove('reading');
+      }
+      showToast('⏹️ Stopped');
+      return;
+    }
+    
+    // ========== READ RECIPE ==========
+    var readWords = ['read recipe', 'read all steps', 'start reading', 'read steps', 'read the recipe', 'tell me the steps', 'read everything', 'read all', 'start'];
+    var isRead = false;
+    for (var i = 0; i < readWords.length; i++) {
+      if (cmd.includes(readWords[i])) {
+        isRead = true;
+        break;
+      }
+    }
+    
+    if (isRead) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      currentUtterance = null;
+      isReading = false;
+      setTimeout(function() { readAllSteps(); }, 100);
+      return;
+    }
+    
+    // ========== NEXT STEP ==========
+    if (cmd.includes('next step') || cmd.includes('next') || cmd.includes('go to next') || cmd.includes('continue')) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      currentUtterance = null;
+      isReading = false;
+      setTimeout(function() { nextStep(); }, 100);
+      return;
+    }
+    
+    // ========== PREVIOUS STEP ==========
+    if (cmd.includes('previous step') || cmd.includes('previous') || cmd.includes('go back') || cmd.includes('step back')) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      currentUtterance = null;
+      isReading = false;
+      setTimeout(function() { previousStep(); }, 100);
+      return;
+    }
+    
+    // ========== REPEAT STEP ==========
+    if (cmd.includes('repeat step') || cmd.includes('repeat') || cmd.includes('say again') || cmd.includes('once more')) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      currentUtterance = null;
+      isReading = false;
+      setTimeout(function() { repeatStep(); }, 100);
+      return;
+    }
+    
+    // ========== INGREDIENTS ==========
+    if (cmd.includes('ingredients') || cmd.includes('what ingredients') || cmd.includes('ingredient list')) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      currentUtterance = null;
+      isReading = false;
+      setTimeout(function() { readIngredients(); }, 100);
+      return;
+    }
+    
+    // ========== HOW LONG ==========
+    if (cmd.includes('how long') || cmd.includes('total time') || cmd.includes('cooking time') || cmd.includes('how many minutes')) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      currentUtterance = null;
+      isReading = false;
+      setTimeout(function() { readTotalTime(); }, 100);
+      return;
+    }
+    
+    // ========== SPECIFIC STEP ==========
+    var stepMatch = cmd.match(/step\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)/);
+    if (stepMatch) {
+      var stepNum = stepMatch[1];
+      var wordNumbers = { 'one':1, 'two':2, 'three':3, 'four':4, 'five':5, 'six':6, 'seven':7, 'eight':8, 'nine':9, 'ten':10 };
+      if (wordNumbers[stepNum]) stepNum = wordNumbers[stepNum];
+      stepNum = parseInt(stepNum);
+      if (stepNum >= 1 && stepNum <= stepTexts.length) {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        currentUtterance = null;
+        isReading = false;
+        currentStep = stepNum - 1;
+        setTimeout(function() {
+          speak(stepTexts[currentStep]);
+          showToast('Reading step ' + stepNum);
+        }, 100);
+        return;
+      }
+    }
+    
+    // Unknown command - silent
+    console.log('Unknown command:', cmd);
+    showToast('❌ Try: read recipe, next step, ingredients, how long, or stop');
+  }
+  
+  // ========== Speech Recognition with Better Sensitivity ==========
+  function initRecognition() {
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      if (statusEl) statusEl.innerHTML = '⚠️ Not supported';
+      showToast('Voice commands not supported. Try Chrome or Edge.');
+      return false;
+    }
+    
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;  // Show interim results for better feedback
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 3;     // Get multiple possible interpretations
+    
+    recognition.onstart = function() {
+      isListening = true;
+      if (statusEl && !currentUtterance) {
+        statusEl.innerHTML = '🎤 Listening...';
+        statusEl.classList.add('listening');
+      }
+      if (micBtn) micBtn.classList.add('listening');
+      showToast('🎤 Listening... Say a command');
+    };
+    
+    recognition.onresult = function(event) {
+      // Get the best result
+      var lastResult = event.results[event.results.length - 1];
+      if (lastResult.isFinal) {
+        var command = lastResult[0].transcript.toLowerCase();
+        processCommand(command);
+      } else {
+        // Show interim result for feedback
+        var interim = lastResult[0].transcript.toLowerCase();
+        if (statusEl && !currentUtterance) {
+          statusEl.innerHTML = '🎤 "' + interim + '"';
+        }
+      }
+    };
+    
+    recognition.onerror = function(event) {
+      console.log('Error:', event.error);
+      if (event.error !== 'no-speech') {
+        if (statusEl && !currentUtterance) {
+          statusEl.innerHTML = '⚪ Idle';
+          statusEl.classList.remove('listening');
+        }
+        if (micBtn) micBtn.classList.remove('listening');
+        isListening = false;
+        if (event.error === 'not-allowed') {
+          showToast('Please allow microphone access');
+        } else if (event.error === 'network') {
+          showToast('Network error - check connection');
+        }
+      }
+    };
+    
+    recognition.onend = function() {
+      if (isListening) {
+        try {
+          recognition.start();
+        } catch(e) {
+          isListening = false;
+          if (statusEl && !currentUtterance) {
+            statusEl.innerHTML = '⚪ Idle';
+            statusEl.classList.remove('listening');
+          }
+          if (micBtn) micBtn.classList.remove('listening');
+        }
+      }
+    };
+    
+    return true;
+  }
+  
+  function toggleMic() {
+    if (!recognition) {
+      if (!initRecognition()) return;
+    }
+    
+    if (isListening) {
+      isListening = false;
+      recognition.stop();
+      if (statusEl && !currentUtterance) {
+        statusEl.innerHTML = '⚪ Idle';
+        statusEl.classList.remove('listening');
+      }
+      if (micBtn) micBtn.classList.remove('listening');
+      showToast('Mic off');
+    } else {
+      isListening = true;
+      try {
+        recognition.start();
+      } catch(e) {
+        console.log(e);
+        initRecognition();
+        try {
+          recognition.start();
+        } catch(e2) {
+          isListening = false;
+          showToast('Please click the mic again');
+        }
+      }
+    }
+  }
+  
+  function onMicClick() {
+    stopSpeaking();
+    toggleMic();
+  }
+  
+  // ========== Event Listeners ==========
+  if (micBtn) micBtn.addEventListener('click', onMicClick);
+  
+  if (readBtn) {
+    readBtn.addEventListener('click', function() {
+      readAllSteps();
     });
-  });
-
-  document.getElementById('vaReadBtn').addEventListener('click', startReadingRecipe);
-  document.getElementById('vaStopBtn').addEventListener('click', stopReading);
-
+  }
+  
+  if (stopBtn) stopBtn.addEventListener('click', stopSpeaking);
+  
   document.querySelectorAll('.va-small').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      var cmd = this.getAttribute('data-command');
+      var cmd = this.getAttribute('data-cmd');
       if (cmd === 'next') nextStep();
       else if (cmd === 'prev') previousStep();
       else if (cmd === 'repeat') repeatStep();
-      else if (cmd === 'ingredients') speakIngredients();
-      else if (cmd === 'time') speakTotalTime();
-      else if (cmd === 'stop') stopReading();
+      else if (cmd === 'ingredients') readIngredients();
+      else if (cmd === 'time') readTotalTime();
+      else if (cmd === 'stop') stopSpeaking();
     });
   });
-
+  
+  document.querySelectorAll('.rd-speak-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var text = this.getAttribute('data-text');
+      if (text) {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+        currentUtterance = null;
+        isReading = false;
+        setTimeout(function() { speak(text); }, 100);
+      }
+    });
+  });
+  
   var favBtn = document.getElementById('favoriteBtn');
   if (favBtn) {
     favBtn.addEventListener('click', function() {
@@ -540,17 +954,17 @@
         });
     });
   }
-
+  
   document.querySelectorAll('.rd-ingr-item').forEach(function(el) {
     el.addEventListener('click', function() {
-      var name = el.getAttribute('data-name');
-      var qty = el.getAttribute('data-qty');
-      var recipeId = el.getAttribute('data-recipe-id');
-      postJSON('/add_to_shopping_list', {
-        ingredient_name: name,
-        quantity: qty,
-        recipe_id: recipeId
-      }).then(function(data) {
+      var name = this.getAttribute('data-name');
+      var qty = this.getAttribute('data-qty');
+      var recipeId = this.getAttribute('data-recipe-id');
+      fetch('/add_to_shopping_list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredient_name: name, quantity: qty, recipe_id: recipeId })
+      }).then(function(r) { return r.json(); }).then(function(data) {
         if (data.success) {
           el.classList.add('added');
           el.querySelector('.rd-plus').textContent = '✓';
@@ -559,7 +973,7 @@
       });
     });
   });
-
+  
   var addAllBtn = document.getElementById('addAllBtn');
   if (addAllBtn) {
     addAllBtn.addEventListener('click', function() {
@@ -577,7 +991,7 @@
         });
     });
   }
-
+  
   var shareBtn = document.getElementById('shareBtn');
   if (shareBtn) {
     shareBtn.addEventListener('click', function() {
@@ -593,159 +1007,9 @@
       }
     });
   }
+  
+  console.log('Voice assistant ready');
+  showToast('🎤 Voice assistant ready! Click the mic and say "read recipe"');
 })();
 </script>
-
-<script>
-(function() {
-  // Get elements
-  var micBtn = document.getElementById('vaMicBtn');
-  var statusEl = document.getElementById('vaStatus');
-  var readBtn = document.getElementById('vaReadBtn');
-  var stopBtn = document.getElementById('vaStopBtn');
-  
-  if (!micBtn) {
-    console.log('Mic button not found - check if id="vaMicBtn" exists');
-    return;
-  }
-  
-  // Get all step texts
-  var stepElements = document.querySelectorAll('.rd-step-text');
-  var stepTexts = [];
-  for (var i = 0; i < stepElements.length; i++) {
-    stepTexts.push(stepElements[i].innerText);
-  }
-  
-  var currentStep = 0;
-  var isReading = false;
-  var recognition = null;
-  var isListening = false;
-  
-  function speak(text, callback) {
-    if (!window.speechSynthesis) {
-      console.log('Speech synthesis not supported');
-      return;
-    }
-    window.speechSynthesis.cancel();
-    var utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    if (callback) utterance.onend = callback;
-    window.speechSynthesis.speak(utterance);
-  }
-  
-  function readAllSteps() {
-    if (stepTexts.length === 0) return;
-    isReading = true;
-    currentStep = 0;
-    if (statusEl) statusEl.innerText = 'Reading...';
-    
-    function readNext() {
-      if (!isReading || currentStep >= stepTexts.length) {
-        isReading = false;
-        if (statusEl) statusEl.innerText = 'Idle';
-        return;
-      }
-      speak(stepTexts[currentStep], function() {
-        currentStep++;
-        readNext();
-      });
-    }
-    readNext();
-  }
-  
-  function stopReading() {
-    window.speechSynthesis.cancel();
-    isReading = false;
-    if (statusEl) statusEl.innerText = 'Idle';
-  }
-  
-  function initRecognition() {
-    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.log('Speech recognition not supported');
-      return false;
-    }
-    
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    
-    recognition.onstart = function() {
-      isListening = true;
-      if (statusEl) statusEl.innerText = 'Listening...';
-      if (micBtn) micBtn.style.background = '#2ecc71';
-      console.log('Listening started');
-    };
-    
-    recognition.onresult = function(event) {
-      var command = event.results[0][0].transcript.toLowerCase();
-      console.log('Command:', command);
-      
-      if (command.includes('read recipe') || command.includes('read all')) {
-        readAllSteps();
-      }
-      else if (command.includes('stop')) {
-        stopReading();
-      }
-      else {
-        speak('Say read recipe or stop');
-      }
-      
-      if (statusEl) statusEl.innerText = 'Idle';
-      if (micBtn) micBtn.style.background = '';
-      isListening = false;
-    };
-    
-    recognition.onerror = function(event) {
-      console.log('Error:', event.error);
-      if (statusEl) statusEl.innerText = 'Idle';
-      if (micBtn) micBtn.style.background = '';
-      isListening = false;
-    };
-    
-    recognition.onend = function() {
-      if (micBtn) micBtn.style.background = '';
-      isListening = false;
-    };
-    
-    return true;
-  }
-  
-  function toggleMic() {
-    if (!recognition) {
-      if (!initRecognition()) {
-        alert('Speech recognition not supported in this browser. Try Chrome.');
-        return;
-      }
-    }
-    
-    if (isListening) {
-      recognition.stop();
-      if (statusEl) statusEl.innerText = 'Idle';
-      if (micBtn) micBtn.style.background = '';
-    } else {
-      try {
-        recognition.start();
-      } catch(e) {
-        console.log(e);
-        initRecognition();
-        try {
-          recognition.start();
-        } catch(e2) {
-          alert('Please click the mic again');
-        }
-      }
-    }
-  }
-  
-  // Attach events
-  if (micBtn) micBtn.addEventListener('click', toggleMic);
-  if (readBtn) readBtn.addEventListener('click', readAllSteps);
-  if (stopBtn) stopBtn.addEventListener('click', stopReading);
-  
-  console.log('Voice assistant loaded');
-})();
-</script>
-
 {% endblock %}
