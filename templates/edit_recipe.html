@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+{% block title %}Edit Recipe - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .er-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .er-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .er-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
+  .er-title {
+    color: #ffffff;
+    font-size: 32px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .er-form {
+    position: relative;
+    z-index: 1;
+    background: rgba(255,255,255,0.03);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(5px);
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .form-group label {
+    display: block;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(15, 5, 0, 0.95);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 15px;
+    font-family: inherit;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #C0392B;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .ingredient-row,
+  .step-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .ingredient-row input {
+    flex: 1;
+  }
+
+  .step-row textarea {
+    flex: 1;
+    min-height: 60px;
+    resize: vertical;
+  }
+
+  .remove-btn {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .add-item-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-direction: column;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: #C0392B;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .submit-btn:active {
+    transform: scale(0.98);
+  }
+
+  .delete-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 12px;
+    color: #f44336;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .delete-btn:active {
+    transform: scale(0.98);
+    background: rgba(244, 67, 54, 0.25);
+  }
+
+  /* Delete Confirmation Modal */
+  .delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 30000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .delete-modal-overlay.active {
+    display: flex;
+  }
+
+  .delete-modal {
+    background: rgba(15, 5, 0, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 300px;
+    padding: 24px;
+    text-align: center;
+    animation: modalSlideUp 0.3s ease;
+  }
+
+  .delete-modal-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .delete-modal-title {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .delete-modal-message {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .delete-modal-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .delete-modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-align: center;
+  }
+
+  .delete-modal-cancel {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+  }
+
+  .delete-modal-confirm {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="er-screen">
+  <div class="er-header">
+    <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="er-back">← Back to Recipe</a>
+    <h1 class="er-title">Edit Recipe</h1>
+  </div>
+
+  <div class="er-form">
+    <form method="POST" id="editRecipeForm">
+      <div class="form-group">
+        <label>Recipe Title</label>
+        <input type="text" name="title" value="{{ recipe.title }}" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" rows="3">{{ recipe.description or '' }}</textarea>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Cuisine</label>
+          <select name="cuisine">
+            <option value="African" {% if recipe.cuisine == 'African' %}selected{% endif %}>African</option>
+            <option value="Asians" {% if recipe.cuisine == 'Asians' %}selected{% endif %}>Asians</option>
+            <option value="Europe" {% if recipe.cuisine == 'Europe' %}selected{% endif %}>Europe</option>
+            <option value="North America" {% if recipe.cuisine == 'North America' %}selected{% endif %}>North America</option>
+            <option value="South America" {% if recipe.cuisine == 'South America' %}selected{% endif %}>South America</option>
+            <option value="Oceania" {% if recipe.cuisine == 'Oceania' %}selected{% endif %}>Oceania</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Region / Country</label>
+          <input type="text" name="region" value="{{ recipe.region or '' }}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prep Time (min)</label>
+          <input type="number" name="prep_time" value="{{ recipe.prep_time or 15 }}">
+        </div>
+
+        <div class="form-group">
+          <label>Cook Time (min)</label>
+          <input type="number" name="cook_time" value="{{ recipe.cook_time or 30 }}">
+        </div>
+
+        <div class="form-group">
+          <label>Difficulty</label>
+          <select name="difficulty">
+            <option value="Easy" {% if recipe.difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+            <option value="Medium" {% if recipe.difficulty == 'Medium' %}selected{% endif %}>Medium</option>
+            <option value="Hard" {% if recipe.difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Category</label>
+        <select name="category">
+          <option value="Main Course" {% if recipe.category == 'Main Course' %}selected{% endif %}>Main Course</option>
+          <option value="Dessert" {% if recipe.category == 'Dessert' %}selected{% endif %}>Dessert</option>
+          <option value="Beverage" {% if recipe.category == 'Beverage' %}selected{% endif %}>Beverage</option>
+          <option value="Soup" {% if recipe.category == 'Soup' %}selected{% endif %}>Soup</option>
+          <option value="Snack" {% if recipe.category == 'Snack' %}selected{% endif %}>Snack</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Ingredients</label>
+        <div id="ingredientsList">
+          {% for ingredient in recipe.ingredients %}
+          <div class="ingredient-row">
+            <input type="text" name="ingredient_name[]" value="{{ ingredient.name }}" placeholder="Ingredient name">
+            <input type="text" name="ingredient_quantity[]" value="{{ ingredient.quantity or '' }}" placeholder="Quantity">
+            <button type="button" onclick="removeIngredient(this)" class="remove-btn">✖</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" onclick="addIngredient()" class="add-item-btn">+ Add Ingredient</button>
+      </div>
+
+      <div class="form-group">
+        <label>Instructions</label>
+        <div id="stepsList">
+          {% for step in recipe.steps %}
+          <div class="step-row">
+            <textarea name="step[]" rows="2">{{ step.instruction }}</textarea>
+            <button type="button" onclick="removeStep(this)" class="remove-btn">✖</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" onclick="addStep()" class="add-item-btn">+ Add Step</button>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="submit-btn">💾 Save Changes</button>
+        <button type="button" class="delete-btn" onclick="showDeleteModal({{ recipe.id }})">🗑️ Delete Recipe</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="delete-modal-overlay">
+  <div class="delete-modal">
+    <div class="delete-modal-icon">🗑️</div>
+    <div class="delete-modal-title">Delete Recipe</div>
+    <div class="delete-modal-message">Are you sure you want to delete this recipe?<br>This cannot be undone!</div>
+    <div class="delete-modal-buttons">
+      <button class="delete-modal-btn delete-modal-cancel" id="deleteModalCancel">Cancel</button>
+      <button class="delete-modal-btn delete-modal-confirm" id="deleteModalConfirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function addIngredient() {
+    const div = document.createElement('div');
+    div.className = 'ingredient-row';
+    div.innerHTML = `
+      <input type="text" name="ingredient_name[]" placeholder="Ingredient name">
+      <input type="text" name="ingredient_quantity[]" placeholder="Quantity">
+      <button type="button" onclick="removeIngredient(this)" class="remove-btn">✖</button>
+    `;
+    document.getElementById('ingredientsList').appendChild(div);
+  }
+
+  function removeIngredient(btn) {
+    btn.parentElement.remove();
+  }
+
+  function addStep() {
+    const div = document.createElement('div');
+    div.className = 'step-row';
+    div.innerHTML = `
+      <textarea name="step[]" rows="2" placeholder="Step description"></textarea>
+      <button type="button" onclick="removeStep(this)" class="remove-btn">✖</button>
+    `;
+    document.getElementById('stepsList').appendChild(div);
+  }
+
+  function removeStep(btn) {
+    btn.parentElement.remove();
+  }
+
+  var pendingDeleteId = null;
+
+  function showDeleteModal(recipeId) {
+    pendingDeleteId = recipeId;
+    var modal = document.getElementById('deleteModal');
+    modal.classList.add('active');
+  }
+
+  function closeDeleteModal() {
+    var modal = document.getElementById('deleteModal');
+    modal.classList.remove('active');
+    pendingDeleteId = null;
+  }
+
+  function confirmDelete() {
+    if (!pendingDeleteId) return;
+    
+    fetch('/delete_recipe/' + pendingDeleteId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = '/home';
+      } else {
+        alert(data.error || 'Error deleting recipe');
+        closeDeleteModal();
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error deleting recipe');
+      closeDeleteModal();
+    });
+  }
+
+  // Set up modal event listeners
+  document.getElementById('deleteModalConfirm').onclick = confirmDelete;
+  document.getElementById('deleteModalCancel').onclick = closeDeleteModal;
+  document.getElementById('deleteModal').onclick = function(e) {
+    if (e.target === this) closeDeleteModal();
+  };
+</script>
+{% endblock %}

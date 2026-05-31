@@ -302,6 +302,86 @@
   .va-small:active {
     background: rgba(192,57,43,0.3);
   }
+
+  .button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.rd-folder-btn {
+  padding: 10px 28px; border-radius: 22px;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.8);
+}
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  z-index: 20000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-container {
+  background: rgba(15,5,0,0.95);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  width: 90%; max-width: 320px;
+  padding: 24px;
+}
+.modal-icon { font-size: 48px; text-align: center; }
+.modal-title { color: #fff; font-size: 20px; text-align: center; }
+.modal-message { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; margin-bottom: 20px; }
+.folders-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+.folder-option {
+  display: flex; justify-content: space-between;
+  padding: 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+}
+.folder-option-name { color: rgba(255,255,255,0.8); }
+.folder-option-add { background: #C0392B; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.modal-buttons { display: flex; gap: 12px; }
+.modal-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
+.modal-cancel { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+
+.folder-option-remove {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.folder-option-remove:hover {
+  background: rgba(244, 67, 54, 0.3);
+}
+
+.rd-done-btn {
+    padding: 10px 28px;
+    border-radius: 22px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+}
+
+.rd-done-btn:active {
+    transform: scale(0.96);
+}
+
 </style>
 {% endblock %}
 
@@ -335,10 +415,41 @@
       {% endif %}
     </div>
 
-    <button class="rd-fav-btn {% if is_favorite %}active{% endif %}"
-            id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
-      {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
-    </button>
+    <div class="button-group">
+  <button class="rd-fav-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
+    {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
+  </button>
+
+  {% if session.user_id == recipe.user_id %}
+  <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="rd-fav-btn" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
+    ✏️ Edit Recipe
+  </a>
+  {% endif %}
+  
+  <button class="rd-folder-btn" onclick="showAddToFolderModal({{ recipe.id }})">
+    📁 Add to Collection
+  </button>
+
+  <button class="rd-done-btn" id="doneBtn" onclick="toggleDone({{ recipe.id }})">
+    ✅ Mark as Done
+  </button>
+</div>
+
+<!-- Add to Folder Modal -->
+<div id="addToFolderModal" class="modal-overlay">
+  <div class="modal-container">
+    <div class="modal-icon">📁</div>
+    <div class="modal-title">Manage Folders</div>
+    <div class="modal-message">Add or remove this recipe from folders</div>
+    <div id="foldersList" class="folders-list">
+      <div style="text-align:center; padding:20px;">Loading folders...</div>
+    </div>
+    <div class="modal-buttons">
+      <button onclick="closeAddToFolderModal()" class="modal-btn modal-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
   </div>
 
   <div class="va-container">
@@ -999,5 +1110,276 @@
   console.log('Voice assistant ready');
   showToast('🎤 Voice assistant ready! Click the mic and say "read recipe"');
 })();
+
+ // Toggle favorite (existing function)
+  function toggleFavorite(recipeId) {
+    fetch(`/favorite/${recipeId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        }
+      });
+  }
+  
+  // Show Add to Folder Modal
+  function showAddToFolderModal(recipeId) {
+    // Fetch user's folders
+    fetch('/get_folders')
+      .then(response => response.json())
+      .then(data => {
+        const foldersList = document.getElementById('foldersList');
+        foldersList.innerHTML = '';
+        
+        if (data.folders && data.folders.length > 0) {
+          data.folders.forEach(folder => {
+            const folderDiv = document.createElement('div');
+            folderDiv.className = 'folder-option';
+            folderDiv.innerHTML = `
+              <span class="folder-option-name">📂 ${folder.name}</span>
+              <button class="folder-option-add" onclick="addToFolder(${recipeId}, ${folder.id})">Add</button>
+            `;
+            foldersList.appendChild(folderDiv);
+          });
+        } else {
+          foldersList.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.5);">No folders yet. Create one below!</div>';
+        }
+        
+        document.getElementById('addToFolderModal').style.display = 'flex';
+      });
+  }
+  
+  function closeAddToFolderModal() {
+    document.getElementById('addToFolderModal').style.display = 'none';
+  }
+  
+  function addToFolder(recipeId, folderId) {
+    fetch('/add_to_folder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ recipe_id: recipeId, folder_id: folderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Recipe added to folder!');
+        closeAddToFolderModal();
+      } else {
+        alert(data.error || 'Error adding to folder');
+      }
+    });
+  }
+  
+  function createAndAddToFolder(recipeId) {
+    const newFolderName = document.getElementById('newFolderName').value.trim();
+    if (!newFolderName) {
+      alert('Please enter a folder name');
+      return;
+    }
+    
+    fetch('/create_folder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: newFolderName })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // After creating folder, add recipe to it
+        fetch('/add_to_folder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ recipe_id: recipeId, folder_id: data.folder_id })
+        })
+        .then(response => response.json())
+        .then(addData => {
+          if (addData.success) {
+            alert('Recipe added to new folder!');
+            closeAddToFolderModal();
+          }
+        });
+      } else {
+        alert('Error creating folder');
+      }
+    });
+  }
+  
+  // Close modal when clicking outside
+  document.getElementById('addToFolderModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeAddToFolderModal();
+    }
+  });
+  
+ // Add to Folder Functions
+var currentRecipeId = null;
+
+function showAddToFolderModal(recipeId) {
+  currentRecipeId = recipeId;
+  var modal = document.getElementById('addToFolderModal');
+  var foldersList = document.getElementById('foldersList');
+  foldersList.innerHTML = '<div style="text-align:center; padding:20px;">Loading folders...</div>';
+  modal.classList.add('active');
+  
+  // First, get all user folders
+  fetch('/get_folders')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var allFolders = data.folders || [];
+      
+      // Then, check which folders already contain this recipe
+      fetch('/get_recipe_folders/' + recipeId)
+        .then(function(r) { return r.json(); })
+        .then(function(folderData) {
+          var recipeFolders = folderData.folders || [];
+          var recipeFolderIds = recipeFolders.map(function(f) { return f.id; });
+          
+          foldersList.innerHTML = '';
+          
+          if (allFolders.length === 0) {
+            foldersList.innerHTML = '<div style="text-align:center; padding:20px;">No folders yet. Create one from home!</div>';
+          } else {
+            allFolders.forEach(function(folder) {
+              var isInFolder = recipeFolderIds.includes(folder.id);
+              var div = document.createElement('div');
+              div.className = 'folder-option';
+              div.innerHTML = `
+                <span class="folder-option-name">📂 ${escapeHtml(folder.name)}</span>
+                <div>
+                  ${isInFolder ? 
+                    `<button class="folder-option-remove" onclick="removeFromFolder(${recipeId}, ${folder.id})">Remove</button>` : 
+                    `<button class="folder-option-add" onclick="addToFolder(${recipeId}, ${folder.id})">Add</button>`
+                  }
+                </div>
+              `;
+              foldersList.appendChild(div);
+            });
+          }
+        });
+    })
+    .catch(function(error) {
+      console.error('Error:', error);
+      foldersList.innerHTML = '<div style="text-align:center; padding:20px;">Error loading folders</div>';
+    });
+}
+
+function closeAddToFolderModal() {
+  document.getElementById('addToFolderModal').classList.remove('active');
+  currentRecipeId = null;
+}
+
+function addToFolder(recipeId, folderId) {
+  fetch('/add_to_folder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipe_id: recipeId, folder_id: folderId })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      showToast('Recipe added to folder!');
+      // Refresh the modal to show updated status
+      showAddToFolderModal(recipeId);
+    } else {
+      showToast(data.error || 'Error adding to folder');
+    }
+  })
+  .catch(function(error) {
+    console.error('Error:', error);
+    showToast('Error adding to folder');
+  });
+}
+
+function removeFromFolder(recipeId, folderId) {
+  fetch('/remove_from_folder/' + recipeId + '/' + folderId, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      showToast('Recipe removed from folder!');
+      // Refresh the modal to show updated status
+      showAddToFolderModal(recipeId);
+    } else {
+      showToast(data.error || 'Error removing from folder');
+    }
+  })
+  .catch(function(error) {
+    console.error('Error:', error);
+    showToast('Error removing from folder');
+  });
+}
+
+function escapeHtml(text) {
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function showToast(message) {
+  var toast = document.getElementById('rdToast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 2500);
+}
+
+// Check if recipe is already marked as done
+function checkDoneStatus(recipeId) {
+    fetch('/check_recipe_done/' + recipeId)
+        .then(response => response.json())
+        .then(data => {
+            const doneBtn = document.getElementById('doneBtn');
+            if (data.is_done) {
+                doneBtn.innerHTML = '✅ Done!';
+                doneBtn.style.background = 'rgba(76, 175, 80, 0.25)';
+                doneBtn.style.borderColor = 'rgba(76, 175, 80, 0.4)';
+                doneBtn.style.color = '#4CAF50';
+            } else {
+                doneBtn.innerHTML = '✅ Mark as Done';
+                doneBtn.style.background = 'rgba(255,255,255,0.08)';
+                doneBtn.style.borderColor = 'rgba(255,255,255,0.15)';
+                doneBtn.style.color = 'rgba(255,255,255,0.8)';
+            }
+        });
+}
+
+function toggleDone(recipeId) {
+    const doneBtn = document.getElementById('doneBtn');
+    const isCurrentlyDone = doneBtn.innerHTML.includes('Done!');
+    
+    if (isCurrentlyDone) {
+        fetch('/unmark_recipe_done/' + recipeId, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    checkDoneStatus(recipeId);
+                    showToast('Recipe unmarked as done');
+                }
+            });
+    } else {
+        fetch('/mark_recipe_done/' + recipeId, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    checkDoneStatus(recipeId);
+                    showToast('Recipe marked as done! 🎉');
+                } else if (data.error === 'Recipe already marked as done') {
+                    checkDoneStatus(recipeId);
+                }
+            });
+    }
+}
+
+// Call on page load
+checkDoneStatus({{ recipe.id }});
+
 </script>
 {% endblock %}
