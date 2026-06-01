@@ -1942,6 +1942,27 @@ def debug_private_status():
     
     return result
 
+@app.route('/fix-imported-public')
+def fix_imported_public():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Set recipes where user_id IS NULL (imported) to public
+        cur.execute("UPDATE recipes SET is_private = FALSE WHERE user_id IS NULL OR is_private IS NULL")
+        conn.commit()
+        count = cur.rowcount
+        result = f"✅ Updated {count} imported recipes to public (is_private = FALSE)"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
