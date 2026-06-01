@@ -210,38 +210,42 @@ def view_cuisine(cuisine):
 
     cursor = get_cursor()
 
-    # Get all recipes for this cuisine
-    cursor.execute("SELECT * FROM recipes WHERE cuisine = %s ORDER BY title", (cuisine,))
-    all_recipes = cursor.fetchall()
+    try:
+        # Get all recipes for this cuisine
+        cursor.execute("SELECT * FROM recipes WHERE cuisine = %s ORDER BY title", (cuisine,))
+        all_recipes = cursor.fetchall()
 
-    # Get distinct regions
-    cursor.execute("""
-        SELECT DISTINCT region FROM recipes 
-        WHERE cuisine = %s AND region IS NOT NULL AND region != ''
-        ORDER BY region
-    """, (cuisine,))
-    regions = cursor.fetchall()
-
-    recipes_by_region = {}
-
-    # Group recipes by region
-    for region in regions:
-        region_name = region['region']
+        # Get distinct regions (handle NULL values)
         cursor.execute("""
-            SELECT * FROM recipes 
-            WHERE cuisine = %s AND region = %s 
-            ORDER BY title
-        """, (cuisine, region_name))
-        recipes_by_region[region_name] = cursor.fetchall()
+            SELECT DISTINCT region FROM recipes 
+            WHERE cuisine = %s AND region IS NOT NULL AND region != ''
+            ORDER BY region
+        """, (cuisine,))
+        regions = cursor.fetchall()
 
-    # If no regions found but we have recipes, put them in "All Recipes"
-    if not recipes_by_region and all_recipes:
-        recipes_by_region['All Recipes'] = all_recipes
+        recipes_by_region = {}
 
-    return render_template('cuisine_view.html', 
-                           cuisine=cuisine,
-                           regions=regions,
-                           recipes_by_region=recipes_by_region)
+        for region in regions:
+            region_name = region['region']
+            cursor.execute("""
+                SELECT * FROM recipes 
+                WHERE cuisine = %s AND region = %s 
+                ORDER BY title
+            """, (cuisine, region_name))
+            recipes_by_region[region_name] = cursor.fetchall()
+
+        # If no regions found but we have recipes, put them in "All Recipes"
+        if not recipes_by_region and all_recipes:
+            recipes_by_region['All Recipes'] = all_recipes
+
+        return render_template('cuisine_view.html', 
+                               cuisine=cuisine,
+                               regions=regions,
+                               recipes_by_region=recipes_by_region)
+    except Exception as e:
+        print(f"View cuisine error: {e}")
+        flash('Error loading cuisine', 'error')
+        return redirect(url_for('index'))
 
 @app.route('/recipe/<string:dish_id>')
 def view_recipe(dish_id):
@@ -1312,6 +1316,31 @@ def create_all_tables():
     conn.close()
 
     return "✅ All tables created successfully!"
+
+@app.route('/debug-cuisines')
+def debug_cuisines():
+    if 'user_id' not in session:
+        return "Please login first"
+    
+    cursor = get_cursor()
+    cursor.execute("SELECT DISTINCT cuisine FROM recipes ORDER BY cuisine")
+    results = cursor.fetchall()
+    
+    output = "<h3>Distinct Cuisine Values in Database:</h3><ul>"
+    for row in results:
+        output += f"<li>'{row['cuisine']}'</li>"
+    output += "</ul>"
+    
+    # Also check if 'Asians' exists
+    cursor.execute("SELECT COUNT(*) as count FROM recipes WHERE cuisine = 'Asians'")
+    asians_count = cursor.fetchone()
+    output += f"<p>Recipes with cuisine='Asians': {asians_count['count']}</p>"
+    
+    cursor.execute("SELECT COUNT(*) as count FROM recipes WHERE cuisine = 'Asian'")
+    asian_count = cursor.fetchone()
+    output += f"<p>Recipes with cuisine='Asian': {asian_count['count']}</p>"
+    
+    return output
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
