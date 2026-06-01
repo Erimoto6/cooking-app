@@ -1400,6 +1400,97 @@ def debug_cuisines():
     
     return output
 
+@app.route('/create-cuisine-template')
+def create_cuisine_template():
+    import os
+    template_content = '''{% extends "base.html" %}
+
+{% block title %}{{ cuisine }} Cuisine - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  .cv-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+  }
+  .cv-header {
+    margin-bottom: 28px;
+  }
+  .cv-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .cv-title {
+    color: #fff;
+    font-size: 32px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    margin: 10px 0 0;
+  }
+  .cv-region {
+    margin-bottom: 24px;
+  }
+  .cv-region-title {
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .cv-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .cv-recipe-card {
+    width: calc(33.33% - 8px);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px;
+    text-decoration: none;
+  }
+  .cv-recipe-name {
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cv-screen">
+  <div class="cv-header">
+    <a href="{{ url_for('index') }}" class="cv-back">← Back to Home</a>
+    <h1 class="cv-title">{{ cuisine }} Cuisine</h1>
+  </div>
+
+  {% if recipes_by_region %}
+    {% for region_name, region_recipes in recipes_by_region.items() %}
+    <div class="cv-region">
+      <h2 class="cv-region-title">{{ region_name }}</h2>
+      <div class="cv-grid">
+        {% for recipe in region_recipes %}
+        <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="cv-recipe-card">
+          <div class="cv-recipe-name">{{ recipe.title }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state" style="text-align:center; color:rgba(255,255,255,0.4); padding:40px;">
+      No recipes found for this cuisine yet.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+'''
+    with open('templates/cuisine_view.html', 'w') as f:
+        f.write(template_content)
+    return "✅ cuisine_view.html template created!"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
