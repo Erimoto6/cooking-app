@@ -1575,6 +1575,83 @@ def check_folders():
     
     return result
 
+@app.route('/debug-folder/<int:folder_id>')
+def debug_folder(folder_id):
+    if 'user_id' not in session:
+        return "Not logged in"
+    
+    import psycopg2
+    import os
+    import traceback
+    
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    result = f"<h3>Debugging Folder ID: {folder_id}</h3>"
+    
+    # Check if folder exists for this user
+    cur.execute("SELECT id, folder_name FROM recipe_folders WHERE id = %s AND user_id = %s", 
+                (folder_id, session['user_id']))
+    folder = cur.fetchone()
+    
+    if not folder:
+        result += "<p style='color:red'>❌ Folder not found or not owned by you!</p>"
+    else:
+        result += f"<p>✅ Folder found: {folder[1]} (ID: {folder[0]})</p>"
+        
+        # Try to get recipes in this folder
+        try:
+            cur.execute("""
+                SELECT r.id, r.title FROM folder_recipes fr
+                JOIN recipes r ON fr.recipe_id = r.id
+                WHERE fr.folder_id = %s AND fr.user_id = %s
+            """, (folder_id, session['user_id']))
+            recipes = cur.fetchall()
+            result += f"<p>📚 Found {len(recipes)} recipes in this folder:</p>"
+            for r in recipes:
+                result += f"- {r[1]} (ID: {r[0]})<br>"
+        except Exception as e:
+            result += f"<p style='color:red'>❌ Error fetching recipes: {e}</p>"
+            result += f"<pre>{traceback.format_exc()}</pre>"
+    
+    cur.close()
+    conn.close()
+    
+    return result
+
+@app.route('/fix-orphan-folder-recipes')
+def fix_orphan_folder_recipes():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    result = "<h3>Checking for orphaned folder_recipes...</h3>"
+    
+    # Delete folder_recipes where recipe doesn't exist
+    cur.execute("""
+        DELETE FROM folder_recipes 
+        WHERE recipe_id NOT IN (SELECT id FROM recipes)
+    """)
+    deleted_count = cur.rowcount
+    result += f"<p>✅ Deleted {deleted_count} orphaned folder_recipes (recipes that don't exist)</p>"
+    
+    # Delete folder_recipes where folder doesn't exist
+    cur.execute("""
+        DELETE FROM folder_recipes 
+        WHERE folder_id NOT IN (SELECT id FROM recipe_folders)
+    """)
+    deleted_count2 = cur.rowcount
+    result += f"<p>✅ Deleted {deleted_count2} orphaned folder_recipes (folders that don't exist)</p>"
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
