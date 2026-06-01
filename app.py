@@ -4,6 +4,7 @@ import psycopg2.extras
 import hashlib
 import os
 import sys
+import traceback
 
 app = Flask(__name__)
 app.secret_key = 'whats_cookin_secret_key_2024'
@@ -287,7 +288,6 @@ def toggle_favorite(recipe_id):
     else:
         add_to_favorites(session['user_id'], recipe_id)
         is_favorite = True
-        # Check for title unlocks after favoriting
         check_and_unlock_titles(session['user_id'])
     
     return jsonify({'success': True, 'is_favorite': is_favorite})
@@ -297,18 +297,16 @@ def search():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    q        = request.args.get('q', '')
+    q = request.args.get('q', '')
     category = request.args.get('category', '')
-    cuisine  = request.args.get('cuisine', '')
-    region   = request.args.get('region', '')
+    cuisine = request.args.get('cuisine', '')
+    region = request.args.get('region', '')
 
     results = []
     if q or category or cuisine or region:
         results = search_recipes(q, category, cuisine, region)
 
-    return render_template('search.html',
-                           results=results,
-                           query=q)
+    return render_template('search.html', results=results, query=q)
 
 @app.route('/create_recipe', methods=['GET', 'POST'])
 def create_recipe():
@@ -336,11 +334,9 @@ def create_recipe():
             steps = request.form.getlist('step[]')
             steps = [s for s in steps if s.strip()]
             
-            # Direct database insert without helper function
             db = get_db()
             cur = db.cursor()
             
-            # Insert recipe
             cur.execute('''
                 INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
@@ -352,14 +348,12 @@ def create_recipe():
             
             recipe_id = cur.fetchone()[0]
             
-            # Insert ingredients
             for ing in ingredients:
                 cur.execute('''
                     INSERT INTO ingredients (recipe_id, name, quantity)
                     VALUES (%s, %s, %s)
                 ''', (recipe_id, ing['name'], ing['quantity']))
             
-            # Insert steps
             for idx, step in enumerate(steps, 1):
                 cur.execute('''
                     INSERT INTO steps (recipe_id, step_number, instruction)
@@ -369,7 +363,6 @@ def create_recipe():
             db.commit()
             cur.close()
             
-            # Check and unlock titles after creating recipe
             check_and_unlock_titles(session['user_id'])
             
             flash('Recipe created successfully!', 'success')
@@ -377,7 +370,6 @@ def create_recipe():
             
         except Exception as e:
             print(f"Create recipe error: {e}")
-            import traceback
             traceback.print_exc()
             flash(f'Error creating recipe: {str(e)}', 'error')
             return redirect(url_for('create_recipe'))
@@ -568,11 +560,9 @@ def achievements():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Use existing database connection
     db = get_db()
     cur = db.cursor()
     
-    # Get counts
     cur.execute("SELECT COUNT(*) FROM recipes WHERE user_id = %s", (session['user_id'],))
     recipe_count = cur.fetchone()[0]
     
@@ -582,7 +572,6 @@ def achievements():
     cur.execute("SELECT COUNT(*) FROM completed_recipes WHERE user_id = %s", (session['user_id'],))
     completed_count = cur.fetchone()[0]
     
-    # Get active title
     cur.execute("""
         SELECT title_name FROM user_titles 
         WHERE user_id = %s AND is_active = true
@@ -598,7 +587,6 @@ def achievements():
                           completed_count=completed_count,
                           active_title=active_title)
 
-
 @app.route('/equip_title/<title_key>', methods=['POST'])
 def equip_title(title_key):
     if 'user_id' not in session:
@@ -608,18 +596,14 @@ def equip_title(title_key):
         db = get_db()
         cur = db.cursor()
         
-        # First, deactivate all titles for this user
         cur.execute("UPDATE user_titles SET is_active = false WHERE user_id = %s", (session['user_id'],))
         
-        # Then activate the selected title
         cur.execute("""
             UPDATE user_titles SET is_active = true 
             WHERE user_id = %s AND title_key = %s
         """, (session['user_id'], title_key))
         
         db.commit()
-        
-        # Close and reopen connection to force refresh
         cur.close()
         
         return jsonify({'success': True})
@@ -627,22 +611,6 @@ def equip_title(title_key):
     except Exception as e:
         print(f"Equip title error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-    
-@app.route('/debug_active_title')
-def debug_active_title():
-    if 'user_id' not in session:
-        return "Not logged in"
-    
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("SELECT title_key, title_name, is_active FROM user_titles WHERE user_id = %s", (session['user_id'],))
-    results = cur.fetchall()
-    
-    output = f"User ID: {session['user_id']}<br>"
-    for row in results:
-        output += f"Title: {row[1]}, Active: {row[2]}<br>"
-    
-    return output
 
 def init_user_titles(user_id):
     """Initialize all possible titles for a new user"""
@@ -669,14 +637,13 @@ def init_user_titles(user_id):
     
     db.commit()
     print(f"Initialized titles for user {user_id}")
-    
+
 # ==================== TITLE UNLOCKING FUNCTION ====================
 
 def check_and_unlock_titles(user_id):
     """Check if user has reached any new title milestones and unlock them"""
     cursor = get_cursor()
     
-    # Get user's current counts
     cursor.execute("SELECT COUNT(*) as count FROM recipes WHERE user_id = %s", (user_id,))
     recipe_result = cursor.fetchone()
     recipe_count = recipe_result['count'] if recipe_result else 0
@@ -689,7 +656,6 @@ def check_and_unlock_titles(user_id):
     completed_result = cursor.fetchone()
     completed_count = completed_result['count'] if completed_result else 0
     
-    # Define title requirements
     titles_to_check = [
         ('apprentice_cook', 'Apprentice Cook', recipe_count >= 5),
         ('home_chef', 'Home Chef', recipe_count >= 10),
@@ -706,11 +672,9 @@ def check_and_unlock_titles(user_id):
     
     for title_key, title_name, condition in titles_to_check:
         if condition:
-            # Check if title already exists for this user
             cur.execute("SELECT id FROM user_titles WHERE user_id = %s AND title_key = %s", 
                        (user_id, title_key))
             if not cur.fetchone():
-                # Insert new title
                 cur.execute("""
                     INSERT INTO user_titles (user_id, title_key, title_name, is_active)
                     VALUES (%s, %s, %s, %s)
@@ -741,7 +705,7 @@ def recent_recipes():
         cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 20')
         recipes = cursor.fetchall()
         return render_template('recent_recipes.html', recipes=recipes)
-    
+
 @app.route('/completed_recipes')
 def completed_recipes():
     if 'user_id' not in session:
@@ -757,53 +721,10 @@ def completed_recipes():
             ORDER BY cr.completed_at DESC
         """, (session['user_id'],))
         recipes = cursor.fetchall()
-        
         return render_template('completed_recipes.html', recipes=recipes)
     except Exception as e:
         print(f"Completed recipes error: {e}")
-        # If table doesn't exist, just show empty
         return render_template('completed_recipes.html', recipes=[])
-    
-@app.route('/update_achievement_titles', methods=['POST'])
-def update_achievement_titles():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'}), 401
-    
-    data = request.get_json()
-    
-    try:
-        db = get_db()
-        cur = db.cursor()
-        
-        cur.execute("""
-            UPDATE users SET
-                apprentice_title = %s,
-                home_chef_title = %s,
-                master_chef_title = %s,
-                food_lover_title = %s,
-                super_fan_title = %s,
-                home_cook_title = %s,
-                dedicated_chef_title = %s,
-                master_completed_title = %s
-            WHERE id = %s
-        """, (
-            data.get('apprentice_title'),
-            data.get('home_chef_title'),
-            data.get('master_chef_title'),
-            data.get('food_lover_title'),
-            data.get('super_fan_title'),
-            data.get('home_cook_title'),
-            data.get('dedicated_chef_title'),
-            data.get('master_completed_title'),
-            session['user_id']
-        ))
-        db.commit()
-        
-        return jsonify({'success': True})
-    except Exception as e:
-        print(f"Update titles error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-    
 
 # ==================== RECIPE FOLDERS ROUTES ====================
 
@@ -841,7 +762,7 @@ def view_folder(folder_id):
     
     try:
         cursor = get_cursor()
-        cursor.execute("SELECT folder_name FROM recipe_folders WHERE id = %s AND user_id = %s",
+        cursor.execute("SELECT id, folder_name FROM recipe_folders WHERE id = %s AND user_id = %s",
                       (folder_id, session['user_id']))
         folder = cursor.fetchone()
         
@@ -849,8 +770,10 @@ def view_folder(folder_id):
             flash('Folder not found', 'error')
             return redirect(url_for('index'))
         
+        # Get recipes in this folder
         cursor.execute("""
-            SELECT r.* FROM folder_recipes fr
+            SELECT r.*, fr.added_at 
+            FROM folder_recipes fr
             JOIN recipes r ON fr.recipe_id = r.id
             WHERE fr.folder_id = %s AND fr.user_id = %s
             ORDER BY fr.added_at DESC
@@ -860,10 +783,11 @@ def view_folder(folder_id):
         return render_template('folder_view.html', 
                              recipes=recipes, 
                              folder_name=folder['folder_name'],
-                             folder_id=folder_id)  # Pass folder_id to template
+                             folder_id=folder_id)
     except Exception as e:
         print(f"View folder error: {e}")
-        flash('Error loading folder', 'error')
+        traceback.print_exc()
+        flash(f'Error loading folder: {str(e)}', 'error')
         return redirect(url_for('index'))
 
 @app.route('/delete_folder/<int:folder_id>', methods=['DELETE'])
@@ -931,10 +855,8 @@ def api_recipe_by_id(recipe_id):
 
 # ==================== GET FOLDERS ====================
 
-
 @app.route('/get_folders')
 def get_folders():
-    """Get all folders for the current user"""
     if 'user_id' not in session:
         return jsonify({'folders': []})
     
@@ -956,7 +878,6 @@ def get_folders():
 
 @app.route('/add_to_folder', methods=['POST'])
 def add_to_folder():
-    """Add a recipe to a folder"""
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
     
@@ -971,7 +892,6 @@ def add_to_folder():
         db = get_db()
         cur = db.cursor()
         
-        # Check if already in folder
         cur.execute("""
             SELECT id FROM folder_recipes 
             WHERE folder_id = %s AND recipe_id = %s AND user_id = %s
@@ -990,11 +910,9 @@ def add_to_folder():
     except Exception as e:
         print(f"Add to folder error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-    
-# Check if recipe is in a specific folder
+
 @app.route('/check_recipe_in_folder/<int:recipe_id>/<int:folder_id>')
 def check_recipe_in_folder(recipe_id, folder_id):
-    """Check if a recipe is already in a folder"""
     if 'user_id' not in session:
         return jsonify({'in_folder': False})
     
@@ -1011,11 +929,8 @@ def check_recipe_in_folder(recipe_id, folder_id):
         print(f"Check folder error: {e}")
         return jsonify({'in_folder': False})
 
-
-# Get all folders that contain this recipe
 @app.route('/get_recipe_folders/<int:recipe_id>')
 def get_recipe_folders(recipe_id):
-    """Get all folders that contain this recipe"""
     if 'user_id' not in session:
         return jsonify({'folders': []})
     
@@ -1036,11 +951,8 @@ def get_recipe_folders(recipe_id):
         print(f"Get recipe folders error: {e}")
         return jsonify({'folders': []})
 
-
-# Remove recipe from a folder
 @app.route('/remove_from_folder/<int:recipe_id>/<int:folder_id>', methods=['DELETE'])
 def remove_from_folder(recipe_id, folder_id):
-    """Remove a recipe from a folder"""
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
     
@@ -1057,7 +969,7 @@ def remove_from_folder(recipe_id, folder_id):
     except Exception as e:
         print(f"Remove from folder error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
 # ==================== EDIT AND DELETE RECIPES ====================
 
 @app.route('/edit_recipe/<int:recipe_id>', methods=['GET', 'POST'])
@@ -1066,15 +978,12 @@ def edit_recipe(recipe_id):
         flash('Please login to edit recipes', 'error')
         return redirect(url_for('login'))
     
-    # Get the recipe
     recipe = get_recipe_by_id(recipe_id)
     
-    # Check if recipe exists
     if not recipe:
         flash('Recipe not found', 'error')
         return redirect(url_for('index'))
     
-    # Check if user owns this recipe
     if recipe['user_id'] != session['user_id']:
         flash('You can only edit your own recipes', 'error')
         return redirect(url_for('index'))
@@ -1090,7 +999,6 @@ def edit_recipe(recipe_id):
             cook_time = request.form.get('cook_time')
             difficulty = request.form.get('difficulty')
             
-            # Update recipe
             db = get_db()
             cur = db.cursor()
             cur.execute("""
@@ -1103,7 +1011,6 @@ def edit_recipe(recipe_id):
                   int(cook_time) if cook_time else 0,
                   difficulty, recipe_id, session['user_id']))
             
-            # Update ingredients (delete old, add new)
             cur.execute("DELETE FROM ingredients WHERE recipe_id = %s", (recipe_id,))
             
             ingredient_names = request.form.getlist('ingredient_name[]')
@@ -1115,7 +1022,6 @@ def edit_recipe(recipe_id):
                         VALUES (%s, %s, %s)
                     """, (recipe_id, name.strip(), qty.strip()))
             
-            # Update steps (delete old, add new)
             cur.execute("DELETE FROM steps WHERE recipe_id = %s", (recipe_id,))
             
             steps = request.form.getlist('step[]')
@@ -1139,7 +1045,6 @@ def edit_recipe(recipe_id):
     
     return render_template('edit_recipe.html', recipe=recipe)
 
-
 @app.route('/delete_recipe/<int:recipe_id>', methods=['POST'])
 def delete_recipe(recipe_id):
     if 'user_id' not in session:
@@ -1149,25 +1054,15 @@ def delete_recipe(recipe_id):
         db = get_db()
         cur = db.cursor()
         
-        # Check if user owns the recipe
         cur.execute("SELECT id FROM recipes WHERE id = %s AND user_id = %s", 
                    (recipe_id, session['user_id']))
         if not cur.fetchone():
             return jsonify({'success': False, 'error': 'You can only delete your own recipes'}), 403
         
-        # Delete ingredients first (due to foreign key)
         cur.execute("DELETE FROM ingredients WHERE recipe_id = %s", (recipe_id,))
-        
-        # Delete steps
         cur.execute("DELETE FROM steps WHERE recipe_id = %s", (recipe_id,))
-        
-        # Delete from favorites
         cur.execute("DELETE FROM favorites WHERE recipe_id = %s", (recipe_id,))
-        
-        # Delete from folders
         cur.execute("DELETE FROM folder_recipes WHERE recipe_id = %s", (recipe_id,))
-        
-        # Delete recipe
         cur.execute("DELETE FROM recipes WHERE id = %s AND user_id = %s", 
                    (recipe_id, session['user_id']))
         
@@ -1179,7 +1074,7 @@ def delete_recipe(recipe_id):
     except Exception as e:
         print(f"Delete recipe error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
 # ==================== COMPLETED RECIPES ====================
 
 @app.route('/mark_recipe_done/<int:recipe_id>', methods=['POST'])
@@ -1191,7 +1086,6 @@ def mark_recipe_done(recipe_id):
         db = get_db()
         cur = db.cursor()
         
-        # Check if already marked as done
         cur.execute("""
             SELECT id FROM completed_recipes 
             WHERE user_id = %s AND recipe_id = %s
@@ -1200,14 +1094,12 @@ def mark_recipe_done(recipe_id):
         if cur.fetchone():
             return jsonify({'success': False, 'error': 'Recipe already marked as done'}), 400
         
-        # Mark as done
         cur.execute("""
             INSERT INTO completed_recipes (user_id, recipe_id)
             VALUES (%s, %s)
         """, (session['user_id'], recipe_id))
         db.commit()
         
-        # Check and unlock titles after marking as done
         check_and_unlock_titles(session['user_id'])
         
         return jsonify({'success': True})
@@ -1215,7 +1107,6 @@ def mark_recipe_done(recipe_id):
     except Exception as e:
         print(f"Mark done error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @app.route('/unmark_recipe_done/<int:recipe_id>', methods=['POST'])
 def unmark_recipe_done(recipe_id):
@@ -1238,7 +1129,6 @@ def unmark_recipe_done(recipe_id):
         print(f"Unmark done error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @app.route('/check_recipe_done/<int:recipe_id>')
 def check_recipe_done(recipe_id):
     if 'user_id' not in session:
@@ -1259,32 +1149,6 @@ def check_recipe_done(recipe_id):
         return jsonify({'is_done': False})
 
 # ==================== HELPER FUNCTIONS ====================
-
-def init_user_titles(user_id):
-    """Initialize all possible titles for a new user"""
-    db = get_db()
-    cur = db.cursor()
-    
-    all_titles = [
-        ('apprentice_cook', 'Apprentice Cook'),
-        ('home_chef', 'Home Chef'),
-        ('master_chef', 'Master Chef'),
-        ('food_lover', 'Food Lover'),
-        ('super_fan', 'Super Fan'),
-        ('home_cook', 'Home Cook'),
-        ('dedicated_chef', 'Dedicated Chef'),
-        ('completion_master', 'Completion Master'),
-    ]
-    
-    for title_key, title_name in all_titles:
-        cur.execute("""
-            INSERT INTO user_titles (user_id, title_key, title_name, is_active)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (user_id, title_key) DO NOTHING
-        """, (user_id, title_key, title_name, False))
-    
-    db.commit()
-    print(f"✅ Initialized {len(all_titles)} titles for user {user_id}")
 
 def add_to_favorites(user_id, recipe_id):
     db = get_db()
@@ -1334,10 +1198,9 @@ def remove_from_shopping_list(item_id):
     cursor.execute('DELETE FROM shopping_list WHERE id = %s', (item_id,))
     db.commit()
 
-# ========== FIXED create_custom_recipe FUNCTION ==========
 def create_custom_recipe(user_id, title, description, cuisine, region, prep_time, cook_time, difficulty, ingredients, steps):
     db = get_db()
-    cursor = db.cursor()  # Use db.cursor() directly instead of get_cursor()
+    cursor = db.cursor()
     
     try:
         cursor.execute('''
@@ -1366,81 +1229,7 @@ def create_custom_recipe(user_id, title, description, cuisine, region, prep_time
     finally:
         cursor.close()
 
-# ==================== IMPORT ROUTES ====================
-
-@app.route('/import')
-def import_route():
-    import subprocess
-    result = subprocess.run(['python', 'import_recipes.py'], capture_output=True, text=True)
-    return f"<pre>{result.stdout}\n\n{result.stderr}</pre>"
-
-@app.route('/reimport')
-def reimport():
-    import subprocess
-    result = subprocess.run(['python3', 'import_recipes.py'], capture_output=True, text=True, cwd='/app')
-    return f"<pre>STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}</pre>"
-
-@app.route('/create-tables')
-def create_tables():
-    import psycopg2
-    import os
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    # Create recent_views table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS recent_views (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
-            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    return "✅ recent_views table created successfully!"
-
-@app.route('/create-missing-tables')
-def create_missing_tables():
-    import psycopg2
-    import os
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    # Create completed_recipes table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS completed_recipes (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
-            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(user_id, recipe_id)
-        )
-    ''')
-    
-    # Create user_titles table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS user_titles (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            title_key VARCHAR(50) NOT NULL,
-            title_name VARCHAR(100) NOT NULL,
-            is_active BOOLEAN DEFAULT FALSE,
-            unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(user_id, title_key)
-        )
-    ''')
-    
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    return "✅ completed_recipes and user_titles tables created successfully!"
+# ==================== DATABASE SETUP ROUTES (Keep for admin use) ====================
 
 @app.route('/create-all-tables')
 def create_all_tables():
@@ -1450,8 +1239,8 @@ def create_all_tables():
     conn = psycopg2.connect(database_url)
     cur = conn.cursor()
     
-    # Create completed_recipes table
-    cur.execute('''
+    tables = [
+        '''
         CREATE TABLE IF NOT EXISTS completed_recipes (
             id SERIAL PRIMARY KEY,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -1459,10 +1248,8 @@ def create_all_tables():
             completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, recipe_id)
         )
-    ''')
-    
-    # Create user_titles table
-    cur.execute('''
+        ''',
+        '''
         CREATE TABLE IF NOT EXISTS user_titles (
             id SERIAL PRIMARY KEY,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -1472,10 +1259,8 @@ def create_all_tables():
             unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, title_key)
         )
-    ''')
-    
-    # Create folder_recipes table (this is the missing one!)
-    cur.execute('''
+        ''',
+        '''
         CREATE TABLE IF NOT EXISTS folder_recipes (
             id SERIAL PRIMARY KEY,
             folder_id INTEGER REFERENCES recipe_folders(id) ON DELETE CASCADE,
@@ -1484,230 +1269,28 @@ def create_all_tables():
             added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(folder_id, recipe_id)
         )
-    ''')
-    
-    # Create recent_views table (if not exists)
-    cur.execute('''
+        ''',
+        '''
         CREATE TABLE IF NOT EXISTS recent_views (
             id SERIAL PRIMARY KEY,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
             recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
             viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
+        '''
+    ]
     
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    return """
-    <h2>✅ All tables created successfully!</h2>
-    <ul>
-        <li>completed_recipes</li>
-        <li>user_titles</li>
-        <li>folder_recipes</li>
-        <li>recent_views</li>
-    </ul>
-    """
-
-@app.route('/fix-folder-tables')
-def fix_folder_tables():
-    import psycopg2
-    import os
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    # Check what columns exist in folder_recipes
-    try:
-        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'folder_recipes'")
-        columns = cur.fetchall()
-        result = "Existing columns in folder_recipes:<br>"
-        for col in columns:
-            result += f"- {col[0]}<br>"
-    except Exception as e:
-        result = f"Error checking columns: {e}<br>"
-    
-    # Recreate folder_recipes table properly
-    try:
-        cur.execute("DROP TABLE IF EXISTS folder_recipes CASCADE")
-        cur.execute('''
-            CREATE TABLE folder_recipes (
-                id SERIAL PRIMARY KEY,
-                folder_id INTEGER REFERENCES recipe_folders(id) ON DELETE CASCADE,
-                recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        result += "<br>✅ folder_recipes table recreated successfully!"
-    except Exception as e:
-        result += f"<br>❌ Error recreating table: {e}"
-    
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    return result
-
-@app.route('/check-folders')
-def check_folders():
-    import psycopg2
-    import os
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    result = "<h3>Recipe Folders:</h3>"
-    cur.execute("SELECT id, folder_name, user_id FROM recipe_folders")
-    folders = cur.fetchall()
-    for f in folders:
-        result += f"ID: {f[0]}, Name: {f[1]}, User: {f[2]}<br>"
-    
-    result += "<h3>Folder Recipes:</h3>"
-    cur.execute("SELECT * FROM folder_recipes")
-    fr = cur.fetchall()
-    for row in fr:
-        result += f"{row}<br>"
-    
-    cur.close()
-    conn.close()
-    
-    return result
-
-@app.route('/debug-folder/<int:folder_id>')
-def debug_folder(folder_id):
-    if 'user_id' not in session:
-        return "Not logged in"
-    
-    import psycopg2
-    import os
-    import traceback
-    
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    result = f"<h3>Debugging Folder ID: {folder_id}</h3>"
-    
-    # Check if folder exists for this user
-    cur.execute("SELECT id, folder_name FROM recipe_folders WHERE id = %s AND user_id = %s", 
-                (folder_id, session['user_id']))
-    folder = cur.fetchone()
-    
-    if not folder:
-        result += "<p style='color:red'>❌ Folder not found or not owned by you!</p>"
-    else:
-        result += f"<p>✅ Folder found: {folder[1]} (ID: {folder[0]})</p>"
-        
-        # Try to get recipes in this folder
+    for table_sql in tables:
         try:
-            cur.execute("""
-                SELECT r.id, r.title FROM folder_recipes fr
-                JOIN recipes r ON fr.recipe_id = r.id
-                WHERE fr.folder_id = %s AND fr.user_id = %s
-            """, (folder_id, session['user_id']))
-            recipes = cur.fetchall()
-            result += f"<p>📚 Found {len(recipes)} recipes in this folder:</p>"
-            for r in recipes:
-                result += f"- {r[1]} (ID: {r[0]})<br>"
+            cur.execute(table_sql)
         except Exception as e:
-            result += f"<p style='color:red'>❌ Error fetching recipes: {e}</p>"
-            result += f"<pre>{traceback.format_exc()}</pre>"
-    
-    cur.close()
-    conn.close()
-    
-    return result
-
-@app.route('/fix-orphan-folder-recipes')
-def fix_orphan_folder_recipes():
-    import psycopg2
-    import os
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    result = "<h3>Checking for orphaned folder_recipes...</h3>"
-    
-    # Delete folder_recipes where recipe doesn't exist
-    cur.execute("""
-        DELETE FROM folder_recipes 
-        WHERE recipe_id NOT IN (SELECT id FROM recipes)
-    """)
-    deleted_count = cur.rowcount
-    result += f"<p>✅ Deleted {deleted_count} orphaned folder_recipes (recipes that don't exist)</p>"
-    
-    # Delete folder_recipes where folder doesn't exist
-    cur.execute("""
-        DELETE FROM folder_recipes 
-        WHERE folder_id NOT IN (SELECT id FROM recipe_folders)
-    """)
-    deleted_count2 = cur.rowcount
-    result += f"<p>✅ Deleted {deleted_count2} orphaned folder_recipes (folders that don't exist)</p>"
+            print(f"Table creation error (may already exist): {e}")
     
     conn.commit()
     cur.close()
     conn.close()
     
-    return result
-
-@app.route('/create-folder-table')
-def create_folder_table():
-    import psycopg2
-    import os
-    database_url = os.environ.get('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cur = conn.cursor()
-    
-    # Create folder_recipes table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS folder_recipes (
-            id SERIAL PRIMARY KEY,
-            folder_id INTEGER NOT NULL,
-            recipe_id INTEGER NOT NULL,
-            user_id INTEGER NOT NULL,
-            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    # Add foreign key constraints (optional but recommended)
-    try:
-        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT fk_folder FOREIGN KEY (folder_id) REFERENCES recipe_folders(id) ON DELETE CASCADE')
-    except Exception as e:
-        print(f"Foreign key constraint already exists or error: {e}")
-    
-    try:
-        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT fk_recipe FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE')
-    except Exception as e:
-        print(f"Foreign key constraint already exists or error: {e}")
-    
-    try:
-        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE')
-    except Exception as e:
-        print(f"Foreign key constraint already exists or error: {e}")
-    
-    # Add unique constraint to prevent duplicates
-    try:
-        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT unique_folder_recipe UNIQUE (folder_id, recipe_id)')
-    except Exception as e:
-        print(f"Unique constraint already exists or error: {e}")
-    
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    return """
-    <h2>✅ folder_recipes table created successfully!</h2>
-    <p>You can now:</p>
-    <ul>
-        <li>Add recipes to folders</li>
-        <li>Click on folders to view their contents</li>
-        <li>Delete recipes properly</li>
-    </ul>
-    <a href="/">Go back to home</a>
-    """
-
+    return "✅ All tables created successfully!"
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
