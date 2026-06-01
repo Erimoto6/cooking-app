@@ -1854,6 +1854,27 @@ def test_asian():
     
     return result
 
+@app.route('/fix-asian-cuisine')
+def fix_asian_cuisine():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Update all recipes with cuisine = 'Asians' to 'Asian'
+        cur.execute("UPDATE recipes SET cuisine = 'Asian' WHERE cuisine = 'Asians'")
+        conn.commit()
+        count = cur.rowcount
+        result = f"✅ Updated {count} recipes from 'Asians' to 'Asian'"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
