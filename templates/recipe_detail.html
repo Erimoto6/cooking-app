@@ -71,12 +71,45 @@
     color: rgba(255,255,255,0.7); font-size: 16px; cursor: pointer;
   }
   .rd-img-wrap {
-    width: 110px; height: 110px; border-radius: 22px;
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 22px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     margin: 0 auto 16px;
-    display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.15); font-size: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rd-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .edit-image-btn {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    z-index: 10;
+    transition: all 0.2s;
+  }
+  .edit-image-btn:hover {
+    background: rgba(192,57,43,0.8);
+    transform: scale(1.05);
   }
   .rd-title {
     font-size: 26px; font-family: 'Georgia', serif;
@@ -98,18 +131,43 @@
     border-radius: 20px;
     font-size: 11px; color: rgba(255,255,255,0.6);
   }
+  .rd-fav-btn, .rd-edit-btn {
+    padding: 10px 28px;
+    border-radius: 22px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
   .rd-fav-btn {
-    padding: 10px 28px; border-radius: 22px;
-    font-size: 14px; font-weight: 500; cursor: pointer;
     background: rgba(139,37,0,0.25);
     border: 1px solid rgba(192,57,43,0.4);
     color: rgba(255,130,90,0.9);
-    transition: all 0.2s;
   }
   .rd-fav-btn.active {
     background: rgba(192,57,43,0.55);
     border-color: rgba(255,100,70,0.65);
     color: #ffffff;
+  }
+  .rd-edit-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    display: inline-block;
+  }
+  .rd-edit-btn:hover {
+    background: rgba(192,57,43,0.3);
+    border-color: rgba(192,57,43,0.5);
+    color: white;
+  }
+  .rd-action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
   }
 
   .rd-divider {
@@ -302,86 +360,6 @@
   .va-small:active {
     background: rgba(192,57,43,0.3);
   }
-
-  .button-group {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-.rd-folder-btn {
-  padding: 10px 28px; border-radius: 22px;
-  font-size: 14px; font-weight: 500; cursor: pointer;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.8);
-}
-
-.modal-overlay {
-  position: fixed; top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(8px);
-  z-index: 20000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-.modal-overlay.active { display: flex; }
-.modal-container {
-  background: rgba(15,5,0,0.95);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 24px;
-  width: 90%; max-width: 320px;
-  padding: 24px;
-}
-.modal-icon { font-size: 48px; text-align: center; }
-.modal-title { color: #fff; font-size: 20px; text-align: center; }
-.modal-message { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; margin-bottom: 20px; }
-.folders-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
-.folder-option {
-  display: flex; justify-content: space-between;
-  padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-}
-.folder-option-name { color: rgba(255,255,255,0.8); }
-.folder-option-add { background: #C0392B; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-.modal-buttons { display: flex; gap: 12px; }
-.modal-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
-.modal-cancel { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
-
-.folder-option-remove {
-  background: rgba(244, 67, 54, 0.2);
-  color: #f44336;
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.folder-option-remove:hover {
-  background: rgba(244, 67, 54, 0.3);
-}
-
-.rd-done-btn {
-    padding: 10px 28px;
-    border-radius: 22px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.8);
-}
-
-.rd-done-btn:active {
-    transform: scale(0.96);
-}
-
 </style>
 {% endblock %}
 
@@ -395,12 +373,17 @@
     <a class="rd-back" href="{{ request.referrer or url_for('index') }}">←</a>
     <button class="rd-share-btn" id="shareBtn" title="Share recipe">↗</button>
 
-    <div class="rd-img-wrap">
+    <!-- Image with Edit Button -->
+    <div class="rd-img-wrap" id="imageContainer">
       {% if recipe.image_url %}
-        <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}"
-             style="width:100%;height:100%;object-fit:cover;border-radius:22px;">
+        <img id="recipeImage" src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
       {% else %}
         <span style="font-size:12px;color:rgba(255,255,255,0.2);">No image</span>
+      {% endif %}
+      
+      <!-- Edit image button (only for recipe owner) -->
+      {% if recipe.user_id == session.user_id %}
+      <button class="edit-image-btn" id="editImageBtn" title="Change image">✏️</button>
       {% endif %}
     </div>
 
@@ -415,41 +398,15 @@
       {% endif %}
     </div>
 
-    <div class="button-group">
-  <button class="rd-fav-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
-    {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
-  </button>
-
-  {% if session.user_id == recipe.user_id %}
-  <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="rd-fav-btn" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
-    ✏️ Edit Recipe
-  </a>
-  {% endif %}
-  
-  <button class="rd-folder-btn" onclick="showAddToFolderModal({{ recipe.id }})">
-    📁 Add to Collection
-  </button>
-
-  <button class="rd-done-btn" id="doneBtn" onclick="toggleDone({{ recipe.id }})">
-    ✅ Mark as Done
-  </button>
-</div>
-
-<!-- Add to Folder Modal -->
-<div id="addToFolderModal" class="modal-overlay">
-  <div class="modal-container">
-    <div class="modal-icon">📁</div>
-    <div class="modal-title">Manage Folders</div>
-    <div class="modal-message">Add or remove this recipe from folders</div>
-    <div id="foldersList" class="folders-list">
-      <div style="text-align:center; padding:20px;">Loading folders...</div>
+    <div class="rd-action-buttons">
+      <button class="rd-fav-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
+        {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
+      </button>
+      
+      {% if recipe.user_id == session.user_id %}
+      <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="rd-edit-btn">✏️ Edit Recipe</a>
+      {% endif %}
     </div>
-    <div class="modal-buttons">
-      <button onclick="closeAddToFolderModal()" class="modal-btn modal-cancel">Close</button>
-    </div>
-  </div>
-</div>
-
   </div>
 
   <div class="va-container">
@@ -538,7 +495,7 @@
   }
   
   // ========== State Variables ==========
-  var currentStep = 0;  // 0-based index
+  var currentStep = 0;
   var isReading = false;
   var currentUtterance = null;
   var recognition = null;
@@ -687,73 +644,56 @@
   }
   
   function nextStep() {
-    // Cancel current speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     currentUtterance = null;
     isReading = false;
     
-    // Clear any pending timeouts
-    if (window.nextStepTimeout) clearTimeout(window.nextStepTimeout);
-    
-    window.nextStepTimeout = setTimeout(function() {
+    setTimeout(function() {
       if (currentStep + 1 < stepTexts.length) {
         currentStep++;
         speak(stepTexts[currentStep]);
         showToast('Step ' + (currentStep + 1));
       } else {
         speak('You are on the last step');
-        showToast('Last step');
       }
-    }, 50);
+    }, 100);
   }
   
   function previousStep() {
-    // Cancel current speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     currentUtterance = null;
     isReading = false;
     
-    if (window.prevStepTimeout) clearTimeout(window.prevStepTimeout);
-    
-    window.prevStepTimeout = setTimeout(function() {
+    setTimeout(function() {
       if (currentStep - 1 >= 0) {
         currentStep--;
         speak(stepTexts[currentStep]);
         showToast('Step ' + (currentStep + 1));
       } else {
         speak('This is the first step');
-        showToast('First step');
       }
-    }, 50);
+    }, 100);
   }
   
   function repeatStep() {
-    // Cancel current speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     currentUtterance = null;
     isReading = false;
     
-    if (window.repeatStepTimeout) clearTimeout(window.repeatStepTimeout);
-    
-    window.repeatStepTimeout = setTimeout(function() {
+    setTimeout(function() {
       if (stepTexts[currentStep]) {
         speak(stepTexts[currentStep]);
         showToast('Repeating step ' + (currentStep + 1));
-      } else if (stepTexts.length > 0) {
-        // If currentStep is invalid but we have steps, read step 1
-        currentStep = 0;
-        speak(stepTexts[0]);
-        showToast('Starting from step 1');
       } else {
-        speak('No steps to repeat');
+        speak('No step to repeat');
       }
-    }, 50);
+    }, 100);
   }
   
   function readIngredients() {
@@ -808,13 +748,11 @@
     
     var cmd = command.toLowerCase().trim();
     
-    // ========== TURN OFF MIC ==========
     if (cmd === 'mic off' || cmd.includes('mic off')) {
       turnMicOff();
       return;
     }
     
-    // ========== STOP COMMAND ==========
     if (cmd.includes('stop') || cmd.includes('stop reading') || cmd.includes('quiet') || 
         cmd.includes('enough') || cmd.includes('cancel') || cmd.includes('shut up') || 
         cmd.includes('stop talking') || cmd.includes('be quiet')) {
@@ -832,7 +770,6 @@
       return;
     }
     
-    // ========== READ RECIPE ==========
     if (cmd.includes('read recipe') || cmd.includes('read all steps') || cmd.includes('start reading') ||
         cmd.includes('read steps') || cmd.includes('read the recipe') || cmd.includes('tell me the steps') ||
         cmd.includes('read everything') || cmd.includes('read all') || cmd.includes('start')) {
@@ -840,41 +777,31 @@
       return;
     }
     
-    // ========== NEXT STEP ==========
-    if (cmd.includes('next step') || cmd === 'next' || cmd.includes('go to next') || 
-        cmd.includes('move to next') || cmd.includes('step forward') || cmd.includes('continue')) {
+    if (cmd.includes('next step') || cmd.includes('next') || cmd.includes('go to next') || cmd.includes('continue')) {
       nextStep();
       return;
     }
     
-    // ========== PREVIOUS STEP ==========
-    if (cmd.includes('previous step') || cmd === 'previous' || cmd.includes('go back') || 
-        cmd.includes('move back') || cmd.includes('step back') || cmd.includes('back up') ||
-        cmd.includes('last step') || cmd.includes('go to previous')) {
+    if (cmd.includes('previous step') || cmd.includes('previous') || cmd.includes('go back') || cmd.includes('step back')) {
       previousStep();
       return;
     }
     
-    // ========== REPEAT STEP ==========
-    if (cmd.includes('repeat step') || cmd === 'repeat' || cmd.includes('say again') || 
-        cmd.includes('read again') || cmd.includes('tell me again') || cmd.includes('once more')) {
+    if (cmd.includes('repeat step') || cmd.includes('repeat') || cmd.includes('say again') || cmd.includes('once more')) {
       repeatStep();
       return;
     }
     
-    // ========== INGREDIENTS ==========
     if (cmd.includes('ingredients') || cmd.includes('what ingredients') || cmd.includes('ingredient list')) {
       readIngredients();
       return;
     }
     
-    // ========== HOW LONG ==========
     if (cmd.includes('how long') || cmd.includes('total time') || cmd.includes('cooking time') || cmd.includes('how many minutes')) {
       readTotalTime();
       return;
     }
     
-    // ========== SPECIFIC STEP ==========
     var stepMatch = cmd.match(/step\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)/);
     if (stepMatch) {
       var stepNum = stepMatch[1];
@@ -894,9 +821,8 @@
       }
     }
     
-    // Unknown command - silent
     console.log('Unknown command:', cmd);
-    showToast('❌ Try: read recipe, next step, previous step, repeat, ingredients, how long, stop, or mic off');
+    showToast('❌ Try: read recipe, next step, ingredients, how long, stop, or mic off');
   }
   
   // ========== Speech Recognition ==========
@@ -1000,6 +926,57 @@
     toggleMic();
   }
   
+  // ========== Image Upload Functionality ==========
+  function openImageUpload() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const imageData = event.target.result;
+          uploadImage(imageData);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  }
+
+  function uploadImage(imageData) {
+    showToast('📤 Uploading image...');
+    
+    fetch(`/upload_recipe_image/{{ recipe.id }}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ image_data: imageData })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const imgContainer = document.getElementById('imageContainer');
+        if (imgContainer) {
+          imgContainer.innerHTML = `
+            <img id="recipeImage" src="${imageData}" alt="{{ recipe.title }}">
+            <button class="edit-image-btn" id="editImageBtn" title="Change image">✏️</button>
+          `;
+          document.getElementById('editImageBtn').onclick = openImageUpload;
+        }
+        showToast('✅ Image uploaded successfully!');
+      } else {
+        showToast('❌ Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showToast('❌ Failed to upload image');
+    });
+  }
+
   // ========== Event Listeners ==========
   if (micBtn) micBtn.addEventListener('click', onMicClick);
   
@@ -1037,6 +1014,12 @@
       }
     });
   });
+  
+  // Edit image button
+  var editImageBtn = document.getElementById('editImageBtn');
+  if (editImageBtn) {
+    editImageBtn.onclick = openImageUpload;
+  }
   
   var favBtn = document.getElementById('favoriteBtn');
   if (favBtn) {
@@ -1110,276 +1093,5 @@
   console.log('Voice assistant ready');
   showToast('🎤 Voice assistant ready! Click the mic and say "read recipe"');
 })();
-
- // Toggle favorite (existing function)
-  function toggleFavorite(recipeId) {
-    fetch(`/favorite/${recipeId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          location.reload();
-        }
-      });
-  }
-  
-  // Show Add to Folder Modal
-  function showAddToFolderModal(recipeId) {
-    // Fetch user's folders
-    fetch('/get_folders')
-      .then(response => response.json())
-      .then(data => {
-        const foldersList = document.getElementById('foldersList');
-        foldersList.innerHTML = '';
-        
-        if (data.folders && data.folders.length > 0) {
-          data.folders.forEach(folder => {
-            const folderDiv = document.createElement('div');
-            folderDiv.className = 'folder-option';
-            folderDiv.innerHTML = `
-              <span class="folder-option-name">📂 ${folder.name}</span>
-              <button class="folder-option-add" onclick="addToFolder(${recipeId}, ${folder.id})">Add</button>
-            `;
-            foldersList.appendChild(folderDiv);
-          });
-        } else {
-          foldersList.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.5);">No folders yet. Create one below!</div>';
-        }
-        
-        document.getElementById('addToFolderModal').style.display = 'flex';
-      });
-  }
-  
-  function closeAddToFolderModal() {
-    document.getElementById('addToFolderModal').style.display = 'none';
-  }
-  
-  function addToFolder(recipeId, folderId) {
-    fetch('/add_to_folder', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ recipe_id: recipeId, folder_id: folderId })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert('Recipe added to folder!');
-        closeAddToFolderModal();
-      } else {
-        alert(data.error || 'Error adding to folder');
-      }
-    });
-  }
-  
-  function createAndAddToFolder(recipeId) {
-    const newFolderName = document.getElementById('newFolderName').value.trim();
-    if (!newFolderName) {
-      alert('Please enter a folder name');
-      return;
-    }
-    
-    fetch('/create_folder', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: newFolderName })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // After creating folder, add recipe to it
-        fetch('/add_to_folder', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ recipe_id: recipeId, folder_id: data.folder_id })
-        })
-        .then(response => response.json())
-        .then(addData => {
-          if (addData.success) {
-            alert('Recipe added to new folder!');
-            closeAddToFolderModal();
-          }
-        });
-      } else {
-        alert('Error creating folder');
-      }
-    });
-  }
-  
-  // Close modal when clicking outside
-  document.getElementById('addToFolderModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-      closeAddToFolderModal();
-    }
-  });
-  
- // Add to Folder Functions
-var currentRecipeId = null;
-
-function showAddToFolderModal(recipeId) {
-  currentRecipeId = recipeId;
-  var modal = document.getElementById('addToFolderModal');
-  var foldersList = document.getElementById('foldersList');
-  foldersList.innerHTML = '<div style="text-align:center; padding:20px;">Loading folders...</div>';
-  modal.classList.add('active');
-  
-  // First, get all user folders
-  fetch('/get_folders')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var allFolders = data.folders || [];
-      
-      // Then, check which folders already contain this recipe
-      fetch('/get_recipe_folders/' + recipeId)
-        .then(function(r) { return r.json(); })
-        .then(function(folderData) {
-          var recipeFolders = folderData.folders || [];
-          var recipeFolderIds = recipeFolders.map(function(f) { return f.id; });
-          
-          foldersList.innerHTML = '';
-          
-          if (allFolders.length === 0) {
-            foldersList.innerHTML = '<div style="text-align:center; padding:20px;">No folders yet. Create one from home!</div>';
-          } else {
-            allFolders.forEach(function(folder) {
-              var isInFolder = recipeFolderIds.includes(folder.id);
-              var div = document.createElement('div');
-              div.className = 'folder-option';
-              div.innerHTML = `
-                <span class="folder-option-name">📂 ${escapeHtml(folder.name)}</span>
-                <div>
-                  ${isInFolder ? 
-                    `<button class="folder-option-remove" onclick="removeFromFolder(${recipeId}, ${folder.id})">Remove</button>` : 
-                    `<button class="folder-option-add" onclick="addToFolder(${recipeId}, ${folder.id})">Add</button>`
-                  }
-                </div>
-              `;
-              foldersList.appendChild(div);
-            });
-          }
-        });
-    })
-    .catch(function(error) {
-      console.error('Error:', error);
-      foldersList.innerHTML = '<div style="text-align:center; padding:20px;">Error loading folders</div>';
-    });
-}
-
-function closeAddToFolderModal() {
-  document.getElementById('addToFolderModal').classList.remove('active');
-  currentRecipeId = null;
-}
-
-function addToFolder(recipeId, folderId) {
-  fetch('/add_to_folder', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ recipe_id: recipeId, folder_id: folderId })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.success) {
-      showToast('Recipe added to folder!');
-      // Refresh the modal to show updated status
-      showAddToFolderModal(recipeId);
-    } else {
-      showToast(data.error || 'Error adding to folder');
-    }
-  })
-  .catch(function(error) {
-    console.error('Error:', error);
-    showToast('Error adding to folder');
-  });
-}
-
-function removeFromFolder(recipeId, folderId) {
-  fetch('/remove_from_folder/' + recipeId + '/' + folderId, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.success) {
-      showToast('Recipe removed from folder!');
-      // Refresh the modal to show updated status
-      showAddToFolderModal(recipeId);
-    } else {
-      showToast(data.error || 'Error removing from folder');
-    }
-  })
-  .catch(function(error) {
-    console.error('Error:', error);
-    showToast('Error removing from folder');
-  });
-}
-
-function escapeHtml(text) {
-  var div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function showToast(message) {
-  var toast = document.getElementById('rdToast');
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.add('show');
-  setTimeout(function() { toast.classList.remove('show'); }, 2500);
-}
-
-// Check if recipe is already marked as done
-function checkDoneStatus(recipeId) {
-    fetch('/check_recipe_done/' + recipeId)
-        .then(response => response.json())
-        .then(data => {
-            const doneBtn = document.getElementById('doneBtn');
-            if (data.is_done) {
-                doneBtn.innerHTML = '✅ Done!';
-                doneBtn.style.background = 'rgba(76, 175, 80, 0.25)';
-                doneBtn.style.borderColor = 'rgba(76, 175, 80, 0.4)';
-                doneBtn.style.color = '#4CAF50';
-            } else {
-                doneBtn.innerHTML = '✅ Mark as Done';
-                doneBtn.style.background = 'rgba(255,255,255,0.08)';
-                doneBtn.style.borderColor = 'rgba(255,255,255,0.15)';
-                doneBtn.style.color = 'rgba(255,255,255,0.8)';
-            }
-        });
-}
-
-function toggleDone(recipeId) {
-    const doneBtn = document.getElementById('doneBtn');
-    const isCurrentlyDone = doneBtn.innerHTML.includes('Done!');
-    
-    if (isCurrentlyDone) {
-        fetch('/unmark_recipe_done/' + recipeId, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    checkDoneStatus(recipeId);
-                    showToast('Recipe unmarked as done');
-                }
-            });
-    } else {
-        fetch('/mark_recipe_done/' + recipeId, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    checkDoneStatus(recipeId);
-                    showToast('Recipe marked as done! 🎉');
-                } else if (data.error === 'Recipe already marked as done') {
-                    checkDoneStatus(recipeId);
-                }
-            });
-    }
-}
-
-// Call on page load
-checkDoneStatus({{ recipe.id }});
-
 </script>
 {% endblock %}
