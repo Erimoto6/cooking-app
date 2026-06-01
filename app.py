@@ -220,13 +220,16 @@ def view_cuisine(cuisine):
         return redirect(url_for('login'))
 
     cursor = get_cursor()
+    user_id = session['user_id']
     
-    # Get distinct regions
+    # Get distinct regions (only public OR user's own private recipes)
     cursor.execute("""
         SELECT DISTINCT region FROM recipes 
-        WHERE cuisine = %s AND region IS NOT NULL AND region != ''
+        WHERE cuisine = %s 
+        AND (is_private = FALSE OR user_id = %s)
+        AND region IS NOT NULL AND region != ''
         ORDER BY region
-    """, (cuisine,))
+    """, (cuisine, user_id))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
@@ -236,14 +239,16 @@ def view_cuisine(cuisine):
         cursor.execute("""
             SELECT * FROM recipes 
             WHERE cuisine = %s AND region = %s 
+            AND (is_private = FALSE OR user_id = %s)
             ORDER BY title
-        """, (cuisine, region_name))
+        """, (cuisine, region_name, user_id))
         recipes_by_region[region_name] = cursor.fetchall()
     
     return render_template('cuisine_view.html', 
                            cuisine=cuisine,
                            regions=regions,
                            recipes_by_region=recipes_by_region)
+
 @app.route('/recipe/<string:dish_id>')
 def view_recipe(dish_id):
     if 'user_id' not in session:
