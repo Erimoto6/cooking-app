@@ -227,3 +227,54 @@ def create_custom_recipe(user_id, title, description, cuisine, region, prep_time
         db.rollback()
         print(f"Create recipe error: {e}")
         raise e
+    
+def add_to_shopping_list(user_id, ingredient_name, quantity, recipe_id=None):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        INSERT INTO shopping_list (user_id, ingredient_name, quantity, recipe_id, checked)
+        VALUES (%s, %s, %s, %s, %s)
+    ''', (user_id, ingredient_name, quantity, recipe_id, False))
+    db.commit()
+    cursor.close()
+    print(f"Added to shopping list: {ingredient_name} for user {user_id}")
+
+
+def get_shopping_list(user_id):
+    cursor = get_cursor()
+    cursor.execute("""
+        SELECT id, ingredient_name, quantity, recipe_id, checked, added_at
+        FROM shopping_list 
+        WHERE user_id = %s 
+        ORDER BY checked, added_at DESC
+    """, (user_id,))
+    items = cursor.fetchall()
+    
+    # Convert to the format expected by the template
+    result = []
+    for item in items:
+        result.append({
+            'id': item['id'],
+            'name': item['ingredient_name'],  # Use ingredient_name as name
+            'quantity': item['quantity'],
+            'recipe_id': item['recipe_id'],
+            'checked': item['checked'],
+            'added_at': item['added_at']
+        })
+    return result
+
+
+def toggle_shopping_item(item_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE shopping_list SET checked = NOT checked WHERE id = %s", (item_id,))
+    db.commit()
+    cursor.close()
+
+
+def remove_from_shopping_list(item_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM shopping_list WHERE id = %s", (item_id,))
+    db.commit()
+    cursor.close()
