@@ -1686,7 +1686,38 @@ def add_private_column():
     conn.close()
     return result
 
-
+@app.route('/fix-public-recipes')
+def fix_public_recipes():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Set all recipes with NULL is_private to FALSE (public)
+        cur.execute("UPDATE recipes SET is_private = FALSE WHERE is_private IS NULL")
+        conn.commit()
+        
+        # Check how many were updated
+        cur.execute("SELECT COUNT(*) FROM recipes WHERE is_private = FALSE")
+        public_count = cur.fetchone()[0]
+        
+        cur.execute("SELECT COUNT(*) FROM recipes WHERE is_private = TRUE")
+        private_count = cur.fetchone()[0]
+        
+        result = f"""
+        <h3>✅ Fixed!</h3>
+        <p>Public recipes (is_private = FALSE): {public_count}</p>
+        <p>Private recipes (is_private = TRUE): {private_count}</p>
+        <p>Now go back to the homepage and refresh.</p>
+        """
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
 
 
 
