@@ -1292,6 +1292,100 @@ def create_all_tables():
 
     return "✅ All tables created successfully!"
 
+@app.route('/add-image-column')
+def add_image_column():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        cur.execute("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS image_url TEXT")
+        conn.commit()
+        result = "✅ image_url column added successfully!"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
+
+@app.route('/edit_recipe/<int:recipe_id>', methods=['GET', 'POST'])
+def edit_recipe(recipe_id):
+    if 'user_id' not in session:
+        flash('Please login to edit recipes', 'error')
+        return redirect(url_for('login'))
+
+    recipe = get_recipe_by_id(recipe_id)
+
+    if not recipe:
+        flash('Recipe not found', 'error')
+        return redirect(url_for('index'))
+
+    if recipe['user_id'] != session['user_id']:
+        flash('You can only edit your own recipes', 'error')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        try:
+            title = request.form.get('title')
+            description = request.form.get('description')
+            cuisine = request.form.get('cuisine')
+            region = request.form.get('region')
+            category = request.form.get('category')
+            prep_time = request.form.get('prep_time')
+            cook_time = request.form.get('cook_time')
+            difficulty = request.form.get('difficulty')
+            image_url = request.form.get('image_url')  # NEW
+
+            db = get_db()
+            cur = db.cursor()
+            cur.execute("""
+                UPDATE recipes 
+                SET title = %s, description = %s, cuisine = %s, region = %s, 
+                    category = %s, prep_time = %s, cook_time = %s, difficulty = %s,
+                    image_url = %s
+                WHERE id = %s AND user_id = %s
+            """, (title, description, cuisine, region, category, 
+                  int(prep_time) if prep_time else 0,
+                  int(cook_time) if cook_time else 0,
+                  difficulty, image_url, recipe_id, session['user_id']))
+
+            cur.execute("DELETE FROM ingredients WHERE recipe_id = %s", (recipe_id,))
+
+            ingredient_names = request.form.getlist('ingredient_name[]')
+            ingredient_quantities = request.form.getlist('ingredient_quantity[]')
+            for name, qty in zip(ingredient_names, ingredient_quantities):
+                if name.strip():
+                    cur.execute("""
+                        INSERT INTO ingredients (recipe_id, name, quantity)
+                        VALUES (%s, %s, %s)
+                    """, (recipe_id, name.strip(), qty.strip()))
+
+            cur.execute("DELETE FROM steps WHERE recipe_id = %s", (recipe_id,))
+
+            steps = request.form.getlist('step[]')
+            steps = [s for s in steps if s.strip()]
+            for idx, step in enumerate(steps, 1):
+                cur.execute("""
+                    INSERT INTO steps (recipe_id, step_number, instruction)
+                    VALUES (%s, %s, %s)
+                """, (recipe_id, idx, step))
+
+            db.commit()
+            cur.close()
+
+            flash('Recipe updated successfully!', 'success')
+            return redirect(url_for('view_recipe_by_id', recipe_id=recipe_id))
+
+        except Exception as e:
+            print(f"Edit recipe error: {e}")
+            flash('Error updating recipe', 'error')
+            return redirect(url_for('edit_recipe', recipe_id=recipe_id))
+
+    return render_template('edit_recipe.html', recipe=recipe)
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)

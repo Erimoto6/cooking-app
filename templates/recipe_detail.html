@@ -71,46 +71,29 @@
     color: rgba(255,255,255,0.7); font-size: 16px; cursor: pointer;
   }
   .rd-img-wrap {
-    width: 110px; height: 110px; border-radius: 22px;
-
-
-
+    width: 110px;
+    height: 110px;
+    border-radius: 22px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     margin: 0 auto 16px;
-    display: flex; align-items: center; justify-content: center;
-    color: rgba(255,255,255,0.15); font-size: 14px;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+
+  .rd-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .rd-img-wrap span {
+    font-size: 12px;
+    color: rgba(255,255,255,0.2);
+  }
+
   .rd-title {
     font-size: 26px; font-family: 'Georgia', serif;
     font-style: italic; font-weight: bold;
@@ -132,14 +115,6 @@
     font-size: 11px; color: rgba(255,255,255,0.6);
   }
 
-
-
-
-
-
-
-
-
   .rd-fav-btn {
     padding: 10px 28px; border-radius: 22px;
     font-size: 14px; font-weight: 500; cursor: pointer;
@@ -153,25 +128,6 @@
     border-color: rgba(255,100,70,0.65);
     color: #ffffff;
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   .rd-divider {
     height: 1px;
@@ -365,69 +321,69 @@
   }
 
   .button-group {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-.rd-folder-btn {
-  padding: 10px 28px; border-radius: 22px;
-  font-size: 14px; font-weight: 500; cursor: pointer;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.8);
-}
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .rd-folder-btn {
+    padding: 10px 28px; border-radius: 22px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+  }
 
-.modal-overlay {
-  position: fixed; top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(8px);
-  z-index: 20000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-.modal-overlay.active { display: flex; }
-.modal-container {
-  background: rgba(15,5,0,0.95);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 24px;
-  width: 90%; max-width: 320px;
-  padding: 24px;
-}
-.modal-icon { font-size: 48px; text-align: center; }
-.modal-title { color: #fff; font-size: 20px; text-align: center; }
-.modal-message { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; margin-bottom: 20px; }
-.folders-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
-.folder-option {
-  display: flex; justify-content: space-between;
-  padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-}
-.folder-option-name { color: rgba(255,255,255,0.8); }
-.folder-option-add { background: #C0392B; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-.modal-buttons { display: flex; gap: 12px; }
-.modal-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
-.modal-cancel { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+  .modal-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 20000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-container {
+    background: rgba(15,5,0,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    width: 90%; max-width: 320px;
+    padding: 24px;
+  }
+  .modal-icon { font-size: 48px; text-align: center; }
+  .modal-title { color: #fff; font-size: 20px; text-align: center; }
+  .modal-message { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; margin-bottom: 20px; }
+  .folders-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+  .folder-option {
+    display: flex; justify-content: space-between;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+  }
+  .folder-option-name { color: rgba(255,255,255,0.8); }
+  .folder-option-add { background: #C0392B; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  .modal-buttons { display: flex; gap: 12px; }
+  .modal-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
+  .modal-cancel { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
 
-.folder-option-remove {
-  background: rgba(244, 67, 54, 0.2);
-  color: #f44336;
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
+  .folder-option-remove {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
 
-.folder-option-remove:hover {
-  background: rgba(244, 67, 54, 0.3);
-}
+  .folder-option-remove:hover {
+    background: rgba(244, 67, 54, 0.3);
+  }
 
-.rd-done-btn {
+  .rd-done-btn {
     padding: 10px 28px;
     border-radius: 22px;
     font-size: 14px;
@@ -437,12 +393,11 @@
     background: rgba(255,255,255,0.08);
     border: 1px solid rgba(255,255,255,0.15);
     color: rgba(255,255,255,0.8);
-}
+  }
 
-.rd-done-btn:active {
+  .rd-done-btn:active {
     transform: scale(0.96);
-}
-
+  }
 </style>
 {% endblock %}
 
@@ -457,18 +412,11 @@
     <button class="rd-share-btn" id="shareBtn" title="Share recipe">↗</button>
 
     <div class="rd-img-wrap">
-
       {% if recipe.image_url %}
-        <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}"
-             style="width:100%;height:100%;object-fit:cover;border-radius:22px;">
+        <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
       {% else %}
-        <span style="font-size:12px;color:rgba(255,255,255,0.2);">No image</span>
+        <span>No image</span>
       {% endif %}
-
-
-
-
-
     </div>
 
     <div class="rd-title">{{ recipe.title }}</div>
@@ -483,40 +431,39 @@
     </div>
 
     <div class="button-group">
-  <button class="rd-fav-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
-    {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
-  </button>
+      <button class="rd-fav-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
+        {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
+      </button>
 
-  {% if session.user_id == recipe.user_id %}
-  <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="rd-fav-btn" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
-    ✏️ Edit Recipe
-  </a>
-  {% endif %}
-  
-  <button class="rd-folder-btn" onclick="showAddToFolderModal({{ recipe.id }})">
-    📁 Add to Collection
-  </button>
+      {% if session.user_id == recipe.user_id %}
+      <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="rd-fav-btn" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
+        ✏️ Edit Recipe
+      </a>
+      {% endif %}
+      
+      <button class="rd-folder-btn" onclick="showAddToFolderModal({{ recipe.id }})">
+        📁 Add to Collection
+      </button>
 
-  <button class="rd-done-btn" id="doneBtn" onclick="toggleDone({{ recipe.id }})">
-    ✅ Mark as Done
-  </button>
-</div>
-
-<!-- Add to Folder Modal -->
-<div id="addToFolderModal" class="modal-overlay">
-  <div class="modal-container">
-    <div class="modal-icon">📁</div>
-    <div class="modal-title">Manage Folders</div>
-    <div class="modal-message">Add or remove this recipe from folders</div>
-    <div id="foldersList" class="folders-list">
-      <div style="text-align:center; padding:20px;">Loading folders...</div>
+      <button class="rd-done-btn" id="doneBtn" onclick="toggleDone({{ recipe.id }})">
+        ✅ Mark as Done
+      </button>
     </div>
-    <div class="modal-buttons">
-      <button onclick="closeAddToFolderModal()" class="modal-btn modal-cancel">Close</button>
-    </div>
-  </div>
-</div>
 
+    <!-- Add to Folder Modal -->
+    <div id="addToFolderModal" class="modal-overlay">
+      <div class="modal-container">
+        <div class="modal-icon">📁</div>
+        <div class="modal-title">Manage Folders</div>
+        <div class="modal-message">Add or remove this recipe from folders</div>
+        <div id="foldersList" class="folders-list">
+          <div style="text-align:center; padding:20px;">Loading folders...</div>
+        </div>
+        <div class="modal-buttons">
+          <button onclick="closeAddToFolderModal()" class="modal-btn modal-cancel">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="va-container">
@@ -1067,57 +1014,6 @@
     toggleMic();
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // ========== Event Listeners ==========
   if (micBtn) micBtn.addEventListener('click', onMicClick);
 
@@ -1155,12 +1051,6 @@
       }
     });
   });
-
-
-
-
-
-
 
   var favBtn = document.getElementById('favoriteBtn');
   if (favBtn) {
