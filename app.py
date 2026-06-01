@@ -1404,6 +1404,44 @@ def create_tables():
     
     return "✅ recent_views table created successfully!"
 
+@app.route('/create-missing-tables')
+def create_missing_tables():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Create completed_recipes table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS completed_recipes (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, recipe_id)
+        )
+    ''')
+    
+    # Create user_titles table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS user_titles (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            title_key VARCHAR(50) NOT NULL,
+            title_name VARCHAR(100) NOT NULL,
+            is_active BOOLEAN DEFAULT FALSE,
+            unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, title_key)
+        )
+    ''')
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return "✅ completed_recipes and user_titles tables created successfully!"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
