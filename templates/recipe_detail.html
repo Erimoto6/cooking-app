@@ -131,43 +131,18 @@
     border-radius: 20px;
     font-size: 11px; color: rgba(255,255,255,0.6);
   }
-  .rd-fav-btn, .rd-edit-btn {
-    padding: 10px 28px;
-    border-radius: 22px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-  }
   .rd-fav-btn {
+    padding: 10px 28px; border-radius: 22px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
     background: rgba(139,37,0,0.25);
     border: 1px solid rgba(192,57,43,0.4);
     color: rgba(255,130,90,0.9);
+    transition: all 0.2s;
   }
   .rd-fav-btn.active {
     background: rgba(192,57,43,0.55);
     border-color: rgba(255,100,70,0.65);
     color: #ffffff;
-  }
-  .rd-edit-btn {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.7);
-    text-decoration: none;
-    display: inline-block;
-  }
-  .rd-edit-btn:hover {
-    background: rgba(192,57,43,0.3);
-    border-color: rgba(192,57,43,0.5);
-    color: white;
-  }
-  .rd-action-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 10px;
-    flex-wrap: wrap;
   }
 
   .rd-divider {
@@ -373,7 +348,6 @@
     <a class="rd-back" href="{{ request.referrer or url_for('index') }}">←</a>
     <button class="rd-share-btn" id="shareBtn" title="Share recipe">↗</button>
 
-    <!-- Image with Edit Button -->
     <div class="rd-img-wrap" id="imageContainer">
       {% if recipe.image_url %}
         <img id="recipeImage" src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
@@ -398,15 +372,29 @@
       {% endif %}
     </div>
 
-    <div class="rd-action-buttons">
-      <button class="rd-fav-btn {% if is_favorite %}active{% endif %}" id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
-        {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
+    <button class="rd-fav-btn {% if is_favorite %}active{% endif %}"
+            id="favoriteBtn" data-recipe-id="{{ recipe.id }}">
+      {% if is_favorite %}♥ Saved{% else %}♡ Save Recipe{% endif %}
+    </button>
+
+    <!-- Add to Folder Button -->
+    {% if session.user_id %}
+    <div style="margin-top: 12px;">
+      <button id="addToFolderBtn" style="
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 22px;
+        padding: 8px 20px;
+        font-size: 13px;
+        color: rgba(255,255,255,0.7);
+        cursor: pointer;
+        width: auto;
+      ">
+        📁 Add to Folder
       </button>
-      
-      {% if recipe.user_id == session.user_id %}
-      <a href="{{ url_for('edit_recipe', recipe_id=recipe.id) }}" class="rd-edit-btn">✏️ Edit Recipe</a>
-      {% endif %}
+      <div id="folderList" style="display: none; margin-top: 10px;"></div>
     </div>
+    {% endif %}
   </div>
 
   <div class="va-container">
@@ -976,6 +964,52 @@
       showToast('❌ Failed to upload image');
     });
   }
+
+  // ========== Add to Folder Functionality ==========
+  var addToFolderBtn = document.getElementById('addToFolderBtn');
+  var folderListDiv = document.getElementById('folderList');
+
+  if (addToFolderBtn) {
+    addToFolderBtn.addEventListener('click', function() {
+      if (folderListDiv.style.display === 'none') {
+        fetch('/get_folders')
+          .then(response => response.json())
+          .then(data => {
+            var folders = data.folders;
+            if (folders.length === 0) {
+              folderListDiv.innerHTML = '<p style="color:rgba(255,255,255,0.5);">No folders yet. Create one first.</p>';
+            } else {
+              var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+              folders.forEach(function(folder) {
+                html += '<button class="va-small" onclick="addToFolder(' + folder.id + ')">📁 ' + folder.name + '</button>';
+              });
+              html += '</div>';
+              folderListDiv.innerHTML = html;
+            }
+            folderListDiv.style.display = 'block';
+          });
+      } else {
+        folderListDiv.style.display = 'none';
+      }
+    });
+  }
+
+  window.addToFolder = function(folderId) {
+    fetch('/add_to_folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipe_id: {{ recipe.id }}, folder_id: folderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showToast('✅ Added to folder!');
+        folderListDiv.style.display = 'none';
+      } else {
+        showToast('❌ ' + (data.error || 'Error adding to folder'));
+      }
+    });
+  };
 
   // ========== Event Listeners ==========
   if (micBtn) micBtn.addEventListener('click', onMicClick);

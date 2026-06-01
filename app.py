@@ -1313,6 +1313,36 @@ def add_image_column():
     
     return result
 
+@app.route('/upload_recipe_image/<int:recipe_id>', methods=['POST'])
+def upload_recipe_image(recipe_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    try:
+        data = request.get_json()
+        image_data = data.get('image_data')
+        
+        if not image_data:
+            return jsonify({'success': False, 'error': 'No image data'}), 400
+        
+        cursor = get_cursor()
+        cursor.execute("SELECT id FROM recipes WHERE id = %s AND user_id = %s", 
+                      (recipe_id, session['user_id']))
+        if not cursor.fetchone():
+            return jsonify({'success': False, 'error': 'You can only edit your own recipes'}), 403
+        
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("UPDATE recipes SET image_url = %s WHERE id = %s", 
+                   (image_data, recipe_id))
+        db.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"Upload image error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
