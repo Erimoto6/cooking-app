@@ -100,8 +100,13 @@ def index():
 
     cursor = get_cursor()
 
-    # Get recent recipes (global)
-    cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 6')
+    # Get recent recipes
+    cursor.execute("""
+        SELECT * FROM recipes 
+        WHERE is_private = FALSE OR user_id = %s
+        ORDER BY created_at DESC 
+        LIMIT 6
+    """, (session['user_id'],))
     recent_recipes = cursor.fetchall()
 
     # Get user's favorite dishes
@@ -116,7 +121,12 @@ def index():
 
     # If no favorites, show some default recipes
     if not favorite_dishes:
-        cursor.execute("SELECT * FROM recipes WHERE region IN ('Philippines', 'United States') LIMIT 3")
+        cursor.execute("""
+            SELECT * FROM recipes 
+            WHERE (is_private = FALSE OR user_id = %s)
+            AND region IN ('Philippines', 'United States') 
+            LIMIT 3
+        """, (session['user_id'],))
         favorite_dishes = cursor.fetchall()
 
     # Get user's own recipes
@@ -183,9 +193,10 @@ def index():
             SELECT r.* FROM recent_views rv
             JOIN recipes r ON rv.recipe_id = r.id
             WHERE rv.user_id = %s
+            AND (r.is_private = FALSE OR r.user_id = %s)
             ORDER BY rv.viewed_at DESC
             LIMIT 5
-        """, (session['user_id'],))
+        """, (session['user_id'], session['user_id']))
         recent_views = cursor.fetchall()
     except Exception as e:
         print(f"Recent views error: {e}")
@@ -209,101 +220,34 @@ def view_cuisine(cuisine):
         return redirect(url_for('login'))
 
     cursor = get_cursor()
-
-    try:
-        # Get all recipes for this cuisine
-        cursor.execute("SELECT * FROM recipes WHERE cuisine = %s ORDER BY title", (cuisine,))
-        all_recipes = cursor.fetchall()
-
-        # Get distinct regions (handle NULL values)
-        cursor.execute("""
-            SELECT DISTINCT region FROM recipes 
-            WHERE cuisine = %s AND region IS NOT NULL AND region != ''
-            ORDER BY region
-        """, (cuisine,))
-        regions = cursor.fetchall()
-
-        recipes_by_region = {}
-
-        for region in regions:
-            region_name = region['region']
-            cursor.execute("""
-                SELECT * FROM recipes 
-                WHERE cuisine = %s AND region = %s 
-                ORDER BY title
-            """, (cuisine, region_name))
-            recipes_by_region[region_name] = cursor.fetchall()
-
-        # If no regions found but we have recipes, put them in "All Recipes"
-        if not recipes_by_region and all_recipes:
-            recipes_by_region['All Recipes'] = all_recipes
-
-        return render_template('cuisine_view.html', 
-                               cuisine=cuisine,
-                               regions=regions,
-                               recipes_by_region=recipes_by_region)
-    except Exception as e:
-        print(f"View cuisine error: {e}")
-        flash('Error loading cuisine', 'error')
-        return redirect(url_for('index'))@app.route('/cuisine/<cuisine>')
-def view_cuisine(cuisine):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    try:
-        cursor = get_cursor()
-        
-        # Debug: Print to logs
-        print(f"=== VIEW CUISINE ===")
-        print(f"Cuisine requested: {cuisine}")
-        
-        # Get all recipes for this cuisine
-        cursor.execute("SELECT * FROM recipes WHERE cuisine = %s ORDER BY title", (cuisine,))
-        all_recipes = cursor.fetchall()
-        print(f"Found {len(all_recipes)} total recipes for cuisine '{cuisine}'")
-        
-        # Get distinct regions
-        cursor.execute("""
-            SELECT DISTINCT region FROM recipes 
-            WHERE cuisine = %s AND region IS NOT NULL AND region != ''
-            ORDER BY region
-        """, (cuisine,))
-        regions = cursor.fetchall()
-        print(f"Found {len(regions)} regions: {[r['region'] for r in regions]}")
-        
-        recipes_by_region = {}
-        
-        for region in regions:
-            region_name = region['region']
-            cursor.execute("""
-                SELECT * FROM recipes 
-                WHERE cuisine = %s AND region = %s 
-                ORDER BY title
-            """, (cuisine, region_name))
-            recipes_by_region[region_name] = cursor.fetchall()
-            print(f"Region '{region_name}': {len(recipes_by_region[region_name])} recipes")
-        
-        if not recipes_by_region and all_recipes:
-            recipes_by_region['All Recipes'] = all_recipes
-            print("No regions found, using 'All Recipes'")
-        
-        return render_template('cuisine_view.html', 
-                               cuisine=cuisine,
-                               regions=regions,
-                               recipes_by_region=recipes_by_region)
+    user_id = session['user_id']
     
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"ERROR in view_cuisine: {e}")
-        print(error_details)
-        return f"""
-        <h3>Error loading cuisine</h3>
-        <p><strong>Cuisine requested:</strong> {cuisine}</p>
-        <p><strong>Error:</strong> {str(e)}</p>
-        <pre>{error_details}</pre>
-        <a href="/home">Go back home</a>
-        """, 500
+    # Show: public recipes OR user's own private recipes
+    cursor.execute("""
+        SELECT DISTINCT region FROM recipes 
+        WHERE cuisine = %s 
+        AND (is_private = FALSE OR user_id = %s)
+        AND region IS NOT NULL AND region != ''
+        ORDER BY region
+    """, (cuisine, user_id))
+    regions = cursor.fetchall()
+    
+    recipes_by_region = {}
+    
+    for region in regions:
+        region_name = region['region']
+        cursor.execute("""
+            SELECT * FROM recipes 
+            WHERE cuisine = %s AND region = %s 
+            AND (is_private = FALSE OR user_id = %s)
+            ORDER BY title
+        """, (cuisine, region_name, user_id))
+        recipes_by_region[region_name] = cursor.fetchall()
+    
+    return render_template('cuisine_view.html', 
+                           cuisine=cuisine,
+                           regions=regions,
+                           recipes_by_region=recipes_by_region)
 
 @app.route('/recipe/<string:dish_id>')
 def view_recipe(dish_id):
@@ -363,10 +307,30 @@ def search():
     category = request.args.get('category', '')
     cuisine = request.args.get('cuisine', '')
     region = request.args.get('region', '')
+    user_id = session['user_id']
 
     results = []
     if q or category or cuisine or region:
-        results = search_recipes(q, category, cuisine, region)
+        # Only show: public recipes OR user's own private recipes
+        conditions = ["(is_private = FALSE OR user_id = %s)"]
+        params = [user_id]
+        
+        if q:
+            conditions.append("(title ILIKE %s OR cuisine ILIKE %s OR region ILIKE %s)")
+            params += [f'%{q}%', f'%{q}%', f'%{q}%']
+        if category:
+            conditions.append("category ILIKE %s")
+            params.append(f'%{category}%')
+        if cuisine:
+            conditions.append("cuisine ILIKE %s")
+            params.append(f'%{cuisine}%')
+        if region:
+            conditions.append("region ILIKE %s")
+            params.append(f'%{region}%')
+        
+        where_clause = " AND ".join(conditions)
+        sql = f"SELECT * FROM recipes WHERE {where_clause} ORDER BY title"
+        results = query(sql, params)
 
     return render_template('search.html', results=results, query=q)
 
@@ -385,6 +349,7 @@ def create_recipe():
             prep_time = request.form.get('prep_time')
             cook_time = request.form.get('cook_time')
             difficulty = request.form.get('difficulty')
+            image_url = request.form.get('image_url')
 
             ingredients = []
             ingredient_names = request.form.getlist('ingredient_name[]')
@@ -400,13 +365,13 @@ def create_recipe():
             cur = db.cursor()
 
             cur.execute('''
-                INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id, created_at, image_url, is_private)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, %s, TRUE)
                 RETURNING id
             ''', (title, description, cuisine, region, category, 
-                  int(prep_time) if prep_time else 0,
-                  int(cook_time) if cook_time else 0,
-                  difficulty, session['user_id']))
+                int(prep_time) if prep_time else 0,
+                int(cook_time) if cook_time else 0,
+                difficulty, session['user_id'], image_url))
 
             recipe_id = cur.fetchone()[0]
 
@@ -751,20 +716,28 @@ def recent_recipes():
         flash('Please login to view recent recipes', 'error')
         return redirect(url_for('login'))
 
+    user_id = session['user_id']
+    
     try:
         cursor = get_cursor()
         cursor.execute("""
             SELECT r.* FROM recent_views rv
             JOIN recipes r ON rv.recipe_id = r.id
             WHERE rv.user_id = %s
+            AND (r.is_private = FALSE OR r.user_id = %s)
             ORDER BY rv.viewed_at DESC
-        """, (session['user_id'],))
+        """, (user_id, user_id))
         recipes = cursor.fetchall()
         return render_template('recent_recipes.html', recipes=recipes)
     except Exception as e:
         print(f"Recent recipes error: {e}")
         cursor = get_cursor()
-        cursor.execute('SELECT * FROM recipes ORDER BY created_at DESC LIMIT 20')
+        cursor.execute("""
+            SELECT * FROM recipes 
+            WHERE is_private = FALSE OR user_id = %s
+            ORDER BY created_at DESC 
+            LIMIT 20
+        """, (user_id,))
         recipes = cursor.fetchall()
         return render_template('recent_recipes.html', recipes=recipes)
 
@@ -1693,6 +1666,31 @@ def create_cuisine_template():
         f.write(template_content)
     
     return "✅ Original cuisine_view.html restored!"
+
+@app.route('/add-private-column')
+def add_private_column():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        cur.execute("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT TRUE")
+        conn.commit()
+        result = "✅ is_private column added! User-created recipes will now be private by default."
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
+
+
+
+
+
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
