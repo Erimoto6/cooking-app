@@ -540,6 +540,30 @@ def reimport():
     result = subprocess.run(['python3', 'import_recipes.py'], capture_output=True, text=True, cwd='/app')
     return f"<pre>STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}</pre>"
 
+@app.route('/create-tables')
+def create_tables():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Create recent_views table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS recent_views (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return "✅ recent_views table created successfully!"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
