@@ -176,7 +176,6 @@
     background: rgba(244, 67, 54, 0.25);
   }
 
-  /* Image Preview Styles */
   .image-preview {
     width: 150px;
     height: 150px;
@@ -187,7 +186,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .image-preview img {
@@ -328,18 +327,20 @@
       <!-- IMAGE UPLOAD SECTION -->
       <div class="form-group">
         <label>Recipe Image</label>
-        <div class="image-preview" id="imagePreviewContainer">
-          {% if recipe.image_url %}
-            <img id="imagePreview" src="{{ recipe.image_url }}" alt="Recipe image">
-          {% else %}
-            <span>No image</span>
-          {% endif %}
-        </div>
-        <input type="file" id="recipeImageInput" accept="image/*" style="display: none;">
-        <input type="hidden" id="imageUrl" name="image_url" value="{{ recipe.image_url or '' }}">
-        <div style="display: flex; gap: 12px; margin-top: 10px;">
-          <button type="button" class="upload-btn" onclick="document.getElementById('recipeImageInput').click()">📷 Choose Image</button>
-          <button type="button" class="upload-btn" onclick="removeImage()">🗑️ Remove Image</button>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <div class="image-preview" id="imagePreviewContainer">
+            {% if recipe.image_url %}
+              <img id="imagePreview" src="{{ recipe.image_url }}" alt="Recipe image">
+            {% else %}
+              <span>No image</span>
+            {% endif %}
+          </div>
+          <input type="file" id="recipeImageInput" accept="image/*" style="display: none;">
+          <input type="hidden" id="imageUrl" name="image_url" value="{{ recipe.image_url or '' }}">
+          <div style="display: flex; gap: 12px; margin-top: 12px; justify-content: center;">
+            <button type="button" class="upload-btn" onclick="document.getElementById('recipeImageInput').click()">📷 Choose Image</button>
+            <button type="button" class="upload-btn" onclick="removeImage()">🗑️ Remove Image</button>
+          </div>
         </div>
       </div>
 
