@@ -1400,52 +1400,6 @@ def debug_cuisines():
     
     return output
 
-@app.route('/create-cuisine-template')
-def create_cuisine_template():
-    import os
-    template_content = '''{% extends "base.html" %}
-
-{% block title %}{{ cuisine }} Cuisine - Dishly{% endblock %}
-
-{% block content %}
-<div class="cv-screen" style="min-height: 100vh; background: #0f0500; padding: 52px 20px 100px;">
-  <div style="margin-bottom: 28px;">
-    <a href="{{ url_for('index') }}" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px;">← Back to Home</a>
-    <h1 style="color: #ffffff; font-size: 32px; font-family: 'Georgia', serif; font-style: italic; font-weight: bold; margin: 10px 0 0;">{{ cuisine }} Cuisine</h1>
-  </div>
-
-  {% if recipes_by_region %}
-    {% for region_name, region_recipes in recipes_by_region.items() %}
-    <div style="margin-bottom: 32px;">
-      <h2 style="color: rgba(255,255,255,0.7); font-size: 18px; font-weight: 500; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">{{ region_name }}</h2>
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        {% for recipe in region_recipes %}
-        <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" style="display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; text-decoration: none;">
-          <div style="width: 44px; height: 44px; background: rgba(139,37,0,0.3); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">🍽️</div>
-          <div style="flex: 1;">
-            <div style="color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500;">{{ recipe.title }}</div>
-            <div style="color: rgba(255,255,255,0.35); font-size: 12px;">{{ recipe.difficulty or 'Medium' }} · {{ recipe.category or 'Recipe' }}</div>
-          </div>
-          <span style="color:rgba(255,255,255,0.2);">›</span>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-  {% else %}
-    <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4);">No recipes found for {{ cuisine }} cuisine yet.</div>
-  {% endif %}
-</div>
-{% endblock %}
-'''
-    # Create templates directory if it doesn't exist
-    os.makedirs('templates', exist_ok=True)
-    
-    with open('templates/cuisine_view.html', 'w') as f:
-        f.write(template_content)
-    return "✅ cuisine_view.html template created with original styling!"
-
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
