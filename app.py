@@ -245,7 +245,65 @@ def view_cuisine(cuisine):
     except Exception as e:
         print(f"View cuisine error: {e}")
         flash('Error loading cuisine', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('index'))@app.route('/cuisine/<cuisine>')
+def view_cuisine(cuisine):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        cursor = get_cursor()
+        
+        # Debug: Print to logs
+        print(f"=== VIEW CUISINE ===")
+        print(f"Cuisine requested: {cuisine}")
+        
+        # Get all recipes for this cuisine
+        cursor.execute("SELECT * FROM recipes WHERE cuisine = %s ORDER BY title", (cuisine,))
+        all_recipes = cursor.fetchall()
+        print(f"Found {len(all_recipes)} total recipes for cuisine '{cuisine}'")
+        
+        # Get distinct regions
+        cursor.execute("""
+            SELECT DISTINCT region FROM recipes 
+            WHERE cuisine = %s AND region IS NOT NULL AND region != ''
+            ORDER BY region
+        """, (cuisine,))
+        regions = cursor.fetchall()
+        print(f"Found {len(regions)} regions: {[r['region'] for r in regions]}")
+        
+        recipes_by_region = {}
+        
+        for region in regions:
+            region_name = region['region']
+            cursor.execute("""
+                SELECT * FROM recipes 
+                WHERE cuisine = %s AND region = %s 
+                ORDER BY title
+            """, (cuisine, region_name))
+            recipes_by_region[region_name] = cursor.fetchall()
+            print(f"Region '{region_name}': {len(recipes_by_region[region_name])} recipes")
+        
+        if not recipes_by_region and all_recipes:
+            recipes_by_region['All Recipes'] = all_recipes
+            print("No regions found, using 'All Recipes'")
+        
+        return render_template('cuisine_view.html', 
+                               cuisine=cuisine,
+                               regions=regions,
+                               recipes_by_region=recipes_by_region)
+    
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in view_cuisine: {e}")
+        print(error_details)
+        return f"""
+        <h3>Error loading cuisine</h3>
+        <p><strong>Cuisine requested:</strong> {cuisine}</p>
+        <p><strong>Error:</strong> {str(e)}</p>
+        <pre>{error_details}</pre>
+        <a href="/home">Go back home</a>
+        """, 500
 
 @app.route('/recipe/<string:dish_id>')
 def view_recipe(dish_id):
