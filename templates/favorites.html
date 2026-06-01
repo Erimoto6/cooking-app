@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}My Favorites - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  .fav-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+  }
+  .fav-header {
+    margin-bottom: 28px;
+  }
+  .fav-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .fav-title {
+    color: #fff;
+    font-size: 30px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    margin: 10px 0 0;
+  }
+  .fav-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fav-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    text-decoration: none;
+  }
+  .fav-card:active {
+    background: rgba(192,57,43,0.1);
+  }
+  .fav-icon {
+    font-size: 32px;
+  }
+  .fav-info {
+    flex: 1;
+  }
+  .fav-name {
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .fav-meta {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fav-screen">
+  <div class="fav-header">
+    <a href="{{ url_for('index') }}" class="fav-back">← Back to Home</a>
+    <h1 class="fav-title">❤️ My Favorites</h1>
+  </div>
+  
+  {% if favorites %}
+  <div class="fav-grid">
+    {% for recipe in favorites %}
+    <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="fav-card">
+      <div class="fav-icon">🍽️</div>
+      <div class="fav-info">
+        <div class="fav-name">{{ recipe.title }}</div>
+        <div class="fav-meta">{{ recipe.cuisine or 'Various' }} · {{ recipe.category or 'Recipe' }}</div>
+      </div>
+      <span style="color:rgba(255,255,255,0.2);">›</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size: 48px; margin-bottom: 16px;">❤️</div>
+    <p>No favorites yet</p>
+    <p style="font-size: 12px;">Click the heart icon on recipes to add them here!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
