@@ -368,9 +368,8 @@ def create_recipe():
             
             db.commit()
             cur.close()
-            db.close()
             
-            # Check and unlock titles after creating recipe (MOVE THIS HERE)
+            # Check and unlock titles after creating recipe
             check_and_unlock_titles(session['user_id'])
             
             flash('Recipe created successfully!', 'success')
@@ -1129,7 +1128,6 @@ def edit_recipe(recipe_id):
             
             db.commit()
             cur.close()
-            db.close()
             
             flash('Recipe updated successfully!', 'success')
             return redirect(url_for('view_recipe_by_id', recipe_id=recipe_id))
@@ -1175,7 +1173,6 @@ def delete_recipe(recipe_id):
         
         db.commit()
         cur.close()
-        db.close()
         
         return jsonify({'success': True})
         
@@ -1337,28 +1334,37 @@ def remove_from_shopping_list(item_id):
     cursor.execute('DELETE FROM shopping_list WHERE id = %s', (item_id,))
     db.commit()
 
+# ========== FIXED create_custom_recipe FUNCTION ==========
 def create_custom_recipe(user_id, title, description, cuisine, region, prep_time, cook_time, difficulty, ingredients, steps):
     db = get_db()
-    cursor = get_cursor()
+    cursor = db.cursor()  # Use db.cursor() directly instead of get_cursor()
     
-    cursor.execute('''
-        INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        RETURNING id
-    ''', (title, description, cuisine, region, 'Main Course', prep_time, cook_time, difficulty, user_id))
-    
-    recipe_id = cursor.fetchone()[0]
-    
-    for ing in ingredients:
-        cursor.execute('INSERT INTO ingredients (recipe_id, name, quantity) VALUES (%s, %s, %s)',
-                      (recipe_id, ing['name'], ing['quantity']))
-    
-    for idx, step in enumerate(steps, 1):
-        cursor.execute('INSERT INTO steps (recipe_id, step_number, instruction) VALUES (%s, %s, %s)',
-                      (recipe_id, idx, step))
-    
-    db.commit()
-    return recipe_id
+    try:
+        cursor.execute('''
+            INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        ''', (title, description, cuisine, region, 'Main Course', prep_time, cook_time, difficulty, user_id))
+        
+        recipe_id = cursor.fetchone()[0]
+        
+        for ing in ingredients:
+            cursor.execute('INSERT INTO ingredients (recipe_id, name, quantity) VALUES (%s, %s, %s)',
+                          (recipe_id, ing['name'], ing['quantity']))
+        
+        for idx, step in enumerate(steps, 1):
+            cursor.execute('INSERT INTO steps (recipe_id, step_number, instruction) VALUES (%s, %s, %s)',
+                          (recipe_id, idx, step))
+        
+        db.commit()
+        return recipe_id
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Error creating recipe: {e}")
+        raise e
+    finally:
+        cursor.close()
 
 # ==================== IMPORT ROUTES ====================
 
