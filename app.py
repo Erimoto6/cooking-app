@@ -1442,6 +1442,74 @@ def create_missing_tables():
     
     return "✅ completed_recipes and user_titles tables created successfully!"
 
+@app.route('/create-all-tables')
+def create_all_tables():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Create completed_recipes table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS completed_recipes (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, recipe_id)
+        )
+    ''')
+    
+    # Create user_titles table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS user_titles (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            title_key VARCHAR(50) NOT NULL,
+            title_name VARCHAR(100) NOT NULL,
+            is_active BOOLEAN DEFAULT FALSE,
+            unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, title_key)
+        )
+    ''')
+    
+    # Create folder_recipes table (this is the missing one!)
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS folder_recipes (
+            id SERIAL PRIMARY KEY,
+            folder_id INTEGER REFERENCES recipe_folders(id) ON DELETE CASCADE,
+            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(folder_id, recipe_id)
+        )
+    ''')
+    
+    # Create recent_views table (if not exists)
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS recent_views (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return """
+    <h2>✅ All tables created successfully!</h2>
+    <ul>
+        <li>completed_recipes</li>
+        <li>user_titles</li>
+        <li>folder_recipes</li>
+        <li>recent_views</li>
+    </ul>
+    """
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
