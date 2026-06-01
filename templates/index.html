@@ -231,11 +231,6 @@
     color: white;
   }
 
-  .folder-delete-btn::after {
-    content: "🗑️";
-    font-size: 11px;
-  }
-
   .h-folder-icon {
     width: 40px;
     height: 40px;
@@ -246,16 +241,6 @@
     align-items: center;
     justify-content: center;
     font-size: 20px;
-  }
-
-  .h-folder-icon::before {
-    content: "📂";
-  }
-
-  .h-folder-add .h-folder-icon::before {
-    content: "+";
-    font-size: 24px;
-    font-weight: bold;
   }
 
   .h-folder-name {
@@ -275,6 +260,16 @@
     border: 1px dashed rgba(255,255,255,0.15);
   }
 
+  .h-folder-add .h-folder-icon {
+    background: rgba(255,255,255,0.05);
+    font-size: 22px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .h-folder-add .h-folder-name {
+    color: rgba(255,255,255,0.3);
+  }
+
   .empty-state {
     color: rgba(255,255,255,0.3);
     font-size: 13px;
@@ -282,120 +277,31 @@
     padding: 20px;
   }
 
+  .completed-badge {
+    background: rgba(76,175,80,0.2);
+    border: 1px solid rgba(76,175,80,0.3);
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 10px;
+    color: #4CAF50;
+    display: inline-block;
+    margin-left: 8px;
+  }
+
+  @keyframes h-float1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+  @keyframes h-float2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-15px,25px) scale(0.95); }
+  }
+
   .h-section-anim1 { animation: h-fadeUp 0.6s ease 0.1s both; }
   .h-section-anim2 { animation: h-fadeUp 0.6s ease 0.2s both; }
   .h-section-anim3 { animation: h-fadeUp 0.6s ease 0.25s both; }
   .h-section-anim4 { animation: h-fadeUp 0.6s ease 0.3s both; }
-
-  /* Modal Styles */
-  .folder-modal-overlay, .delete-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(8px);
-    z-index: 20000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-  }
-
-  .folder-modal-overlay.active, .delete-modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .folder-modal, .delete-modal {
-    background: rgba(15, 5, 0, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 24px;
-    width: 90%;
-    max-width: 320px;
-    padding: 24px;
-    animation: modalSlideUp 0.3s ease;
-  }
-
-  .folder-modal-title, .delete-modal-title {
-    color: #fff;
-    font-size: 20px;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 8px;
-  }
-
-  .folder-modal-message, .delete-modal-message {
-    color: rgba(255,255,255,0.5);
-    font-size: 13px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  .folder-modal-input {
-    width: 100%;
-    padding: 14px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-    color: #fff;
-    font-size: 16px;
-    margin-bottom: 20px;
-    box-sizing: border-box;
-  }
-
-  .folder-modal-input:focus {
-    outline: none;
-    border-color: #C0392B;
-  }
-
-  .folder-modal-buttons, .delete-modal-buttons {
-    display: flex;
-    gap: 12px;
-  }
-
-  .folder-modal-btn, .delete-modal-btn {
-    flex: 1;
-    padding: 12px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    text-align: center;
-  }
-
-  .folder-modal-cancel, .delete-modal-cancel {
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.7);
-  }
-
-  .folder-modal-create {
-    background: #C0392B;
-    color: #fff;
-  }
-
-  .delete-modal-confirm {
-    background: rgba(244, 67, 54, 0.2);
-    color: #f44336;
-    border: 1px solid rgba(244, 67, 54, 0.3);
-  }
-
-  @keyframes modalSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+  .h-section-anim5 { animation: h-fadeUp 0.6s ease 0.35s both; }
 </style>
 {% endblock %}
 
@@ -412,24 +318,31 @@
 
   <!-- Discover Cuisines -->
   <div class="h-section h-section-anim1">
+    <p class="h-section-title">Discover</p>
     <div class="h-cuisine-grid">
       <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🦁🌍</span>
         <span class="h-cuisine-name">African</span>
       </a>
-      <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">
-        <span class="h-cuisine-name">Asians</span>
-      </a>
       <a href="{{ url_for('view_cuisine', cuisine='Europe') }}" class="h-cuisine-card">
-        <span class="h-cuisine-name">Europe</span>
+        <span class="h-cuisine-emoji">🍝🥖</span>
+        <span class="h-cuisine-name">European</span>
+      </a>
+      <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">
+        <span class="h-cuisine-emoji">🍜🥢</span>
+        <span class="h-cuisine-name">Asian</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='North America') }}" class="h-cuisine-card">
-        <span class="h-cuisine-name">North America</span>
+        <span class="h-cuisine-emoji">🍔🌮</span>
+        <span class="h-cuisine-name">North American</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='South America') }}" class="h-cuisine-card">
-        <span class="h-cuisine-name">South America</span>
+        <span class="h-cuisine-emoji">🥩🌽</span>
+        <span class="h-cuisine-name">South American</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Oceania') }}" class="h-cuisine-card">
-        <span class="h-cuisine-name">Oceania</span>
+        <span class="h-cuisine-emoji">🦘🥝</span>
+        <span class="h-cuisine-name">Oceanian</span>
       </a>
     </div>
   </div>
@@ -442,12 +355,12 @@
     </div>
     <div class="h-scroll">
       {% for recipe in favorite_dishes %}
-        <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-          <div class="h-recipe-thumb"></div>
-          <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
-        </a>
+      <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
+        <div class="h-recipe-thumb">🍽️</div>
+        <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
+      </a>
       {% else %}
-      <div class="empty-state">No favorites yet. Save recipes to see them here!</div>
+      <div class="empty-state">No favorites yet. ❤️ recipes to see them here!</div>
       {% endfor %}
     </div>
   </div>
@@ -461,7 +374,7 @@
     <div class="h-scroll">
       {% for recipe in recent_recipes[:5] %}
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb"></div>
+        <div class="h-recipe-thumb">🍳</div>
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
@@ -471,17 +384,17 @@
   </div>
 
   <!-- My Recipes -->
-  <div class="h-section h-section-anim3">
+  <div class="h-section h-section-anim4">
     <div class="h-section-title">
-      <span>📝 My Recipes</span>
+      <span>My Recipes</span>
       <a href="{{ url_for('my_recipes') }}" class="h-view-all">View all →</a>
     </div>
     <div class="h-scroll">
       {% for recipe in my_recipes[:5] %}
-        <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-          <div class="h-recipe-thumb">🍽️</div>
-          <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
-        </a>
+      <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
+        <div class="h-recipe-thumb">👨‍🍳</div>
+        <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
+      </a>
       {% else %}
       <div class="empty-state">No recipes yet. Create your first recipe!</div>
       {% endfor %}
@@ -489,41 +402,43 @@
   </div>
 
   <!-- Recently Completed -->
-  <div class="h-section h-section-anim3">
+  <div class="h-section h-section-anim5">
     <div class="h-section-title">
       <span>✅ Recently Completed</span>
       <a href="{{ url_for('completed_recipes') }}" class="h-view-all">View all →</a>
     </div>
     <div class="h-scroll">
-      {% for recipe in recent_completed[:5] %}
-      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb">✅</div>
-        <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
-      </a>
+      {% if recent_completed and recent_completed|length > 0 %}
+        {% for recipe in recent_completed[:5] %}
+        <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
+          <div class="h-recipe-thumb">✅</div>
+          <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
+        </a>
+        {% endfor %}
       {% else %}
       <div class="empty-state">No completed recipes yet. Mark recipes as done!</div>
-      {% endfor %}
+      {% endif %}
     </div>
   </div>
 
   <!-- Recipe Folders -->
-  <div class="h-section h-section-anim4">
+  <div class="h-section h-section-anim5">
     <div class="h-section-title">
-      <span>Recipe Collections</span>
+      <span>Your Recipe Folders</span>
     </div>
     <div class="h-folder-grid">
       {% for folder in folders %}
       <div class="h-folder-card-wrapper">
         <div class="h-folder-card" onclick="viewFolder({{ folder.id }})">
-          <div class="h-folder-icon"></div>
+          <div class="h-folder-icon">📂</div>
           <div class="h-folder-name">{{ folder.name }}</div>
           <div class="h-folder-count">{{ folder.recipe_count or 0 }} recipes</div>
         </div>
-        <button class="folder-delete-btn" onclick="event.stopPropagation(); showDeleteFolderModal({{ folder.id }}, '{{ folder.name }}')"></button>
+        <button class="folder-delete-btn" onclick="event.stopPropagation(); showDeleteFolderModal({{ folder.id }}, '{{ folder.name }}')">🗑️</button>
       </div>
       {% endfor %}
       <div class="h-folder-card h-folder-add" onclick="showCreateFolderModal()">
-        <div class="h-folder-icon"></div>
+        <div class="h-folder-icon">+</div>
         <div class="h-folder-name">New Folder</div>
       </div>
     </div>
@@ -540,7 +455,8 @@
     modal.className = 'folder-modal-overlay';
     modal.innerHTML = `
       <div class="folder-modal">
-        <div class="folder-modal-title">📁 New Folder</div>
+        <div class="folder-modal-icon">📁</div>
+        <div class="folder-modal-title">New Folder</div>
         <div class="folder-modal-message">Enter a name for your recipe folder</div>
         <input type="text" class="folder-modal-input" id="folderNameInput" placeholder="e.g., Weeknight Dinners" autocomplete="off">
         <div class="folder-modal-buttons">
@@ -617,8 +533,9 @@
     modal.className = 'delete-modal-overlay';
     modal.innerHTML = `
       <div class="delete-modal">
-        <div class="delete-modal-title">🗑️ Delete Folder</div>
-        <div class="delete-modal-message">Are you sure you want to delete "<strong>${escapeHtml(folderName)}</strong>"?<br>This will not delete the recipes themselves.</div>
+        <div class="delete-modal-icon">🗑️</div>
+        <div class="delete-modal-title">Delete Folder</div>
+        <div class="delete-modal-message">Are you sure you want to delete "<strong>${escapeHtml(folderName)}</strong>"?<br>This will also remove all recipes from this folder.</div>
         <div class="delete-modal-buttons">
           <button class="delete-modal-btn delete-modal-cancel" id="cancelDeleteBtn">Cancel</button>
           <button class="delete-modal-btn delete-modal-confirm" id="confirmDeleteBtn">Delete</button>
