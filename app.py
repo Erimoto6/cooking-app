@@ -1652,6 +1652,63 @@ def fix_orphan_folder_recipes():
     
     return result
 
+@app.route('/create-folder-table')
+def create_folder_table():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Create folder_recipes table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS folder_recipes (
+            id SERIAL PRIMARY KEY,
+            folder_id INTEGER NOT NULL,
+            recipe_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Add foreign key constraints (optional but recommended)
+    try:
+        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT fk_folder FOREIGN KEY (folder_id) REFERENCES recipe_folders(id) ON DELETE CASCADE')
+    except Exception as e:
+        print(f"Foreign key constraint already exists or error: {e}")
+    
+    try:
+        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT fk_recipe FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE')
+    except Exception as e:
+        print(f"Foreign key constraint already exists or error: {e}")
+    
+    try:
+        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE')
+    except Exception as e:
+        print(f"Foreign key constraint already exists or error: {e}")
+    
+    # Add unique constraint to prevent duplicates
+    try:
+        cur.execute('ALTER TABLE folder_recipes ADD CONSTRAINT unique_folder_recipe UNIQUE (folder_id, recipe_id)')
+    except Exception as e:
+        print(f"Unique constraint already exists or error: {e}")
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return """
+    <h2>✅ folder_recipes table created successfully!</h2>
+    <p>You can now:</p>
+    <ul>
+        <li>Add recipes to folders</li>
+        <li>Click on folders to view their contents</li>
+        <li>Delete recipes properly</li>
+    </ul>
+    <a href="/">Go back to home</a>
+    """
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
