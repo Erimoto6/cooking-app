@@ -1838,6 +1838,22 @@ def debug_asian_error():
     conn.close()
     return result
 
+@app.route('/test-asian')
+def test_asian():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = get_cursor()
+    cursor.execute("SELECT * FROM recipes WHERE cuisine = 'Asian' LIMIT 5")
+    recipes = cursor.fetchall()
+    
+    result = "<h3>Test Asian Cuisine</h3>"
+    result += f"<p>Found {len(recipes)} recipes</p>"
+    for r in recipes:
+        result += f"<p>{r['title']} - {r['region']}</p>"
+    
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
