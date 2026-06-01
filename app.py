@@ -239,7 +239,7 @@ def view_cuisine(cuisine):
         cursor.execute("""
             SELECT * FROM recipes 
             WHERE cuisine = %s AND region = %s 
-            AND (is_private = FALSE OR user_id = %s)
+            AND (is_private = TRUE OR user_id = %s)
             ORDER BY title
         """, (cuisine, region_name, user_id))
         recipes_by_region[region_name] = cursor.fetchall()
