@@ -1719,7 +1719,33 @@ def fix_public_recipes():
     conn.close()
     return result
 
-
+@app.route('/make-imported-public')
+def make_imported_public():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Set ALL recipes to FALSE first (public)
+        cur.execute("UPDATE recipes SET is_private = FALSE")
+        conn.commit()
+        
+        cur.execute("SELECT COUNT(*) FROM recipes")
+        total = cur.fetchone()[0]
+        
+        result = f"""
+        <h3>✅ All {total} recipes are now public!</h3>
+        <p>Now go back to the homepage and refresh.</p>
+        <p>New recipes you create will automatically be private.</p>
+        """
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
 
 
 
