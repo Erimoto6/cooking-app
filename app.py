@@ -1510,6 +1510,71 @@ def create_all_tables():
     </ul>
     """
 
+@app.route('/fix-folder-tables')
+def fix_folder_tables():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Check what columns exist in folder_recipes
+    try:
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'folder_recipes'")
+        columns = cur.fetchall()
+        result = "Existing columns in folder_recipes:<br>"
+        for col in columns:
+            result += f"- {col[0]}<br>"
+    except Exception as e:
+        result = f"Error checking columns: {e}<br>"
+    
+    # Recreate folder_recipes table properly
+    try:
+        cur.execute("DROP TABLE IF EXISTS folder_recipes CASCADE")
+        cur.execute('''
+            CREATE TABLE folder_recipes (
+                id SERIAL PRIMARY KEY,
+                folder_id INTEGER REFERENCES recipe_folders(id) ON DELETE CASCADE,
+                recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        result += "<br>✅ folder_recipes table recreated successfully!"
+    except Exception as e:
+        result += f"<br>❌ Error recreating table: {e}"
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return result
+
+@app.route('/check-folders')
+def check_folders():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    result = "<h3>Recipe Folders:</h3>"
+    cur.execute("SELECT id, folder_name, user_id FROM recipe_folders")
+    folders = cur.fetchall()
+    for f in folders:
+        result += f"ID: {f[0]}, Name: {f[1]}, User: {f[2]}<br>"
+    
+    result += "<h3>Folder Recipes:</h3>"
+    cur.execute("SELECT * FROM folder_recipes")
+    fr = cur.fetchall()
+    for row in fr:
+        result += f"{row}<br>"
+    
+    cur.close()
+    conn.close()
+    
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
