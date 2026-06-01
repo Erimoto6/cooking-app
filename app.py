@@ -221,25 +221,29 @@ def view_cuisine(cuisine):
 
     cursor = get_cursor()
     
-    # Simple query without any filters
-    cursor.execute("SELECT * FROM recipes WHERE cuisine = %s", (cuisine,))
-    all_recipes = cursor.fetchall()
+    # Get distinct regions
+    cursor.execute("""
+        SELECT DISTINCT region FROM recipes 
+        WHERE cuisine = %s AND region IS NOT NULL AND region != ''
+        ORDER BY region
+    """, (cuisine,))
+    regions = cursor.fetchall()
     
-    # Group by region manually
     recipes_by_region = {}
-    for recipe in all_recipes:
-        region = recipe['region'] if recipe['region'] else 'Other'
-        if region not in recipes_by_region:
-            recipes_by_region[region] = []
-        recipes_by_region[region].append(recipe)
     
-    regions = [{'region': r} for r in recipes_by_region.keys()]
+    for region in regions:
+        region_name = region['region']
+        cursor.execute("""
+            SELECT * FROM recipes 
+            WHERE cuisine = %s AND region = %s 
+            ORDER BY title
+        """, (cuisine, region_name))
+        recipes_by_region[region_name] = cursor.fetchall()
     
     return render_template('cuisine_view.html', 
                            cuisine=cuisine,
                            regions=regions,
                            recipes_by_region=recipes_by_region)
-
 @app.route('/recipe/<string:dish_id>')
 def view_recipe(dish_id):
     if 'user_id' not in session:
