@@ -1791,21 +1791,49 @@ def debug_asian():
     conn.close()
     return result
 
-@app.route('/fix-asian-cuisine')
-def fix_asian_cuisine():
+@app.route('/debug-asian-error')
+def debug_asian_error():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    import traceback
     import psycopg2
     import os
+    
     database_url = os.environ.get('DATABASE_URL')
     conn = psycopg2.connect(database_url)
     cur = conn.cursor()
     
+    result = "<h3>Debugging Asian Cuisine Error</h3>"
+    
     try:
-        cur.execute("UPDATE recipes SET cuisine = 'Asian' WHERE cuisine = 'Asians'")
-        conn.commit()
-        count = cur.rowcount
-        result = f"✅ Updated {count} recipes from 'Asians' to 'Asian'"
+        cuisine = 'Asian'
+        user_id = session['user_id']
+        
+        # Check what cuisine values exist
+        cur.execute("SELECT DISTINCT cuisine FROM recipes")
+        cuisines = cur.fetchall()
+        result += "<p><strong>Cuisines in database:</strong></p><ul>"
+        for c in cuisines:
+            result += f"<li>'{c[0]}'</li>"
+        result += "</ul>"
+        
+        # Try the query that's failing
+        cur.execute("""
+            SELECT DISTINCT region FROM recipes 
+            WHERE cuisine = %s 
+            AND region IS NOT NULL AND region != ''
+            ORDER BY region
+        """, (cuisine,))
+        regions = cur.fetchall()
+        result += f"<p>Regions found for '{cuisine}': {len(regions)}</p>"
+        
+        for region in regions:
+            result += f"<p>Region: {region[0]}</p>"
+        
     except Exception as e:
-        result = f"❌ Error: {e}"
+        result += f"<p style='color:red'>Error: {e}</p>"
+        result += f"<pre>{traceback.format_exc()}</pre>"
     
     cur.close()
     conn.close()
