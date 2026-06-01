@@ -1,118 +1,530 @@
 {% extends "base.html" %}
+{% block title %}Create Recipe - Dishly{% endblock %}
 
-{% block title %}Create Recipe{% endblock %}
+{% block styles %}
+<style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cr-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cr-blob1 {
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6B1A00 0%, transparent 70%);
+    top: -80px; right: -60px;
+    animation: float 9s ease-in-out infinite;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px,-30px) scale(1.08); }
+  }
+
+  .cr-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,1,0,0.55);
+    pointer-events: none;
+  }
+
+  .cr-header {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .cr-back {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    font-size: 13px;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+
+  .cr-title {
+    color: #ffffff;
+    font-size: 32px;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .cr-subtitle {
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  .cr-form {
+    position: relative;
+    z-index: 1;
+    background: rgba(255,255,255,0.03);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(5px);
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .form-group label {
+    display: block;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .form-group label .required {
+    color: #C0392B;
+    margin-left: 4px;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(15, 5, 0, 0.95);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .form-group select option {
+    background: #1a0a00;
+    color: #ffffff;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #C0392B;
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: rgba(255,255,255,0.3);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .form-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .ingredient-row,
+  .step-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+
+  .ingredient-row input {
+    flex: 1;
+  }
+
+  .step-row {
+    position: relative;
+  }
+
+  .step-row textarea {
+    flex: 1;
+    min-height: 60px;
+    resize: vertical;
+  }
+
+  .remove-btn {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .remove-btn:hover {
+    background: rgba(244, 67, 54, 0.3);
+  }
+
+  .add-item-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .add-item-btn:hover {
+    background: rgba(192,57,43,0.15);
+    border-color: rgba(192,57,43,0.4);
+    color: #fff;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: #C0392B;
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 16px;
+  }
+
+  .submit-btn:hover {
+    background: #a93226;
+  }
+
+  .submit-btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .helper-text {
+    color: rgba(255,255,255,0.3);
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 500px) {
+    .form-row, .form-row-2 {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="create-screen">
-    <h1>Create New Recipe</h1>
-    
+<div class="cr-screen">
+  <div class="cr-blob1"></div>
+  <div class="cr-overlay"></div>
+
+  <div class="cr-header">
+    <a href="{{ url_for('index') }}" class="cr-back">← Back to Home</a>
+    <h1 class="cr-title">Create New Recipe</h1>
+    <p class="cr-subtitle">Share your delicious creation with the world</p>
+  </div>
+
+  <div class="cr-form">
     <form method="POST" id="createRecipeForm">
+      <div class="form-group">
+        <label>Recipe Title <span class="required">*</span></label>
+        <input type="text" name="title" placeholder="e.g., Creamy Mushroom Pasta" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" rows="3" placeholder="Brief description of your recipe..."></textarea>
+      </div>
+
+      <div class="form-row-2">
         <div class="form-group">
-            <label>Recipe Title *</label>
-            <input type="text" name="title" required>
+          <label>Cuisine</label>
+          <select name="cuisine">
+            <option value="African">African</option>
+            <option value="Asians">Asians</option>
+            <option value="Europe">Europe</option>
+            <option value="North America">North America</option>
+            <option value="South America">South America</option>
+            <option value="Oceania">Oceania</option>
+          </select>
         </div>
-        
+
         <div class="form-group">
-            <label>Description</label>
-            <textarea name="description" rows="3" placeholder="Brief description of your recipe..."></textarea>
+          <label>Region / Country</label>
+          <select name="region">
+            <option value="">Select a region...</option>
+            {% set regions = [
+              'Philippines', 'Japan', 'China', 'Korea', 'Thailand', 'Vietnam', 'India', 'Malaysia',
+              'Italy', 'France', 'Germany', 'Spain', 'United Kingdom', 'Greece',
+              'United States', 'Mexico', 'Canada', 'Brazil', 'Argentina', 'Australia'
+            ] %}
+            {% for region in regions %}
+            <option value="{{ region }}">{{ region }}</option>
+            {% endfor %}
+          </select>
         </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>Cuisine</label>
-                <select name="cuisine">
-                    <option value="African">African</option>
-                    <option value="Asian">Asian</option>
-                    <option value="European">European</option>
-                    <option value="North American">North American</option>
-                    <option value="South American">South American</option>
-                    <option value="Oceanian">Oceanian</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Region</label>
-                <input type="text" name="region" placeholder="e.g., Philippines, Italy, Japan">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>Prep Time (min)</label>
-                <input type="number" name="prep_time" value="15">
-            </div>
-            
-            <div class="form-group">
-                <label>Cook Time (min)</label>
-                <input type="number" name="cook_time" value="30">
-            </div>
-            
-            <div class="form-group">
-                <label>Difficulty</label>
-                <select name="difficulty">
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                </select>
-            </div>
-        </div>
-        
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
-            <label>Ingredients</label>
-            <div id="ingredientsList">
-                <div class="ingredient-row">
-                    <input type="text" name="ingredient_name[]" placeholder="Ingredient name">
-                    <input type="text" name="ingredient_quantity[]" placeholder="Quantity">
-                    <button type="button" onclick="removeIngredient(this)" class="remove-btn">✖</button>
-                </div>
-            </div>
-            <button type="button" onclick="addIngredient()" class="add-item-btn">+ Add Ingredient</button>
+          <label>Prep Time (min)</label>
+          <input type="number" name="prep_time" value="15" min="0">
         </div>
-        
+
         <div class="form-group">
-            <label>Steps</label>
-            <div id="stepsList">
-                <div class="step-row">
-                    <textarea name="step[]" rows="2" placeholder="Step 1..."></textarea>
-                    <button type="button" onclick="removeStep(this)" class="remove-btn">✖</button>
-                </div>
-            </div>
-            <button type="button" onclick="addStep()" class="add-item-btn">+ Add Step</button>
+          <label>Cook Time (min)</label>
+          <input type="number" name="cook_time" value="30" min="0">
         </div>
-        
-        <button type="submit" class="submit-btn">Create Recipe</button>
+
+        <div class="form-group">
+          <label>Difficulty</label>
+          <select name="difficulty">
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Category</label>
+        <select name="category">
+          <option value="Main Course">Main Course</option>
+          <option value="Dessert">Dessert</option>
+          <option value="Beverage">Beverage</option>
+          <option value="Soup">Soup</option>
+          <option value="Snack">Snack</option>
+          <option value="Breakfast">Breakfast</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Ingredients</label>
+        <div id="ingredientsList">
+          <div class="ingredient-row">
+            <input type="text" name="ingredient_name[]" placeholder="Ingredient name (e.g., Chicken breast)" autocomplete="off">
+            <input type="text" name="ingredient_quantity[]" placeholder="Quantity (e.g., 500g, 2 pcs)">
+            <button type="button" onclick="removeIngredient(this)" class="remove-btn" style="display: none;">✖</button>
+          </div>
+        </div>
+        <button type="button" onclick="addIngredient()" class="add-item-btn">+ Add Ingredient</button>
+        <div class="helper-text">Add all ingredients needed for this recipe</div>
+      </div>
+
+      <div class="form-group">
+        <label>Instructions</label>
+        <div id="stepsList">
+          <div class="step-row" id="step-row-1">
+            <textarea name="step[]" rows="2" placeholder="e.g., Boil water in a large pot"></textarea>
+            <button type="button" onclick="removeStep(this)" class="remove-btn" style="display: none;">✖</button>
+          </div>
+        </div>
+        <button type="button" onclick="addStep()" class="add-item-btn">+ Add Step</button>
+        <div class="helper-text">Write clear, step-by-step instructions (step numbers will be added automatically)</div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">Create Recipe</button>
     </form>
+  </div>
 </div>
 
 <script>
-function addIngredient() {
-    var div = document.createElement('div');
+  // Update step numbers visually and prepare for submission
+  function updateStepNumbers() {
+    const steps = document.querySelectorAll('.step-row');
+    steps.forEach((step, index) => {
+      const textarea = step.querySelector('textarea');
+      if (textarea) {
+        // Store the user's actual instruction text
+        let userText = textarea.getAttribute('data-user-text') || textarea.value;
+        
+        // Update placeholder
+        textarea.placeholder = `Step ${index + 1}: (type your instruction here)`;
+        
+        // Display with step number in the textarea
+        if (userText && userText.trim()) {
+          textarea.value = `Step ${index + 1}: ${userText}`;
+        } else {
+          textarea.value = `Step ${index + 1}: `;
+        }
+      }
+    });
+  }
+
+  function saveUserText(textarea) {
+    let value = textarea.value;
+    // Extract just the instruction part (remove "Step X: ")
+    let cleanValue = value.replace(/^Step \d+:\s*/i, '');
+    textarea.setAttribute('data-user-text', cleanValue);
+  }
+
+  function handleStepInput(textarea) {
+    const stepRow = textarea.closest('.step-row');
+    const index = Array.from(stepRow.parentNode.children).indexOf(stepRow);
+    
+    let value = textarea.value;
+    // Remove any existing step number prefix
+    let cleanValue = value.replace(/^Step \d+:\s*/i, '');
+    
+    // Save the clean instruction
+    textarea.setAttribute('data-user-text', cleanValue);
+    
+    // Update display with step number
+    textarea.value = `Step ${index + 1}: ${cleanValue}`;
+    
+    // Move cursor to the end
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  }
+
+  function updateRemoveButtons() {
+    const ingredientRows = document.querySelectorAll('.ingredient-row');
+    ingredientRows.forEach((row) => {
+      const removeBtn = row.querySelector('.remove-btn');
+      if (removeBtn) {
+        removeBtn.style.display = ingredientRows.length > 1 ? 'block' : 'none';
+      }
+    });
+    
+    const stepRows = document.querySelectorAll('.step-row');
+    stepRows.forEach((row, index) => {
+      const removeBtn = row.querySelector('.remove-btn');
+      if (removeBtn) {
+        removeBtn.style.display = stepRows.length > 1 ? 'block' : 'none';
+      }
+      // Update the step number in display
+      const textarea = row.querySelector('textarea');
+      if (textarea) {
+        let userText = textarea.getAttribute('data-user-text') || '';
+        if (userText) {
+          textarea.value = `Step ${index + 1}: ${userText}`;
+        } else {
+          textarea.value = `Step ${index + 1}: `;
+        }
+      }
+    });
+  }
+
+  function addIngredient() {
+    const div = document.createElement('div');
     div.className = 'ingredient-row';
     div.innerHTML = `
-        <input type="text" name="ingredient_name[]" placeholder="Ingredient name">
-        <input type="text" name="ingredient_quantity[]" placeholder="Quantity">
-        <button type="button" onclick="removeIngredient(this)" class="remove-btn">✖</button>
+      <input type="text" name="ingredient_name[]" placeholder="Ingredient name" autocomplete="off">
+      <input type="text" name="ingredient_quantity[]" placeholder="Quantity">
+      <button type="button" onclick="removeIngredient(this)" class="remove-btn">✖</button>
     `;
     document.getElementById('ingredientsList').appendChild(div);
-}
+    updateRemoveButtons();
+  }
 
-function removeIngredient(btn) {
+  function removeIngredient(btn) {
     btn.parentElement.remove();
-}
+    updateRemoveButtons();
+  }
 
-function addStep() {
-    var stepCount = document.querySelectorAll('.step-row').length + 1;
-    var div = document.createElement('div');
+  function addStep() {
+    const stepCount = document.querySelectorAll('.step-row').length + 1;
+    const div = document.createElement('div');
     div.className = 'step-row';
     div.innerHTML = `
-        <textarea name="step[]" rows="2" placeholder="Step ${stepCount}..."></textarea>
-        <button type="button" onclick="removeStep(this)" class="remove-btn">✖</button>
+      <textarea name="step[]" rows="2" placeholder="e.g., Add the chicken and cook until golden"></textarea>
+      <button type="button" onclick="removeStep(this)" class="remove-btn">✖</button>
     `;
     document.getElementById('stepsList').appendChild(div);
-}
+    
+    // Set up the new textarea
+    const textarea = div.querySelector('textarea');
+    textarea.setAttribute('data-user-text', '');
+    textarea.value = `Step ${stepCount}: `;
+    
+    // Add input event listener
+    textarea.addEventListener('input', function() {
+      handleStepInput(this);
+    });
+    
+    updateRemoveButtons();
+  }
 
-function removeStep(btn) {
+  function removeStep(btn) {
     btn.parentElement.remove();
-}
+    updateRemoveButtons();
+  }
+
+  // Form submission - clean step data before sending
+  document.getElementById('createRecipeForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.classList.add('loading');
+    submitBtn.textContent = 'Creating Recipe...';
+    
+    // Clean up step values - remove "Step X: " prefix before submission
+    const steps = document.querySelectorAll('textarea[name="step[]"]');
+    steps.forEach((step) => {
+      let value = step.value;
+      // Remove the auto-added step number prefix
+      let cleanValue = value.replace(/^Step \d+:\s*/i, '');
+      step.value = cleanValue;
+    });
+    
+    const ingredients = document.querySelectorAll('input[name="ingredient_name[]"]');
+    
+    let hasIngredient = false;
+    ingredients.forEach(ing => {
+      if (ing.value.trim()) hasIngredient = true;
+    });
+    
+    let hasStep = false;
+    steps.forEach(step => {
+      if (step.value.trim()) hasStep = true;
+    });
+    
+    if (!hasIngredient) {
+      e.preventDefault();
+      alert('Please add at least one ingredient');
+      submitBtn.classList.remove('loading');
+      submitBtn.textContent = 'Create Recipe';
+    } else if (!hasStep) {
+      e.preventDefault();
+      alert('Please add at least one instruction step');
+      submitBtn.classList.remove('loading');
+      submitBtn.textContent = 'Create Recipe';
+    }
+  });
+
+  // Initialize all steps
+  function initSteps() {
+    const textareas = document.querySelectorAll('.step-row textarea');
+    textareas.forEach((textarea, index) => {
+      textarea.setAttribute('data-user-text', '');
+      textarea.value = `Step ${index + 1}: `;
+      textarea.addEventListener('input', function() {
+        handleStepInput(this);
+      });
+    });
+  }
+
+  // Initial setup
+  updateRemoveButtons();
+  initSteps();
 </script>
 {% endblock %}

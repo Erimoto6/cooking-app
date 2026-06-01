@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Completed Recipes - Dishly{% endblock %}
+
+{% block styles %}
+<style>
+  .cr-screen {
+    min-height: 100vh;
+    background: #0f0500;
+    padding: 52px 20px 100px;
+  }
+  .cr-header { margin-bottom: 28px; }
+  .cr-back { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; }
+  .cr-title { color: #fff; font-size: 32px; font-family: 'Georgia', serif; font-style: italic; margin: 10px 0 0; }
+  .cr-count { color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 8px; }
+  .cr-grid { display: flex; flex-direction: column; gap: 12px; }
+  .cr-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    text-decoration: none;
+  }
+  .cr-icon { font-size: 32px; }
+  .cr-info { flex: 1; }
+  .cr-name { color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500; }
+  .cr-meta { color: rgba(255,255,255,0.35); font-size: 12px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.4); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cr-screen">
+  <div class="cr-header">
+    <a href="{{ url_for('index') }}" class="cr-back">← Back to Home</a>
+    <h1 class="cr-title">✅ Completed Recipes</h1>
+    <p class="cr-count">{{ recipes|length }} recipe{{ 's' if recipes|length != 1 }}</p>
+  </div>
+  
+  {% if recipes %}
+  <div class="cr-grid">
+    {% for recipe in recipes %}
+    <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="cr-card">
+      <div class="cr-icon">✅</div>
+      <div class="cr-info">
+        <div class="cr-name">{{ recipe.title }}</div>
+        <div class="cr-meta">{{ recipe.cuisine or 'Various' }} · {{ recipe.category or 'Recipe' }}</div>
+      </div>
+      <span style="color:rgba(255,255,255,0.2);">›</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+    <p>No completed recipes yet</p>
+    <p style="font-size: 12px;">Click "Mark as Done" on recipes you've made!</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

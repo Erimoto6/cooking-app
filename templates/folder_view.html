@@ -7,59 +7,154 @@
     min-height: 100vh;
     background: #0f0500;
     padding: 52px 20px 100px;
+    position: relative;
+    overflow: hidden;
   }
+
   .fv-header {
+    position: relative;
+    z-index: 1;
     margin-bottom: 28px;
   }
+
   .fv-back {
     color: rgba(255,255,255,0.5);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
+    display: inline-block;
+    margin-bottom: 16px;
   }
+
   .fv-title {
-    color: #fff;
-    font-size: 30px;
+    color: #ffffff;
+    font-size: 32px;
     font-family: 'Georgia', serif;
     font-style: italic;
-    margin: 10px 0 0;
+    font-weight: bold;
+    margin: 0;
   }
+
+  .fv-count {
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
   .fv-grid {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
+
   .fv-card {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
-    padding: 12px;
+    padding: 16px;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
+    border-radius: 16px;
+  }
+
+  .fv-card-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
     text-decoration: none;
+    color: inherit;
   }
-  .fv-card:active {
-    background: rgba(192,57,43,0.1);
-  }
+
   .fv-icon {
-    font-size: 32px;
+    width: 56px;
+    height: 56px;
+    background: rgba(139,37,0,0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
   }
+
   .fv-info {
     flex: 1;
   }
+
   .fv-name {
     color: rgba(255,255,255,0.9);
     font-size: 16px;
     font-weight: 500;
+    margin-bottom: 4px;
   }
+
   .fv-meta {
     color: rgba(255,255,255,0.35);
     font-size: 12px;
   }
-  .empty-state {
+
+  .fv-remove-btn {
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #f44336;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* Modal */
+  #removeModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #removeModal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: rgba(15,5,0,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    width: 280px;
+    padding: 24px;
     text-align: center;
-    padding: 60px 20px;
-    color: rgba(255,255,255,0.4);
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-cancel {
+    background: rgba(255,255,255,0.1);
+    color: white;
+  }
+
+  .btn-remove {
+    background: rgba(244,67,54,0.2);
+    color: #f44336;
+    border: 1px solid rgba(244,67,54,0.3);
   }
 </style>
 {% endblock %}
@@ -69,27 +164,100 @@
   <div class="fv-header">
     <a href="{{ url_for('index') }}" class="fv-back">← Back to Home</a>
     <h1 class="fv-title">📁 {{ folder_name }}</h1>
+    <p class="fv-count">{{ recipes|length }} recipes</p>
   </div>
-  
+
   {% if recipes %}
   <div class="fv-grid">
     {% for recipe in recipes %}
-    <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="fv-card">
-      <div class="fv-icon">🍽️</div>
-      <div class="fv-info">
-        <div class="fv-name">{{ recipe.title }}</div>
-        <div class="fv-meta">{{ recipe.cuisine or 'Various' }} · {{ recipe.category or 'Recipe' }}</div>
-      </div>
-      <span style="color:rgba(255,255,255,0.2);">›</span>
-    </a>
+    <div class="fv-card" id="card-{{ recipe.id }}">
+      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="fv-card-left">
+        <div class="fv-icon">🍽️</div>
+        <div class="fv-info">
+          <div class="fv-name">{{ recipe.title }}</div>
+          <div class="fv-meta">{{ recipe.cuisine or 'Various' }} · {{ recipe.category or 'Recipe' }}</div>
+        </div>
+      </a>
+      <button class="fv-remove-btn" onclick="showRemoveModal({{ recipe.id }}, {{ folder_id }})">
+        Remove
+      </button>
+    </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty-state">
-    <div style="font-size: 48px; margin-bottom: 16px;">📂</div>
-    <p>This folder is empty</p>
-    <p style="font-size: 12px;">Add recipes to this folder from recipe pages!</p>
-  </div>
+  <div class="empty-state">This folder is empty</div>
   {% endif %}
 </div>
+
+<!-- Modal -->
+<div id="removeModal">
+  <div class="modal-content">
+    <div style="font-size: 48px; margin-bottom: 16px;">🗑️</div>
+    <h3 style="color: white; margin-bottom: 8px;">Remove Recipe</h3>
+    <p style="color: rgba(255,255,255,0.5); font-size: 13px;">Remove this recipe from the folder?</p>
+    <div class="modal-buttons">
+      <button class="modal-btn btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn btn-remove" id="confirmRemoveBtn">Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var currentRecipeId = null;
+  var currentFolderId = null;
+
+  function showRemoveModal(recipeId, folderId) {
+    currentRecipeId = recipeId;
+    currentFolderId = folderId;
+    var modal = document.getElementById('removeModal');
+    modal.classList.add('active');
+  }
+
+  function closeModal() {
+    var modal = document.getElementById('removeModal');
+    modal.classList.remove('active');
+    currentRecipeId = null;
+    currentFolderId = null;
+  }
+
+  // Handle confirm remove
+  document.getElementById('confirmRemoveBtn').onclick = function() {
+    if (!currentRecipeId || !currentFolderId) return;
+    
+    fetch('/remove_from_folder/' + currentRecipeId + '/' + currentFolderId, {
+      method: 'DELETE'
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      if (data.success) {
+        // Remove the card
+        var card = document.getElementById('card-' + currentRecipeId);
+        if (card) card.remove();
+        
+        // Update count
+        var remaining = document.querySelectorAll('.fv-card').length;
+        var countSpan = document.querySelector('.fv-count');
+        if (countSpan) countSpan.textContent = remaining + ' recipes';
+        
+        // Reload if empty
+        if (remaining === 0) location.reload();
+        
+        closeModal();
+      } else {
+        alert(data.error || 'Error removing recipe');
+        closeModal();
+      }
+    })
+    .catch(function(error) {
+      console.error('Error:', error);
+      alert('Error removing recipe');
+      closeModal();
+    });
+  };
+
+  // Close modal when clicking outside
+  document.getElementById('removeModal').onclick = function(e) {
+    if (e.target === this) closeModal();
+  };
+</script>
 {% endblock %}

@@ -191,3 +191,39 @@ def search_recipes(q='', category='', cuisine='', region=''):
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
     sql = f"SELECT * FROM recipes {where} ORDER BY title"
     return query(sql, params)
+
+def create_custom_recipe(user_id, title, description, cuisine, region, prep_time, cook_time, difficulty, ingredients, steps, category='Main Course'):
+    db = get_db()
+    cursor = db.cursor()
+    
+    try:
+        # Insert recipe
+        cursor.execute('''
+            INSERT INTO recipes (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+            RETURNING id
+        ''', (title, description, cuisine, region, category, prep_time, cook_time, difficulty, user_id))
+        
+        recipe_id = cursor.fetchone()[0]
+        
+        # Insert ingredients
+        for ing in ingredients:
+            cursor.execute('''
+                INSERT INTO ingredients (recipe_id, name, quantity)
+                VALUES (%s, %s, %s)
+            ''', (recipe_id, ing['name'], ing['quantity']))
+        
+        # Insert steps
+        for idx, step in enumerate(steps, 1):
+            cursor.execute('''
+                INSERT INTO steps (recipe_id, step_number, instruction)
+                VALUES (%s, %s, %s)
+            ''', (recipe_id, idx, step))
+        
+        db.commit()
+        return recipe_id
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Create recipe error: {e}")
+        raise e
