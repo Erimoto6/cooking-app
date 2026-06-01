@@ -1903,6 +1903,45 @@ def debug_shopping():
         result += f"<p>Item: {item}</p>"
     return result
 
+@app.route('/make-my-recipes-private')
+def make_my_recipes_private():
+    if 'user_id' not in session:
+        return "Please login first"
+    
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Set ALL recipes created by current user to private
+        cur.execute("UPDATE recipes SET is_private = TRUE WHERE user_id = %s", (session['user_id'],))
+        conn.commit()
+        count = cur.rowcount
+        result = f"✅ Updated {count} of your recipes to private (only visible to you)"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
+
+@app.route('/debug-private-status')
+def debug_private_status():
+    if 'user_id' not in session:
+        return "Please login first"
+    
+    cursor = get_cursor()
+    cursor.execute("SELECT id, title, is_private FROM recipes WHERE user_id = %s ORDER BY id DESC LIMIT 5", (session['user_id'],))
+    recipes = cursor.fetchall()
+    
+    result = "<h3>Your recent recipes:</h3>"
+    for r in recipes:
+        result += f"<p>ID: {r['id']} - {r['title']} - is_private: {r['is_private']}</p>"
+    
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
