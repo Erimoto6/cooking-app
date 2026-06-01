@@ -163,11 +163,6 @@
     background: linear-gradient(135deg, rgba(139,37,0,0.4), rgba(92,26,0,0.3));
     border: 1px solid rgba(255,255,255,0.1);
     margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: rgba(255,255,255,0.5);
   }
 
   .h-recipe-name {
@@ -345,7 +340,7 @@
     <div class="h-scroll">
       {% for recipe in favorite_dishes %}
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb">🍽️</div>
+        <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
@@ -363,7 +358,7 @@
     <div class="h-scroll">
       {% for recipe in recent_recipes[:5] %}
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb">🍳</div>
+        <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
@@ -381,7 +376,7 @@
     <div class="h-scroll">
       {% for recipe in my_recipes[:5] %}
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-        <div class="h-recipe-thumb">👨‍🍳</div>
+        <div class="h-recipe-thumb"></div>
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
@@ -400,7 +395,7 @@
       {% if recent_completed and recent_completed|length > 0 %}
         {% for recipe in recent_completed[:5] %}
         <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="h-recipe-card">
-          <div class="h-recipe-thumb">✅</div>
+          <div class="h-recipe-thumb"></div>
           <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
         </a>
         {% endfor %}
