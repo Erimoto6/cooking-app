@@ -1292,6 +1292,27 @@ def create_all_tables():
     
     return "✅ All tables created successfully!"
 
+@app.route('/add-image-column')
+def add_image_column():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    # Add image_url column to recipes table
+    try:
+        cur.execute("ALTER TABLE recipes ADD COLUMN IF NOT EXISTS image_url TEXT")
+        conn.commit()
+        result = "✅ image_url column added successfully!"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    
+    return result
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
