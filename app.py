@@ -220,16 +220,13 @@ def view_cuisine(cuisine):
         return redirect(url_for('login'))
 
     cursor = get_cursor()
-    user_id = session['user_id']
     
-    # Show: public recipes OR user's own private recipes
     cursor.execute("""
         SELECT DISTINCT region FROM recipes 
         WHERE cuisine = %s 
-        AND (is_private = FALSE OR user_id = %s)
         AND region IS NOT NULL AND region != ''
         ORDER BY region
-    """, (cuisine, user_id))
+    """, (cuisine,))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
@@ -239,9 +236,8 @@ def view_cuisine(cuisine):
         cursor.execute("""
             SELECT * FROM recipes 
             WHERE cuisine = %s AND region = %s 
-            AND (is_private = FALSE OR user_id = %s)
             ORDER BY title
-        """, (cuisine, region_name, user_id))
+        """, (cuisine, region_name))
         recipes_by_region[region_name] = cursor.fetchall()
     
     return render_template('cuisine_view.html', 
@@ -1747,7 +1743,53 @@ def make_imported_public():
     conn.close()
     return result
 
-
+@app.route('/debug-asian')
+def debug_asian():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    import psycopg2
+    import os
+    import traceback
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    result = "<h3>Debugging Asian Cuisine</h3>"
+    
+    try:
+        # Check if is_private column exists
+        cur.execute("""
+            SELECT column_name FROM information_schema.columns 
+            WHERE table_name = 'recipes' AND column_name = 'is_private'
+        """)
+        col_exists = cur.fetchone()
+        result += f"<p>is_private column exists: {col_exists is not None}</p>"
+        
+        # Try the query that's failing
+        user_id = session['user_id']
+        cuisine = 'Asians'
+        
+        cur.execute("""
+            SELECT DISTINCT region FROM recipes 
+            WHERE cuisine = %s 
+            AND (is_private = FALSE OR user_id = %s)
+            AND region IS NOT NULL AND region != ''
+            ORDER BY region
+        """, (cuisine, user_id))
+        regions = cur.fetchall()
+        result += f"<p>Regions found: {len(regions)}</p>"
+        
+        for region in regions:
+            result += f"<p>Region: {region[0]}</p>"
+        
+    except Exception as e:
+        result += f"<p style='color:red'>Error: {e}</p>"
+        result += f"<pre>{traceback.format_exc()}</pre>"
+    
+    cur.close()
+    conn.close()
+    return result
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
