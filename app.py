@@ -418,12 +418,12 @@ def view_shopping_list():
         return redirect(url_for('login'))
 
     items = get_shopping_list(session['user_id'])
-    return render_template('shopping_list.html', items=items)
+    return render_template('shopping_list.html', shopping_items=items)
 
 @app.route('/add_to_shopping_list', methods=['POST'])
 def add_to_shopping_list_route():
     if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'})
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
 
     data = request.get_json()
     ingredient_name = data.get('ingredient_name')
@@ -433,22 +433,34 @@ def add_to_shopping_list_route():
     add_to_shopping_list(session['user_id'], ingredient_name, quantity, recipe_id)
     return jsonify({'success': True})
 
-@app.route('/toggle_shopping_item/<int:item_id>')
+@app.route('/toggle_shopping_item/<int:item_id>', methods=['POST'])
 def toggle_shopping_item_route(item_id):
     if 'user_id' not in session:
-        return redirect(url_for('login'))
-
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
     toggle_shopping_item(item_id)
-    return redirect(url_for('view_shopping_list'))
+    return jsonify({'success': True})
 
-@app.route('/remove_shopping_item/<int:item_id>')
+
+@app.route('/remove_shopping_item/<int:item_id>', methods=['POST'])
 def remove_shopping_item_route(item_id):
     if 'user_id' not in session:
-        return redirect(url_for('login'))
-
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
     remove_from_shopping_list(item_id)
-    flash('Item removed from shopping list', 'success')
-    return redirect(url_for('view_shopping_list'))
+    return jsonify({'success': True})
+
+
+@app.route('/clear_shopping_list', methods=['POST'])
+def clear_shopping_list_route():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM shopping_list WHERE user_id = %s", (session['user_id'],))
+    db.commit()
+    return jsonify({'success': True})
 
 @app.route('/add_recipe_to_shopping_list/<int:recipe_id>')
 def add_recipe_to_shopping_list_route(recipe_id):
@@ -1873,6 +1885,17 @@ def fix_asian_cuisine():
     
     cur.close()
     conn.close()
+    return result
+
+@app.route('/debug-shopping')
+def debug_shopping():
+    if 'user_id' not in session:
+        return "Not logged in"
+    
+    items = get_shopping_list(session['user_id'])
+    result = "<h3>Shopping List Debug</h3>"
+    for item in items:
+        result += f"<p>Item: {item}</p>"
     return result
 
 if __name__ == '__main__':

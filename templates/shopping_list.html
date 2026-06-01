@@ -314,7 +314,7 @@
       <div class="sl-item {% if item.checked %}checked{% endif %}" data-id="{{ item.id }}">
         <div class="sl-checkbox" onclick="toggleItem({{ item.id }})"></div>
         <div class="sl-item-info">
-          <div class="sl-item-name">{{ item.name }}</div>
+          <div class="sl-item-name">{{ item.ingredient_name or item.name }}</div>
           {% if item.recipe_name %}
           <div class="sl-item-meta">From: {{ item.recipe_name }}</div>
           {% endif %}
@@ -337,61 +337,69 @@
 </div>
 
 <script>
+  function showToast(message) {
+    var toast = document.getElementById('rdToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'rdToast';
+      toast.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(20,70,30,0.92); border: 1px solid rgba(76,175,80,0.35); color: rgba(255,255,255,0.9); padding: 10px 22px; border-radius: 14px; font-size: 13px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 200;';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    setTimeout(function() { toast.style.opacity = '0'; }, 2500);
+  }
+
   function toggleItem(id) {
-    fetch(`/toggle_shopping_item/${id}`, { method: 'POST' })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) location.reload();
-      });
+    fetch('/toggle_shopping_item/' + id, { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) location.reload();
+      else showToast('Error updating item');
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showToast('Error updating item');
+    });
   }
 
   function deleteItem(id) {
-    showConfirmModal({
-        title: 'Remove Item',
-        message: 'Are you sure you want to remove this item from your shopping list?',
-        icon: '🗑️',
-        confirmText: 'Remove',
-        cancelText: 'Cancel',
-        danger: true
-    }).then((confirmed) => {
-        if (confirmed) {
-            fetch(`/remove_shopping_item/${id}`, { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) location.reload();
-            });
-        }
-    });
-}
+    if (confirm('Remove this item from your shopping list?')) {
+      fetch('/remove_shopping_item/' + id, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) location.reload();
+        else showToast('Error removing item');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Error removing item');
+      });
+    }
+  }
 
   function clearAllItems() {
-    showConfirmModal({
-        title: 'Clear Shopping List',
-        message: 'Are you sure you want to clear your entire shopping list? This action cannot be undone.',
-        icon: '🛒',
-        confirmText: 'Clear All',
-        cancelText: 'Cancel',
-        danger: true
-    }).then((confirmed) => {
-        if (confirmed) {
-            fetch('/clear_shopping_list', { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) location.reload();
-            });
-        }
-    });
-}
-
+    if (confirm('Clear your entire shopping list?')) {
+      fetch('/clear_shopping_list', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) location.reload();
+        else showToast('Error clearing list');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showToast('Error clearing list');
+      });
+    }
+  }
 </script>
 {% endblock %}
