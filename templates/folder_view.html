@@ -103,6 +103,12 @@
     cursor: pointer;
   }
 
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255,255,255,0.4);
+  }
+
   /* Modal */
   #removeModal {
     display: none;
@@ -171,7 +177,7 @@
   <div class="fv-grid">
     {% for recipe in recipes %}
     <div class="fv-card" id="card-{{ recipe.id }}">
-      <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="fv-card-left">
+      <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}" class="fv-card-left">
         <div class="fv-icon">🍽️</div>
         <div class="fv-info">
           <div class="fv-name">{{ recipe.title }}</div>
@@ -220,7 +226,6 @@
     currentFolderId = null;
   }
 
-  // Handle confirm remove
   document.getElementById('confirmRemoveBtn').onclick = function() {
     if (!currentRecipeId || !currentFolderId) return;
     
@@ -230,16 +235,13 @@
     .then(function(response) { return response.json(); })
     .then(function(data) {
       if (data.success) {
-        // Remove the card
         var card = document.getElementById('card-' + currentRecipeId);
         if (card) card.remove();
         
-        // Update count
         var remaining = document.querySelectorAll('.fv-card').length;
         var countSpan = document.querySelector('.fv-count');
         if (countSpan) countSpan.textContent = remaining + ' recipes';
         
-        // Reload if empty
         if (remaining === 0) location.reload();
         
         closeModal();
@@ -255,7 +257,6 @@
     });
   };
 
-  // Close modal when clicking outside
   document.getElementById('removeModal').onclick = function(e) {
     if (e.target === this) closeModal();
   };
