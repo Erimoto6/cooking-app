@@ -121,14 +121,8 @@
     background: rgba(192,57,43,0.4);
   }
 
-  .h-cuisine-emoji {
-    font-size: 28px;
-    margin-bottom: 8px;
-    display: block;
-  }
-
   .h-cuisine-name {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: rgba(255,255,255,0.85);
   }
@@ -172,7 +166,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
+    font-size: 24px;
+    color: rgba(255,255,255,0.5);
   }
 
   .h-recipe-name {
@@ -321,27 +316,21 @@
     <p class="h-section-title">Discover</p>
     <div class="h-cuisine-grid">
       <a href="{{ url_for('view_cuisine', cuisine='African') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🦁🌍</span>
         <span class="h-cuisine-name">African</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Europe') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🍝🥖</span>
         <span class="h-cuisine-name">European</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Asians') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🍜🥢</span>
         <span class="h-cuisine-name">Asian</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='North America') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🍔🌮</span>
         <span class="h-cuisine-name">North American</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='South America') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🥩🌽</span>
         <span class="h-cuisine-name">South American</span>
       </a>
       <a href="{{ url_for('view_cuisine', cuisine='Oceania') }}" class="h-cuisine-card">
-        <span class="h-cuisine-emoji">🦘🥝</span>
         <span class="h-cuisine-name">Oceanian</span>
       </a>
     </div>
@@ -360,7 +349,7 @@
         <p class="h-recipe-name">{{ recipe.title[:16] }}{% if recipe.title|length > 16 %}...{% endif %}</p>
       </a>
       {% else %}
-      <div class="empty-state">No favorites yet. ❤️ recipes to see them here!</div>
+      <div class="empty-state">No favorites yet. Save recipes to see them here!</div>
       {% endfor %}
     </div>
   </div>
@@ -404,7 +393,7 @@
   <!-- Recently Completed -->
   <div class="h-section h-section-anim5">
     <div class="h-section-title">
-      <span>✅ Recently Completed</span>
+      <span>Recently Completed</span>
       <a href="{{ url_for('completed_recipes') }}" class="h-view-all">View all →</a>
     </div>
     <div class="h-scroll">
@@ -430,7 +419,7 @@
       {% for folder in folders %}
       <div class="h-folder-card-wrapper">
         <div class="h-folder-card" onclick="viewFolder({{ folder.id }})">
-          <div class="h-folder-icon">📂</div>
+          <div class="h-folder-icon">📁</div>
           <div class="h-folder-name">{{ folder.name }}</div>
           <div class="h-folder-count">{{ folder.recipe_count or 0 }} recipes</div>
         </div>
@@ -438,7 +427,7 @@
       </div>
       {% endfor %}
       <div class="h-folder-card h-folder-add" onclick="showCreateFolderModal()">
-        <div class="h-folder-icon">+</div>
+        <div class="h-folder-icon">📁</div>
         <div class="h-folder-name">New Folder</div>
       </div>
     </div>
