@@ -2051,6 +2051,49 @@ def fix_railway_images():
 def serve_static(filename):
     return send_from_directory('static', filename)
 
+@app.route('/fix-all-paths')
+def fix_all_paths():
+    if 'user_id' not in session:
+        return "Please login first", 401
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Fix the folder name from 'Asians' to 'Asian' and fix case
+    fixes = [
+        # Asians -> Asian (no 's')
+        ('/static/images/Asians/', '/static/images/Asian/'),
+        
+        # Fix country cases
+        ('/Asian/Philippines/', '/Asian/PHILIPPINES/'),
+        ('/Asian/Japan/', '/Asian/JAPAN/'),
+        ('/Asian/China/', '/Asian/CHINA/'),
+        ('/Asian/Korea/', '/Asian/KOREA/'),
+        ('/Asian/Indonesia/', '/Asian/INDONESIA/'),
+        ('/Asian/Thailand/', '/Asian/THAILAND/'),
+        ('/Asian/Vietnam/', '/Asian/VIETNAM/'),
+        ('/Asian/Malaysia/', '/Asian/MALAYSIA/'),
+        
+        # Other cuisines
+        ('/North America/United States/', '/North America/UNITED STATES/'),
+        ('/North America/Canada/', '/North America/CANADA/'),
+        ('/North America/Mexico/', '/North America/MEXICO/'),
+    ]
+    
+    total = 0
+    for old_path, new_path in fixes:
+        cur.execute("""
+            UPDATE recipes 
+            SET image_url = REPLACE(image_url, %s, %s)
+            WHERE image_url LIKE %s
+        """, (old_path, new_path, f'%{old_path}%'))
+        total += cur.rowcount
+        if cur.rowcount > 0:
+            print(f"Fixed {cur.rowcount} recipes")
+    
+    conn.commit()
+    return f"✅ Fixed {total} recipes with correct paths"
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
