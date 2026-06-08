@@ -1911,6 +1911,40 @@ def debug_shopping():
         result += f"<p>Item: {item}</p>"
     return result
 
+@app.route('/sync-images')
+def sync_images():
+    if 'user_id' not in session:
+        return "Please login first", 401
+    
+    import cloudinary
+    import cloudinary.api
+    
+    cloudinary.config(
+        cloud_name="dybaojdge",
+        api_key="324229828458714",
+        api_secret="O_4BAZfVhMYWdsr1pbQeOYEgvYE"
+    )
+    
+    # Get all images from Cloudinary
+    result = cloudinary.api.resources(type="upload", prefix="cooking_app", max_results=500)
+    
+    # Create mapping
+    image_map = {}
+    for resource in result['resources']:
+        public_id = resource['public_id']
+        filename = public_id.split('/')[-1].replace('.jpg', '').replace('.jpeg', '').replace('.png', '')
+        image_map[filename.lower()] = resource['secure_url']
+    
+    # Update recipes
+    cursor = get_cursor()
+    updated = 0
+    for img_name, url in image_map.items():
+        cursor.execute("UPDATE recipes SET image_url = %s WHERE title ILIKE %s AND image_url IS NULL", 
+                      (url, f'%{img_name}%'))
+        updated += cursor.rowcount
+    
+    return f"Updated {updated} recipes with images!"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
