@@ -1975,6 +1975,36 @@ def fix_imported_public():
     conn.close()
     return result
 
+@app.route('/sync-images')
+def sync_images():
+    if 'user_id' not in session:
+        return "Please login first", 401
+    
+    import cloudinary
+    import cloudinary.api
+    
+    cloudinary.config(
+        cloud_name="dybaojdge",
+        api_key="324229828458714",
+        api_secret="O_4BAZfVhMYWdsr1pbQeOYEgvYE"
+    )
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    result = cloudinary.api.resources(type="upload", prefix="cooking_app", max_results=500)
+    
+    updated = 0
+    for resource in result['resources']:
+        filename = resource['public_id'].split('/')[-1].replace('.jpg', '').replace('.jpeg', '').replace('.png', '')
+        cur.execute("UPDATE recipes SET image_url = %s WHERE title ILIKE %s AND image_url IS NULL", 
+                    (resource['secure_url'], f'%{filename}%'))
+        updated += cur.rowcount
+    
+    conn.commit()
+    return f"✅ Updated {updated} recipes with images!"
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
