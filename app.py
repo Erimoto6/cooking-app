@@ -219,6 +219,18 @@ def view_cuisine(cuisine):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    # Map common variations to database values
+    cuisine_map = {
+        'Asian': 'Asians',
+        'European': 'Europe',
+        'Oceanian': 'Oceania',
+        'North American': 'North America',
+        'South American': 'South America',
+    }
+    
+    # Use mapped value if exists, otherwise use original
+    db_cuisine = cuisine_map.get(cuisine, cuisine)
+    
     cursor = get_cursor()
     user_id = session['user_id']
     

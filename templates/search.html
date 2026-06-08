@@ -622,7 +622,13 @@
         <div class="s-results-list">
           {% for recipe in results %}
           <a href="{{ url_for('view_recipe', dish_id=recipe.dish_id) }}" class="s-result-card">
-            <div class="s-result-thumb">🍽️</div>
+            <div class="s-result-thumb">
+  {% if recipe.image_url %}
+    <img src="{{ recipe.image_url }}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
+  {% else %}
+    🍽️
+  {% endif %}
+</div>
             <div class="s-result-info">
               <p class="s-result-title">{{ recipe.title }}</p>
               <p class="s-result-meta">{{ recipe.cuisine }} · {{ recipe.region }}</p>
