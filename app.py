@@ -222,39 +222,52 @@ def view_cuisine(cuisine):
     # Map common variations to database values
     cuisine_map = {
         'Asian': 'Asians',
+        'Asians': 'Asians',
         'European': 'Europe',
-        'Oceanian': 'Oceania',
+        'Europe': 'Europe',
         'North American': 'North America',
+        'North America': 'North America',
         'South American': 'South America',
+        'South America': 'South America',
+        'Oceanian': 'Oceania',
+        'Oceania': 'Oceania',
+        'African': 'African'
     }
     
-    # Use mapped value if exists, otherwise use original
     db_cuisine = cuisine_map.get(cuisine, cuisine)
     
     cursor = get_cursor()
-    user_id = session['user_id']
     
-    # Get distinct regions (only public OR user's own private recipes)
+    # Debug: print to Railway logs
+    print(f"Looking for cuisine: {db_cuisine}")
+    
+    # Get recipes
+    cursor.execute("SELECT * FROM recipes WHERE cuisine = %s ORDER BY title", (db_cuisine,))
+    recipes = cursor.fetchall()
+    
+    print(f"Found {len(recipes)} recipes for {db_cuisine}")
+    
+    # Get distinct regions
     cursor.execute("""
         SELECT DISTINCT region FROM recipes 
-        WHERE cuisine = %s 
-        AND (is_private = FALSE OR user_id = %s)
-        AND region IS NOT NULL AND region != ''
+        WHERE cuisine = %s AND region IS NOT NULL AND region != ''
         ORDER BY region
-    """, (cuisine, user_id))
+    """, (db_cuisine,))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
-    
     for region in regions:
         region_name = region['region']
         cursor.execute("""
             SELECT * FROM recipes 
             WHERE cuisine = %s AND region = %s 
-            AND (is_private = FALSE OR user_id = %s)
             ORDER BY title
-        """, (cuisine, region_name, user_id))
+        """, (db_cuisine, region_name))
         recipes_by_region[region_name] = cursor.fetchall()
+    
+    # If no regions but have recipes
+    if not recipes_by_region and recipes:
+        recipes_by_region['All Recipes'] = recipes
     
     return render_template('cuisine_view.html', 
                            cuisine=cuisine,
