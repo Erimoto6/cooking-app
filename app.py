@@ -219,6 +219,18 @@ def view_cuisine(cuisine):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    # Map common variations to database values
+    cuisine_map = {
+        'Asian': 'Asians',
+        'European': 'Europe',
+        'Oceanian': 'Oceania',
+        'North American': 'North America',
+        'South American': 'South America',
+    }
+    
+    # Use mapped value if exists, otherwise use original
+    db_cuisine = cuisine_map.get(cuisine, cuisine)
+    
     cursor = get_cursor()
     
     # Get distinct regions
@@ -226,7 +238,7 @@ def view_cuisine(cuisine):
         SELECT DISTINCT region FROM recipes 
         WHERE cuisine = %s AND region IS NOT NULL AND region != ''
         ORDER BY region
-    """, (cuisine,))
+    """, (db_cuisine,))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
@@ -237,13 +249,14 @@ def view_cuisine(cuisine):
             SELECT * FROM recipes 
             WHERE cuisine = %s AND region = %s 
             ORDER BY title
-        """, (cuisine, region_name))
+        """, (db_cuisine, region_name))
         recipes_by_region[region_name] = cursor.fetchall()
     
     return render_template('cuisine_view.html', 
                            cuisine=cuisine,
                            regions=regions,
                            recipes_by_region=recipes_by_region)
+
 @app.route('/recipe/<string:dish_id>')
 def view_recipe(dish_id):
     if 'user_id' not in session:

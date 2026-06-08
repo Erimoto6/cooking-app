@@ -257,7 +257,13 @@
       <a href="{{ url_for('view_recipe_by_id', recipe_id=recipe.id) }}"
          class="cv-card"
          data-category="{{ recipe.category or 'Other' }}">
-        <div class="cv-card-thumb"></div>
+        <div class="cv-card-thumb">
+  {% if recipe.image_url %}
+    <img src="{{ recipe.image_url }}" style="width:100%;height:100%;object-fit:cover;">
+  {% else %}
+    <div style="width:100%;height:100%;background:rgba(255,255,255,0.05);"></div>
+  {% endif %}
+</div>
         <div class="cv-card-body">
           <p class="cv-card-title">{{ recipe.title }}</p>
           <p class="cv-card-meta">
