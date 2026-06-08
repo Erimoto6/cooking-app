@@ -1975,8 +1975,74 @@ def fix_imported_public():
     conn.close()
     return result
 
-
+@app.route('/debug-images')
+def debug_images():
+    if 'user_id' not in session:
+        return "Please login first", 401
     
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Check how many recipes have image URLs
+    cur.execute("SELECT COUNT(*) FROM recipes WHERE image_url IS NOT NULL AND image_url != ''")
+    with_images = cur.fetchone()[0]
+    
+    cur.execute("SELECT COUNT(*) FROM recipes")
+    total = cur.fetchone()[0]
+    
+    # Show some sample image URLs
+    cur.execute("SELECT id, title, image_url FROM recipes WHERE image_url IS NOT NULL LIMIT 5")
+    samples = cur.fetchall()
+    
+    result = f"<h3>Image URL Status</h3>"
+    result += f"<p>Total recipes: {total}</p>"
+    result += f"<p>Recipes with images: {with_images}</p>"
+    result += f"<p>Missing images: {total - with_images}</p>"
+    
+    result += "<h3>Sample image URLs:</h3><ul>"
+    for recipe_id, title, url in samples:
+        result += f"<li><strong>{title}</strong><br>URL: {url}</li>"
+    result += "</ul>"
+    
+    return result
+
+@app.route('/fix-railway-images')
+def fix_railway_images():
+    if 'user_id' not in session:
+        return "Please login first", 401
+    
+    import os
+    conn = get_db()
+    cur = conn.cursor()
+    
+    image_folder = "static/images"
+    updated = 0
+    
+    # Walk through all images in the static folder
+    for root, dirs, files in os.walk(image_folder):
+        for file in files:
+            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                # Get recipe name from filename
+                recipe_name = file.replace('.jpg', '').replace('.jpeg', '').replace('.png', '')
+                recipe_name = recipe_name.replace('_', ' ').replace('-', ' ')
+                
+                # Get the relative path for URL
+                rel_path = os.path.relpath(os.path.join(root, file), image_folder)
+                image_url = f"/static/images/{rel_path.replace('\\', '/')}"
+                
+                # Update database
+                cur.execute("""
+                    UPDATE recipes 
+                    SET image_url = %s 
+                    WHERE title ILIKE %s AND (image_url IS NULL OR image_url = '')
+                """, (image_url, f'%{recipe_name}%'))
+                
+                if cur.rowcount > 0:
+                    updated += cur.rowcount
+    
+    conn.commit()
+    return f"✅ Updated {updated} recipes with local images on Railway!"
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
