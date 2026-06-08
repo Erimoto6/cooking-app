@@ -232,13 +232,16 @@ def view_cuisine(cuisine):
     db_cuisine = cuisine_map.get(cuisine, cuisine)
     
     cursor = get_cursor()
+    user_id = session['user_id']
     
-    # Get distinct regions
+    # Get distinct regions (only public OR user's own private recipes)
     cursor.execute("""
         SELECT DISTINCT region FROM recipes 
-        WHERE cuisine = %s AND region IS NOT NULL AND region != ''
+        WHERE cuisine = %s 
+        AND (is_private = FALSE OR user_id = %s)
+        AND region IS NOT NULL AND region != ''
         ORDER BY region
-    """, (db_cuisine,))
+    """, (cuisine, user_id))
     regions = cursor.fetchall()
     
     recipes_by_region = {}
@@ -248,8 +251,9 @@ def view_cuisine(cuisine):
         cursor.execute("""
             SELECT * FROM recipes 
             WHERE cuisine = %s AND region = %s 
+            AND (is_private = FALSE OR user_id = %s)
             ORDER BY title
-        """, (db_cuisine, region_name))
+        """, (cuisine, region_name, user_id))
         recipes_by_region[region_name] = cursor.fetchall()
     
     return render_template('cuisine_view.html', 
@@ -1909,6 +1913,66 @@ def debug_shopping():
     result = "<h3>Shopping List Debug</h3>"
     for item in items:
         result += f"<p>Item: {item}</p>"
+    return result
+
+@app.route('/make-my-recipes-private')
+def make_my_recipes_private():
+    if 'user_id' not in session:
+        return "Please login first"
+    
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Set ALL recipes created by current user to private
+        cur.execute("UPDATE recipes SET is_private = TRUE WHERE user_id = %s", (session['user_id'],))
+        conn.commit()
+        count = cur.rowcount
+        result = f"✅ Updated {count} of your recipes to private (only visible to you)"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
+    return result
+
+@app.route('/debug-private-status')
+def debug_private_status():
+    if 'user_id' not in session:
+        return "Please login first"
+    
+    cursor = get_cursor()
+    cursor.execute("SELECT id, title, is_private FROM recipes WHERE user_id = %s ORDER BY id DESC LIMIT 5", (session['user_id'],))
+    recipes = cursor.fetchall()
+    
+    result = "<h3>Your recent recipes:</h3>"
+    for r in recipes:
+        result += f"<p>ID: {r['id']} - {r['title']} - is_private: {r['is_private']}</p>"
+    
+    return result
+
+@app.route('/fix-imported-public')
+def fix_imported_public():
+    import psycopg2
+    import os
+    database_url = os.environ.get('DATABASE_URL')
+    conn = psycopg2.connect(database_url)
+    cur = conn.cursor()
+    
+    try:
+        # Set recipes where user_id IS NULL (imported) to public
+        cur.execute("UPDATE recipes SET is_private = FALSE WHERE user_id IS NULL OR is_private IS NULL")
+        conn.commit()
+        count = cur.rowcount
+        result = f"✅ Updated {count} imported recipes to public (is_private = FALSE)"
+    except Exception as e:
+        result = f"❌ Error: {e}"
+    
+    cur.close()
+    conn.close()
     return result
 
 if __name__ == '__main__':
