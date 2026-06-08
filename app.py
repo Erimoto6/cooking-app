@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from database import *
 import psycopg2.extras
 import hashlib
@@ -6,7 +6,10 @@ import os
 import sys
 import traceback
 
-app = Flask(__name__)
+
+
+
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = 'whats_cookin_secret_key_2024'
 
 # Initialize database tables on startup
@@ -2042,6 +2045,11 @@ def fix_railway_images():
     
     conn.commit()
     return f"✅ Updated {updated} recipes with local images on Railway!"
+
+# Ensure static files are served correctly
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 
 if __name__ == '__main__':
