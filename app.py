@@ -224,7 +224,7 @@ def view_cuisine(cuisine):
 
     # Map common variations to database values
     cuisine_map = {
-        'Asian': 'Asians',
+        'Asian': 'Asian',
         'European': 'Europe',
         'Oceanian': 'Oceania',
         'North American': 'North America',
@@ -1389,10 +1389,10 @@ def debug_cuisines():
         output += f"<li>'{row['cuisine']}'</li>"
     output += "</ul>"
     
-    # Also check if 'Asians' exists
-    cursor.execute("SELECT COUNT(*) as count FROM recipes WHERE cuisine = 'Asians'")
-    asians_count = cursor.fetchone()
-    output += f"<p>Recipes with cuisine='Asians': {asians_count['count']}</p>"
+    # Also check if 'Asian' exists
+    cursor.execute("SELECT COUNT(*) as count FROM recipes WHERE cuisine = 'Asian'")
+    asian_count = cursor.fetchone()
+    output += f"<p>Recipes with cuisine='Asian': {asian_count['count']}</p>"
     
     cursor.execute("SELECT COUNT(*) as count FROM recipes WHERE cuisine = 'Asian'")
     asian_count = cursor.fetchone()
@@ -1799,7 +1799,7 @@ def debug_asian():
         
         # Try the query that's failing
         user_id = session['user_id']
-        cuisine = 'Asians'
+        cuisine = 'Asian'
         
         cur.execute("""
             SELECT DISTINCT region FROM recipes 
@@ -1895,11 +1895,11 @@ def fix_asian_cuisine():
     cur = conn.cursor()
     
     try:
-        # Update all recipes with cuisine = 'Asians' to 'Asian'
-        cur.execute("UPDATE recipes SET cuisine = 'Asian' WHERE cuisine = 'Asians'")
+        # Update all recipes with cuisine = 'Asian' to 'Asian'
+        cur.execute("UPDATE recipes SET cuisine = 'Asian' WHERE cuisine = 'Asian'")
         conn.commit()
         count = cur.rowcount
-        result = f"✅ Updated {count} recipes from 'Asians' to 'Asian'"
+        result = f"✅ Updated {count} recipes from 'Asian' to 'Asian'"
     except Exception as e:
         result = f"❌ Error: {e}"
     
@@ -2059,10 +2059,10 @@ def fix_all_paths():
     conn = get_db()
     cur = conn.cursor()
     
-    # Fix the folder name from 'Asians' to 'Asian' and fix case
+    # Fix the folder name from 'Asian' to 'Asian' and fix case
     fixes = [
-        # Asians -> Asian (no 's')
-        ('/static/images/Asians/', '/static/images/Asian/'),
+        # Asian -> Asian (no 's')
+        ('/static/images/Asian/', '/static/images/Asian/'),
         
         # Fix country cases
         ('/Asian/Philippines/', '/Asian/PHILIPPINES/'),
