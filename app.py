@@ -2094,6 +2094,28 @@ def fix_all_paths():
     conn.commit()
     return f"✅ Fixed {total} recipes with correct paths"
 
+@app.route('/fix-karekare')
+def fix_karekare():
+    # You must be logged in as an admin to run this
+    if 'user_id' not in session:
+        return "Please login first", 401
+
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Update the image URL for Kare-Kare
+    cur.execute("""
+        UPDATE recipes 
+        SET image_url = '/static/images/Asian/PHILIPPINES/Kare Kare.jpg' 
+        WHERE title = 'Kare-Kare'
+    """)
+    
+    conn.commit()
+    
+    if cur.rowcount > 0:
+        return "✅ Successfully updated image for Kare-Kare!"
+    else:
+        return "❌ Recipe 'Kare-Kare' not found or already has correct image."
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
